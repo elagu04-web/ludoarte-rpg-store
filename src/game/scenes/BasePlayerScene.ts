@@ -1,31 +1,27 @@
 import Phaser from "phaser";
-import { eventBus } from "@/game/eventBus";
-import { shelves, type ShelfData } from "@/data/shelves";
 
-const PLAYER_SPEED = 200;
-const SHELF_INTERACTION_PADDING = 40;
+export const PLAYER_SPEED = 200;
 
-type Direction = "down" | "left" | "right" | "up";
+export type Direction = "down" | "left" | "right" | "up";
 
-const IDLE_FRAME: Record<Direction, number> = {
+export const IDLE_FRAME: Record<Direction, number> = {
   down: 1,
   left: 4,
   right: 7,
   up: 10,
 };
 
-interface ShelfZone {
-  id: string;
-  rect: Phaser.Geom.Rectangle;
-}
+/**
+ * Base scene shared by every walkable screen (exterior, ground floor, store).
+ * Handles loading the player sprite, movement, animation and collisions so
+ * each screen only needs to add its own obstacles/zones.
+ */
+export abstract class BasePlayerScene extends Phaser.Scene {
+  protected player!: Phaser.Physics.Arcade.Sprite;
+  protected obstacles!: Phaser.Physics.Arcade.StaticGroup;
+  protected facing: Direction = "down";
 
-export class MainScene extends Phaser.Scene {
-  private player!: Phaser.Physics.Arcade.Sprite;
-  private obstacles!: Phaser.Physics.Arcade.StaticGroup;
-  private shelfZones: ShelfZone[] = [];
-  private nearbyShelfId: string | null = null;
   private eKey!: Phaser.Input.Keyboard.Key;
-  private facing: Direction = "down";
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: {
     up: Phaser.Input.Keyboard.Key;
@@ -33,10 +29,6 @@ export class MainScene extends Phaser.Scene {
     left: Phaser.Input.Keyboard.Key;
     right: Phaser.Input.Keyboard.Key;
   };
-
-  constructor() {
-    super("MainScene");
-  }
 
   preload() {
     this.load.spritesheet(
@@ -46,29 +38,13 @@ export class MainScene extends Phaser.Scene {
     );
   }
 
-  create() {
-    this.cameras.main.setBackgroundColor("#2d2d44");
-
-    this.add
-      .text(400, 24, "Ludoarte RPG Store", {
-        fontSize: "20px",
-        color: "#ffffff",
-      })
-      .setOrigin(0.5);
-
-    this.player = this.physics.add.sprite(400, 300, "player-walk", 1);
+  protected createPlayer(x: number, y: number) {
+    this.player = this.physics.add.sprite(x, y, "player-walk", 1);
     this.player.setCollideWorldBounds(true);
     this.player.body?.setSize(40, 50).setOffset(22, 54);
     this.createPlayerAnimations();
 
     this.obstacles = this.physics.add.staticGroup();
-    this.addObstacle(250, 150, 300, 30); // pared interna horizontal
-    this.addObstacle(150, 400, 30, 200); // pared interna vertical
-
-    this.addShelf(shelves[0], 680, 110, 140, 70);
-    this.addShelf(shelves[1], 680, 480, 140, 140);
-    this.addShelf(shelves[2], 270, 520, 180, 70);
-
     this.physics.add.collider(this.player, this.obstacles);
 
     const keyboard = this.input.keyboard!;
@@ -83,6 +59,8 @@ export class MainScene extends Phaser.Scene {
   }
 
   private createPlayerAnimations() {
+    if (this.anims.exists("walk-down")) return; // animations are global, create once
+
     const directions: { key: Direction; start: number; end: number }[] = [
       { key: "down", start: 0, end: 2 },
       { key: "left", start: 3, end: 5 },
@@ -103,12 +81,18 @@ export class MainScene extends Phaser.Scene {
     }
   }
 
-  private addObstacle(x: number, y: number, width: number, height: number) {
-    const key = `obstacle-${width}x${height}`;
+  protected addObstacle(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    color: number = 0x555577
+  ) {
+    const key = `obstacle-${width}x${height}-${color}`;
 
     if (!this.textures.exists(key)) {
       const graphics = this.add.graphics();
-      graphics.fillStyle(0x555577, 1);
+      graphics.fillStyle(color, 1);
       graphics.fillRect(0, 0, width, height);
       graphics.generateTexture(key, width, height);
       graphics.destroy();
@@ -120,58 +104,28 @@ export class MainScene extends Phaser.Scene {
       key
     ) as Phaser.Physics.Arcade.Sprite;
     obstacle.refreshBody();
+    return obstacle;
   }
 
-  private addShelf(
-    shelf: ShelfData,
+  /** A walkable (non-colliding) marker zone, e.g. a door or staircase. */
+  protected addZoneMarker(
     x: number,
     y: number,
     width: number,
-    height: number
-  ) {
-    const key = `shelf-${width}x${height}`;
-
-    if (!this.textures.exists(key)) {
-      const graphics = this.add.graphics();
-      graphics.fillStyle(0x8b5a2b, 1);
-      graphics.fillRect(0, 0, width, height);
-      graphics.generateTexture(key, width, height);
-      graphics.destroy();
-    }
-
-    const shelfSprite = this.obstacles.create(
-      x,
-      y,
-      key
-    ) as Phaser.Physics.Arcade.Sprite;
-    shelfSprite.refreshBody();
-
-    this.shelfZones.push({
-      id: shelf.id,
-      rect: new Phaser.Geom.Rectangle(
-        x - width / 2 - SHELF_INTERACTION_PADDING,
-        y - height / 2 - SHELF_INTERACTION_PADDING,
-        width + SHELF_INTERACTION_PADDING * 2,
-        height + SHELF_INTERACTION_PADDING * 2
-      ),
-    });
+    height: number,
+    color: number
+  ): Phaser.Geom.Rectangle {
+    this.add.rectangle(x, y, width, height, color);
+    return new Phaser.Geom.Rectangle(
+      x - width / 2,
+      y - height / 2,
+      width,
+      height
+    );
   }
 
-  private updateShelfProximity() {
-    const playerBounds = this.player.getBounds();
-
-    let nearestShelfId: string | null = null;
-    for (const zone of this.shelfZones) {
-      if (Phaser.Geom.Rectangle.Overlaps(playerBounds, zone.rect)) {
-        nearestShelfId = zone.id;
-        break;
-      }
-    }
-
-    if (nearestShelfId !== this.nearbyShelfId) {
-      this.nearbyShelfId = nearestShelfId;
-      eventBus.emit("shelf-proximity", nearestShelfId);
-    }
+  protected isEKeyJustDown(): boolean {
+    return Phaser.Input.Keyboard.JustDown(this.eKey);
   }
 
   private updatePlayerAnimation(velocityX: number, velocityY: number) {
@@ -215,10 +169,9 @@ export class MainScene extends Phaser.Scene {
     this.player.setVelocity(velocityX, velocityY);
     this.updatePlayerAnimation(velocityX, velocityY);
 
-    this.updateShelfProximity();
-
-    if (this.nearbyShelfId && Phaser.Input.Keyboard.JustDown(this.eKey)) {
-      eventBus.emit("shelf-open", this.nearbyShelfId);
-    }
+    this.onSceneUpdate();
   }
+
+  /** Override in subclasses for scene-specific checks (doors, shelves, etc.). */
+  protected onSceneUpdate(): void {}
 }

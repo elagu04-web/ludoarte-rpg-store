@@ -3,6 +3,9 @@
 import { useEffect, useRef } from "react";
 import Phaser from "phaser";
 import { createGameConfig } from "@/game/config";
+import ShelfPrompt from "./ShelfPrompt";
+import GameModal from "./GameModal";
+import styles from "./GameOverlay.module.css";
 
 export default function GameCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -19,5 +22,11 @@ export default function GameCanvas() {
     };
   }, []);
 
-  return <div ref={containerRef} />;
+  return (
+    <div className={styles.gameWrapper}>
+      <div ref={containerRef} />
+      <ShelfPrompt />
+      <GameModal />
+    </div>
+  );
 }

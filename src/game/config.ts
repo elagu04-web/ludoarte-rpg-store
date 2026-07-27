@@ -10,6 +10,7 @@ export function createGameConfig(
     height: 600,
     parent,
     backgroundColor: "#2d2d44",
+    pixelArt: true,
     physics: {
       default: "arcade",
       arcade: {

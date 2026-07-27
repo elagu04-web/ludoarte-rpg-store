@@ -1,7 +1,19 @@
 .gameWrapper {
   position: relative;
-  width: 800px;
-  max-width: 100%;
+  width: min(100%, 1536px, calc(80vh * 1.5));
+  aspect-ratio: 1536 / 1024;
+  margin: 0 auto;
+}
+
+.canvasHost {
+  position: absolute;
+  inset: 0;
+}
+
+.gameWrapper canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .prompt {

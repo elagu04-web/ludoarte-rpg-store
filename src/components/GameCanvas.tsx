@@ -24,7 +24,7 @@ export default function GameCanvas() {
 
   return (
     <div className={styles.gameWrapper}>
-      <div ref={containerRef} />
+      <div ref={containerRef} className={styles.canvasHost} />
       <ShelfPrompt />
       <GameModal />
     </div>

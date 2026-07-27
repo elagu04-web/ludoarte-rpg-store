@@ -8,34 +8,29 @@ export class ExteriorScene extends BasePlayerScene {
     super("ExteriorScene");
   }
 
+  preload() {
+    super.preload();
+    this.load.image("bg-fachada", "/assets/scene/fachada.png");
+  }
+
   create() {
-    this.cameras.main.setBackgroundColor("#8fb8de"); // cielo/calle
+    this.addBackground("bg-fachada");
 
-    this.add
-      .text(400, 24, "Epico Atlantida - Fachada", {
-        fontSize: "20px",
-        color: "#1a1a1a",
-      })
-      .setOrigin(0.5);
+    this.createPlayer(768, 850);
 
-    this.createPlayer(400, 450);
+    // Fachada del edificio, con hueco central para la puerta (invisibles,
+    // el dibujo de fondo ya muestra las paredes)
+    this.addObstacle(335, 390, 670, 280, { visible: false });
+    this.addObstacle(1228, 390, 616, 280, { visible: false });
 
-    // Fachada del edificio, con un hueco central para la puerta
-    this.addObstacle(160, 100, 320, 100, 0x8a8a8a); // pared izquierda
-    this.addObstacle(640, 100, 320, 100, 0x8a8a8a); // pared derecha
+    // Mesa de ajedrez decorativa afuera
+    this.addObstacle(265, 635, 230, 170, { visible: false });
 
-    this.doorZone = this.addZoneMarker(400, 100, 160, 100, 0xd9a441);
-
-    this.add
-      .text(400, 100, "Entrada", {
-        fontSize: "16px",
-        color: "#1a1a1a",
-      })
-      .setOrigin(0.5);
+    this.doorZone = this.addZoneMarker(795, 350, 120, 100, { visible: false });
   }
 
   protected onSceneUpdate() {
-    if (Phaser.Geom.Rectangle.Overlaps(this.player.getBounds(), this.doorZone)) {
+    if (this.isPlayerInZone(this.doorZone)) {
       this.scene.start("GroundFloorScene");
     }
   }

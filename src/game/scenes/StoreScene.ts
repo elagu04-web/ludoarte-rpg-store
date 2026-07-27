@@ -3,7 +3,7 @@ import { eventBus } from "@/game/eventBus";
 import { shelves, type ShelfData } from "@/data/shelves";
 import { BasePlayerScene } from "./BasePlayerScene";
 
-const SHELF_INTERACTION_PADDING = 40;
+const SHELF_INTERACTION_PADDING = 30;
 
 interface ShelfZone {
   id: string;
@@ -19,33 +19,30 @@ export class StoreScene extends BasePlayerScene {
     super("StoreScene");
   }
 
+  preload() {
+    super.preload();
+    this.load.image("bg-tienda", "/assets/scene/tienda.png");
+  }
+
   create() {
-    this.cameras.main.setBackgroundColor("#2d2d44");
+    this.addBackground("bg-tienda");
 
-    this.add
-      .text(400, 24, "Ludoarte - Tienda", {
-        fontSize: "20px",
-        color: "#ffffff",
-      })
-      .setOrigin(0.5);
+    this.createPlayer(760, 890);
 
-    this.createPlayer(400, 550);
+    // Estanterias interactivas (sobre los muebles del dibujo)
+    this.addShelf(shelves[0], 547, 200, 275, 175);
+    this.addShelf(shelves[1], 975, 200, 270, 175);
+    this.addShelf(shelves[2], 205, 590, 230, 620);
 
-    this.addObstacle(250, 150, 300, 30); // pared interna horizontal
-    this.addObstacle(150, 400, 30, 200); // pared interna vertical
+    // Muebles decorativos (colisionables, no interactivos)
+    this.addObstacle(1350, 525, 200, 610, { visible: false }); // torre de ajedrez
+    this.addObstacle(1210, 275, 165, 165, { visible: false }); // mostrador/caja
+    this.addObstacle(775, 420, 260, 150, { visible: false }); // mesa de ajedrez central
+    this.addObstacle(765, 665, 350, 220, { visible: false }); // mesa de juegos
 
-    this.addShelf(shelves[0], 680, 110, 140, 70);
-    this.addShelf(shelves[1], 680, 480, 140, 140);
-    this.addShelf(shelves[2], 270, 520, 180, 70);
-
-    this.stairsDownZone = this.addZoneMarker(500, 110, 160, 100, 0xb0b0b0);
-    this.add
-      .text(500, 110, "Escalera a\nplanta baja", {
-        fontSize: "14px",
-        color: "#1a1a1a",
-        align: "center",
-      })
-      .setOrigin(0.5);
+    this.stairsDownZone = this.addZoneMarker(763, 220, 80, 70, {
+      visible: false,
+    });
 
     this.events.on("shutdown", () => {
       eventBus.emit("shelf-proximity", null);
@@ -59,7 +56,7 @@ export class StoreScene extends BasePlayerScene {
     width: number,
     height: number
   ) {
-    this.addObstacle(x, y, width, height, 0x8b5a2b);
+    this.addObstacle(x, y, width, height, { visible: false });
 
     this.shelfZones.push({
       id: shelf.id,
@@ -96,9 +93,7 @@ export class StoreScene extends BasePlayerScene {
       eventBus.emit("shelf-open", this.nearbyShelfId);
     }
 
-    if (
-      Phaser.Geom.Rectangle.Overlaps(this.player.getBounds(), this.stairsDownZone)
-    ) {
+    if (this.isPlayerInZone(this.stairsDownZone)) {
       this.scene.start("GroundFloorScene");
     }
   }

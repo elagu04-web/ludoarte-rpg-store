@@ -8,8 +8,8 @@ export function createGameConfig(
 ): Phaser.Types.Core.GameConfig {
   return {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    width: 1536,
+    height: 1024,
     parent,
     backgroundColor: "#2d2d44",
     pixelArt: true,

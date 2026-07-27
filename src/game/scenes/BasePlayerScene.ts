@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 
-export const PLAYER_SPEED = 200;
+export const PLAYER_SPEED = 320;
 
 export type Direction = "down" | "left" | "right" | "up";
 
@@ -81,18 +81,23 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     }
   }
 
+  protected addBackground(key: string) {
+    this.add.image(0, 0, key).setOrigin(0, 0);
+  }
+
   protected addObstacle(
     x: number,
     y: number,
     width: number,
     height: number,
-    color: number = 0x555577
+    options: { color?: number; visible?: boolean } = {}
   ) {
-    const key = `obstacle-${width}x${height}-${color}`;
+    const { color = 0x555577, visible = true } = options;
+    const key = `obstacle-${width}x${height}-${color}-${visible ? "v" : "i"}`;
 
     if (!this.textures.exists(key)) {
       const graphics = this.add.graphics();
-      graphics.fillStyle(color, 1);
+      graphics.fillStyle(color, visible ? 1 : 0);
       graphics.fillRect(0, 0, width, height);
       graphics.generateTexture(key, width, height);
       graphics.destroy();
@@ -113,9 +118,12 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     y: number,
     width: number,
     height: number,
-    color: number
+    options: { color?: number; visible?: boolean } = {}
   ): Phaser.Geom.Rectangle {
-    this.add.rectangle(x, y, width, height, color);
+    const { color = 0xffffff, visible = true } = options;
+    if (visible) {
+      this.add.rectangle(x, y, width, height, color);
+    }
     return new Phaser.Geom.Rectangle(
       x - width / 2,
       y - height / 2,
@@ -126,6 +134,15 @@ export abstract class BasePlayerScene extends Phaser.Scene {
 
   protected isEKeyJustDown(): boolean {
     return Phaser.Input.Keyboard.JustDown(this.eKey);
+  }
+
+  /**
+   * Whether the player's feet (center point) are standing inside a zone.
+   * Deliberately stricter than a full sprite-bounds overlap so walking past
+   * or near a door/staircase doesn't trigger it by accident.
+   */
+  protected isPlayerInZone(zone: Phaser.Geom.Rectangle): boolean {
+    return zone.contains(this.player.x, this.player.y);
   }
 
   private updatePlayerAnimation(velocityX: number, velocityY: number) {

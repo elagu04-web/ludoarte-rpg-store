@@ -4,6 +4,7 @@ const PLAYER_SPEED = 200;
 
 export class MainScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
+  private obstacles!: Phaser.Physics.Arcade.StaticGroup;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: {
     up: Phaser.Input.Keyboard.Key;
@@ -31,6 +32,13 @@ export class MainScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(400, 300, "player");
     this.player.setCollideWorldBounds(true);
 
+    this.obstacles = this.physics.add.staticGroup();
+    this.addObstacle(250, 150, 300, 30); // pared interna horizontal
+    this.addObstacle(150, 400, 30, 200); // pared interna vertical
+    this.addObstacle(620, 470, 140, 140); // mueble/estanteria de prueba
+
+    this.physics.add.collider(this.player, this.obstacles);
+
     const keyboard = this.input.keyboard!;
     this.cursors = keyboard.createCursorKeys();
     this.wasd = {
@@ -47,6 +55,25 @@ export class MainScene extends Phaser.Scene {
     graphics.fillRect(0, 0, 32, 32);
     graphics.generateTexture("player", 32, 32);
     graphics.destroy();
+  }
+
+  private addObstacle(x: number, y: number, width: number, height: number) {
+    const key = `obstacle-${width}x${height}`;
+
+    if (!this.textures.exists(key)) {
+      const graphics = this.add.graphics();
+      graphics.fillStyle(0x555577, 1);
+      graphics.fillRect(0, 0, width, height);
+      graphics.generateTexture(key, width, height);
+      graphics.destroy();
+    }
+
+    const obstacle = this.obstacles.create(
+      x,
+      y,
+      key
+    ) as Phaser.Physics.Arcade.Sprite;
+    obstacle.refreshBody();
   }
 
   update() {

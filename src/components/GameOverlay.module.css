@@ -102,10 +102,10 @@
 
 .spinningBoxWrapper {
   position: absolute;
-  left: 18%;
-  top: 50%;
+  left: 54%;
+  top: 48%;
   transform: translate(-50%, -50%);
-  perspective: 700px;
+  perspective: 800px;
   z-index: 40;
   pointer-events: none;
 }
@@ -122,6 +122,42 @@
   }
   to {
     transform: rotateY(360deg);
+  }
+}
+
+.spinSheetBox {
+  background-repeat: no-repeat;
+  animation: spinSheetFrames 1.6s steps(1) infinite;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.4));
+}
+
+@keyframes spinSheetFrames {
+  0% {
+    background-position: 0 0;
+  }
+  12.5% {
+    background-position: calc(var(--frame-w) * -1) 0;
+  }
+  25% {
+    background-position: calc(var(--frame-w) * -2) 0;
+  }
+  37.5% {
+    background-position: calc(var(--frame-w) * -3) 0;
+  }
+  50% {
+    background-position: 0 calc(var(--frame-h) * -1);
+  }
+  62.5% {
+    background-position: calc(var(--frame-w) * -1) calc(var(--frame-h) * -1);
+  }
+  75% {
+    background-position: calc(var(--frame-w) * -2) calc(var(--frame-h) * -1);
+  }
+  87.5% {
+    background-position: calc(var(--frame-w) * -3) calc(var(--frame-h) * -1);
+  }
+  100% {
+    background-position: 0 0;
   }
 }
 

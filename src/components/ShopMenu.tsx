@@ -1,11 +1,46 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Image from "next/image";
 import { eventBus } from "@/game/eventBus";
-import { shelves } from "@/data/shelves";
+import { shelves, type BoardGame } from "@/data/shelves";
 import { useCart } from "@/context/CartContext";
 import styles from "./GameOverlay.module.css";
+
+const SPIN_SHEET_DISPLAY_SCALE = 0.5;
+
+function SpinningBox({ game }: { game: BoardGame }) {
+  const { spinSheet } = game;
+
+  if (spinSheet) {
+    const displayWidth = spinSheet.frameWidth * SPIN_SHEET_DISPLAY_SCALE;
+    const displayHeight = spinSheet.frameHeight * SPIN_SHEET_DISPLAY_SCALE;
+
+    return (
+      <div
+        className={styles.spinSheetBox}
+        style={
+          {
+            width: displayWidth,
+            height: displayHeight,
+            backgroundImage: `url(${spinSheet.path})`,
+            backgroundSize: `${spinSheet.columns * displayWidth}px ${
+              spinSheet.rows * displayHeight
+            }px`,
+            "--frame-w": `${displayWidth}px`,
+            "--frame-h": `${displayHeight}px`,
+          } as CSSProperties
+        }
+      />
+    );
+  }
+
+  return (
+    <div className={styles.spinningBox}>
+      <Image src={game.image} alt={game.name} width={230} height={275} />
+    </div>
+  );
+}
 
 export default function ShopMenu() {
   const [openShelfId, setOpenShelfId] = useState<string | null>(null);
@@ -101,14 +136,7 @@ export default function ShopMenu() {
   return (
     <>
       <div className={styles.spinningBoxWrapper}>
-        <div className={styles.spinningBox} key={selectedGame.id}>
-          <Image
-            src={selectedGame.image}
-            alt={selectedGame.name}
-            width={140}
-            height={140}
-          />
-        </div>
+        <SpinningBox game={selectedGame} key={selectedGame.id} />
       </div>
 
       <div className={styles.shopMenu}>

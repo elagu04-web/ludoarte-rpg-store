@@ -1,8 +1,18 @@
+export interface SpinSheet {
+  path: string;
+  frameWidth: number;
+  frameHeight: number;
+  columns: number;
+  rows: number;
+}
+
 export interface BoardGame {
   id: string;
   name: string;
   price: number;
   image: string;
+  /** Optional 360-degree box-rotation sprite sheet (columns x rows frames). */
+  spinSheet?: SpinSheet;
 }
 
 export interface ShelfData {
@@ -13,51 +23,56 @@ export interface ShelfData {
 
 const PLACEHOLDER_IMAGE = "/assets/placeholder-game.svg";
 
+// Catalogo real de Ludoarte, cargado desde la planilla de inventario
+// (precio = "Precio de Venta Publico"). Repartido parejo en las 3
+// estanterias por ahora; la categoria por tematica se ajusta despues.
 export const shelves: ShelfData[] = [
   {
     id: "shelf-strategy",
     title: "Estanteria de Estrategia",
     games: [
-      { id: "catan", name: "Catan", price: 2500, image: PLACEHOLDER_IMAGE },
-      {
-        id: "carcassonne",
-        name: "Carcassonne",
-        price: 2200,
-        image: PLACEHOLDER_IMAGE,
-      },
-      {
-        id: "ticket-to-ride",
-        name: "Ticket to Ride",
-        price: 2800,
-        image: PLACEHOLDER_IMAGE,
-      },
+      { id: "papas-queman", name: "Papas queman", price: 1250, image: PLACEHOLDER_IMAGE },
+      { id: "salem-1692", name: "Salem 1692", price: 1790, image: PLACEHOLDER_IMAGE },
+      { id: "llamagedon", name: "LLamagedon", price: 1250, image: PLACEHOLDER_IMAGE },
+      { id: "no-game-over", name: "No Game Over", price: 1390, image: PLACEHOLDER_IMAGE },
+      { id: "yokai-pagoda", name: "Yokai Pagoda", price: 1390, image: PLACEHOLDER_IMAGE },
+      { id: "exploding-kittens", name: "Exploding Kittens", price: 1890, image: PLACEHOLDER_IMAGE },
+      { id: "niji", name: "Niji", price: 1250, image: PLACEHOLDER_IMAGE },
+      { id: "dados-pato-mar", name: "Dados Pato Mar", price: 890, image: PLACEHOLDER_IMAGE },
     ],
   },
   {
     id: "shelf-party",
     title: "Estanteria de Fiesta",
     games: [
-      {
-        id: "codenames",
-        name: "Codenames",
-        price: 1800,
-        image: PLACEHOLDER_IMAGE,
-      },
-      { id: "dixit", name: "Dixit", price: 2600, image: PLACEHOLDER_IMAGE },
+      { id: "rin-rin-raja", name: "Rin Rin Raja", price: 1190, image: PLACEHOLDER_IMAGE },
+      { id: "flores", name: "Flores", price: 1550, image: PLACEHOLDER_IMAGE },
+      { id: "difference", name: "Difference", price: 1490, image: PLACEHOLDER_IMAGE },
+      { id: "lama", name: "Lama", price: 1350, image: PLACEHOLDER_IMAGE },
+      { id: "la-noche-de-gansferatu", name: "La Noche de Gansferatu", price: 990, image: PLACEHOLDER_IMAGE },
+      { id: "cubirds", name: "Cubirds", price: 1350, image: PLACEHOLDER_IMAGE },
+      { id: "district-noir", name: "District Noir", price: 1390, image: PLACEHOLDER_IMAGE },
+      { id: "palabras-basura", name: "Palabras Basura", price: 1690, image: PLACEHOLDER_IMAGE },
     ],
   },
   {
     id: "shelf-family",
     title: "Estanteria Familiar",
     games: [
-      { id: "uno", name: "Uno", price: 900, image: PLACEHOLDER_IMAGE },
-      { id: "jenga", name: "Jenga", price: 1500, image: PLACEHOLDER_IMAGE },
+      { id: "patachof", name: "Patachof", price: 1350, image: PLACEHOLDER_IMAGE },
+      { id: "vaalbara", name: "Vaalbara", price: 1700, image: PLACEHOLDER_IMAGE },
+      { id: "tummple", name: "Tummple", price: 1900, image: PLACEHOLDER_IMAGE },
+      { id: "barrio", name: "Barrio", price: 1290, image: PLACEHOLDER_IMAGE },
       {
-        id: "rummikub",
-        name: "Rummikub",
-        price: 2100,
-        image: PLACEHOLDER_IMAGE,
+        id: "catan",
+        name: "Catan",
+        price: 3690,
+        image: "/assets/boardgames/catan-box.png",
       },
+      { id: "porto", name: "Porto", price: 2250, image: PLACEHOLDER_IMAGE },
+      { id: "carcassonne", name: "Carcassonne", price: 3550, image: PLACEHOLDER_IMAGE },
+      { id: "banana-azul", name: "Banana Azul", price: 1450, image: PLACEHOLDER_IMAGE },
+      { id: "azul", name: "Azul", price: 4200, image: PLACEHOLDER_IMAGE },
     ],
   },
 ];

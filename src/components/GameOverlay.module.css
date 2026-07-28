@@ -29,85 +29,172 @@
   pointer-events: none;
 }
 
-.modalBackdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.modal {
-  background: #ffffff;
-  color: #1a1a1a;
+.shopMenu {
+  position: absolute;
+  top: 40px;
+  right: 40px;
+  width: 320px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 4px solid #2d2d44;
   border-radius: 8px;
-  padding: 24px;
-  width: 90%;
-  max-width: 640px;
-  max-height: 80vh;
-  overflow-y: auto;
+  padding: 16px;
+  color: #1a1a1a;
+  font-size: 18px;
+  z-index: 50;
 }
 
-.modalHeader {
+.shopMenuTitle {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  font-weight: bold;
+  font-size: 20px;
+  margin-bottom: 12px;
+  border-bottom: 2px solid #2d2d44;
+  padding-bottom: 8px;
 }
 
-.closeButton {
-  background: none;
-  border: 1px solid #ccc;
+.shopMenuClose {
+  background: #2d2d44;
+  color: #ffffff;
+  border: none;
   border-radius: 4px;
-  font-size: 18px;
-  line-height: 1;
+  font-size: 13px;
+  font-weight: bold;
   padding: 4px 10px;
   cursor: pointer;
 }
 
-.gameList {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 16px;
+.shopMenuList {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
 }
 
-.gameCard {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 12px;
-  text-align: center;
+.shopMenuItem,
+.shopMenuItemSelected {
+  padding: 6px 4px;
+  white-space: pre;
+}
+
+.shopMenuItemSelected {
+  font-weight: bold;
+  color: #8b5a2b;
+}
+
+.shopMenuFooter {
+  border-top: 2px solid #2d2d44;
+  padding-top: 8px;
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
 }
 
-.gameImage {
-  border-radius: 4px;
-  margin-bottom: 8px;
-}
-
-.gameName {
-  font-size: 15px;
-  margin: 4px 0;
-}
-
-.gamePrice {
+.shopMenuPrice {
   font-weight: bold;
-  margin: 4px 0 8px;
+  font-size: 18px;
 }
 
-.addButton {
-  background: #8b5a2b;
-  color: #ffffff;
+.shopMenuHint {
+  font-size: 12px;
+  color: #555555;
+}
+
+.spinningBoxWrapper {
+  position: absolute;
+  left: 18%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  perspective: 700px;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.spinningBox {
+  animation: spinBox 3s linear infinite;
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.4));
+}
+
+@keyframes spinBox {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+.touchControls {
+  display: none;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+@media (pointer: coarse) {
+  .touchControls {
+    display: block;
+  }
+}
+
+.dpad {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  width: 168px;
+  height: 168px;
+  pointer-events: auto;
+}
+
+.dpadButton {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
   border: none;
-  border-radius: 4px;
-  padding: 8px 12px;
-  cursor: pointer;
-  width: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #ffffff;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  user-select: none;
 }
 
-.addButton:hover {
-  background: #6f4622;
+.dpadUp {
+  left: 56px;
+  top: 0;
+}
+
+.dpadDown {
+  left: 56px;
+  top: 112px;
+}
+
+.dpadLeft {
+  left: 0;
+  top: 56px;
+}
+
+.dpadRight {
+  left: 112px;
+  top: 56px;
+}
+
+.interactButton {
+  position: absolute;
+  right: 24px;
+  bottom: 40px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(139, 90, 43, 0.85);
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: bold;
+  pointer-events: auto;
+  touch-action: manipulation;
 }

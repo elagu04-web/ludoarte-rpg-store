@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { eventBus } from "@/game/eventBus";
 
 export const PLAYER_SPEED = 320;
 
@@ -29,6 +30,9 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     left: Phaser.Input.Keyboard.Key;
     right: Phaser.Input.Keyboard.Key;
   };
+  private touchDirection = { up: false, down: false, left: false, right: false };
+  private touchInteractRequested = false;
+  private inputPaused = false;
 
   preload() {
     this.load.spritesheet(
@@ -56,6 +60,34 @@ export abstract class BasePlayerScene extends Phaser.Scene {
       right: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
     };
     this.eKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+
+    this.touchDirection = { up: false, down: false, left: false, right: false };
+    this.touchInteractRequested = false;
+
+    const handleTouchDirection = (payload: {
+      direction: Direction;
+      pressed: boolean;
+    }) => {
+      this.touchDirection[payload.direction] = payload.pressed;
+    };
+    const handleTouchInteract = () => {
+      this.touchInteractRequested = true;
+    };
+
+    eventBus.on("touch-direction", handleTouchDirection);
+    eventBus.on("touch-interact", handleTouchInteract);
+
+    this.inputPaused = false;
+    const handleMenuOpen = (open: boolean) => {
+      this.inputPaused = open;
+    };
+    eventBus.on("menu-open", handleMenuOpen);
+
+    this.events.on("shutdown", () => {
+      eventBus.off("touch-direction", handleTouchDirection);
+      eventBus.off("touch-interact", handleTouchInteract);
+      eventBus.off("menu-open", handleMenuOpen);
+    });
   }
 
   private createPlayerAnimations() {
@@ -133,7 +165,14 @@ export abstract class BasePlayerScene extends Phaser.Scene {
   }
 
   protected isEKeyJustDown(): boolean {
-    return Phaser.Input.Keyboard.JustDown(this.eKey);
+    if (Phaser.Input.Keyboard.JustDown(this.eKey)) return true;
+
+    if (this.touchInteractRequested) {
+      this.touchInteractRequested = false;
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -163,18 +202,24 @@ export abstract class BasePlayerScene extends Phaser.Scene {
   }
 
   update() {
+    if (this.inputPaused) {
+      this.player.setVelocity(0, 0);
+      this.updatePlayerAnimation(0, 0);
+      return;
+    }
+
     let velocityX = 0;
     let velocityY = 0;
 
-    if (this.cursors.left.isDown || this.wasd.left.isDown) {
+    if (this.cursors.left.isDown || this.wasd.left.isDown || this.touchDirection.left) {
       velocityX = -PLAYER_SPEED;
-    } else if (this.cursors.right.isDown || this.wasd.right.isDown) {
+    } else if (this.cursors.right.isDown || this.wasd.right.isDown || this.touchDirection.right) {
       velocityX = PLAYER_SPEED;
     }
 
-    if (this.cursors.up.isDown || this.wasd.up.isDown) {
+    if (this.cursors.up.isDown || this.wasd.up.isDown || this.touchDirection.up) {
       velocityY = -PLAYER_SPEED;
-    } else if (this.cursors.down.isDown || this.wasd.down.isDown) {
+    } else if (this.cursors.down.isDown || this.wasd.down.isDown || this.touchDirection.down) {
       velocityY = PLAYER_SPEED;
     }
 

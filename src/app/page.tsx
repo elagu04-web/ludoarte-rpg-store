@@ -1,6 +1,7 @@
 import styles from "./page.module.css";
 import GameLoader from "@/components/GameLoader";
 import CartBadge from "@/components/CartBadge";
+import CartViewLoader from "@/components/CartViewLoader";
 import { CartProvider } from "@/context/CartContext";
 
 export default function Home() {
@@ -13,6 +14,7 @@ export default function Home() {
           <GameLoader />
         </main>
       </div>
+      <CartViewLoader />
     </CartProvider>
   );
 }

@@ -4,7 +4,8 @@ import { useEffect, useRef } from "react";
 import Phaser from "phaser";
 import { createGameConfig } from "@/game/config";
 import ShelfPrompt from "./ShelfPrompt";
-import GameModal from "./GameModal";
+import ShopMenu from "./ShopMenu";
+import TouchControls from "./TouchControls";
 import styles from "./GameOverlay.module.css";
 
 export default function GameCanvas() {
@@ -26,7 +27,8 @@ export default function GameCanvas() {
     <div className={styles.gameWrapper}>
       <div ref={containerRef} className={styles.canvasHost} />
       <ShelfPrompt />
-      <GameModal />
+      <ShopMenu />
+      <TouchControls />
     </div>
   );
 }

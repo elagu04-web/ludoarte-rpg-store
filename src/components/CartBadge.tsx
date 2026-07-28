@@ -1,13 +1,14 @@
 "use client";
 
 import { useCart } from "@/context/CartContext";
+import styles from "./CartView.module.css";
 
 export default function CartBadge() {
-  const { totalItems } = useCart();
+  const { totalItems, openCart } = useCart();
 
   return (
-    <p>
+    <button className={styles.cartBadge} onClick={openCart}>
       Carrito: {totalItems} {totalItems === 1 ? "juego" : "juegos"}
-    </p>
+    </button>
   );
 }

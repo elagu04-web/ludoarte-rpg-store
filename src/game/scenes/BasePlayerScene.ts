@@ -164,6 +164,29 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     );
   }
 
+  /**
+   * Currently-held movement axis, -1/0/1 per axis, regardless of the
+   * 4-direction walk animation. Useful for 8-way aiming (e.g. fireballs).
+   */
+  protected getInputAxis(): { x: number; y: number } {
+    let x = 0;
+    let y = 0;
+
+    if (this.cursors.left.isDown || this.wasd.left.isDown || this.touchDirection.left) {
+      x = -1;
+    } else if (this.cursors.right.isDown || this.wasd.right.isDown || this.touchDirection.right) {
+      x = 1;
+    }
+
+    if (this.cursors.up.isDown || this.wasd.up.isDown || this.touchDirection.up) {
+      y = -1;
+    } else if (this.cursors.down.isDown || this.wasd.down.isDown || this.touchDirection.down) {
+      y = 1;
+    }
+
+    return { x, y };
+  }
+
   protected isEKeyJustDown(): boolean {
     if (Phaser.Input.Keyboard.JustDown(this.eKey)) return true;
 

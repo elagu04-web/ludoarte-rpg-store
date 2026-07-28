@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { gameState } from "@/game/gameState";
+import { playFireballSound } from "@/game/music";
 import { BasePlayerScene } from "./BasePlayerScene";
 
 const ENEMY_SPEED = 90;
@@ -81,7 +82,9 @@ export class ExteriorScene extends BasePlayerScene {
       0xc9a876
     );
 
-    this.physics.add.collider(this.player, this.enemy);
+    this.physics.add.collider(this.player, this.enemy, () =>
+      this.endEncounter("Perdiste el combate!", "#7a1f1f")
+    );
     this.physics.add.overlap(
       this.fireballs,
       this.enemy,
@@ -130,23 +133,33 @@ export class ExteriorScene extends BasePlayerScene {
   }
 
   private fireFireball() {
-    let velocityX = 0;
-    let velocityY = 0;
+    const axis = this.getInputAxis();
+    let dirX = axis.x;
+    let dirY = axis.y;
 
-    switch (this.facing) {
-      case "up":
-        velocityY = -FIREBALL_SPEED;
-        break;
-      case "down":
-        velocityY = FIREBALL_SPEED;
-        break;
-      case "left":
-        velocityX = -FIREBALL_SPEED;
-        break;
-      case "right":
-        velocityX = FIREBALL_SPEED;
-        break;
+    if (dirX === 0 && dirY === 0) {
+      // Standing still: fire in the direction the player is currently facing.
+      switch (this.facing) {
+        case "up":
+          dirY = -1;
+          break;
+        case "down":
+          dirY = 1;
+          break;
+        case "left":
+          dirX = -1;
+          break;
+        case "right":
+          dirX = 1;
+          break;
+      }
     }
+
+    // Normalize so diagonals (45 degrees) travel at the same speed as
+    // straight shots instead of faster.
+    const length = Math.sqrt(dirX * dirX + dirY * dirY) || 1;
+    const velocityX = (dirX / length) * FIREBALL_SPEED;
+    const velocityY = (dirY / length) * FIREBALL_SPEED;
 
     const key = this.ensureFireballTexture();
     const fireball = this.physics.add.sprite(
@@ -156,6 +169,7 @@ export class ExteriorScene extends BasePlayerScene {
     );
     this.fireballs.add(fireball);
     fireball.setVelocity(velocityX, velocityY);
+    playFireballSound();
 
     this.time.delayedCall(2000, () => fireball.destroy());
   }
@@ -199,11 +213,13 @@ export class ExteriorScene extends BasePlayerScene {
     });
 
     if (this.enemyHits >= ENEMY_HITS_TO_WIN) {
-      this.defeatEnemy();
+      this.endEncounter("Ganaste el combate!", "#2d2d44");
     }
   }
 
-  private defeatEnemy() {
+  private endEncounter(message: string, backgroundColor: string) {
+    if (!this.encounterActive) return;
+
     this.encounterActive = false;
     const enemy = this.enemy;
     const leftLeg = this.leftLeg;
@@ -230,10 +246,10 @@ export class ExteriorScene extends BasePlayerScene {
     }
 
     this.add
-      .text(768, 550, "Ganaste el combate!", {
+      .text(768, 550, message, {
         fontSize: "28px",
         color: "#ffffff",
-        backgroundColor: "#2d2d44",
+        backgroundColor,
         padding: { x: 12, y: 8 },
       })
       .setOrigin(0.5);

@@ -49,7 +49,7 @@ export class ExteriorScene extends BasePlayerScene {
 
     this.doorZone = this.addZoneMarker(795, 350, 120, 100, { visible: false });
 
-    this.addInfoScreen(970, 360, 90, 110);
+    this.addInfoScreen(970, 390, 90, 110);
 
     this.spaceKey = this.input.keyboard!.addKey(
       Phaser.Input.Keyboard.KeyCodes.SPACE
@@ -66,9 +66,13 @@ export class ExteriorScene extends BasePlayerScene {
   }
 
   /**
-   * Decorative info kiosk mounted on the wall to the right of the door --
-   * the "pantalla con info" the player can approach and press E on to open
-   * the game search screen.
+   * Info screen on the glass door to the right of the entrance -- the
+   * "pantalla con info" the player can approach and press E on to open the
+   * game search screen. It's purely decorative (no collision, like the
+   * door art itself); the interaction zone is a separate, taller rectangle
+   * that reaches down past the wall's collision area (y > 530) into the
+   * walkable yard, so it stays reachable even though the screen art sits
+   * higher up on the facade.
    */
   private addInfoScreen(x: number, y: number, width: number, height: number) {
     this.add.rectangle(x, y, width, height, 0x1a1a2e).setStrokeStyle(4, 0x8b5a2b);
@@ -81,12 +85,14 @@ export class ExteriorScene extends BasePlayerScene {
       })
       .setOrigin(0.5);
 
-    const padding = 30;
+    const sidePadding = 30;
+    const top = y - height / 2 - sidePadding;
+    const bottom = 590; // reaches into the walkable yard below the wall
     this.screenZone = new Phaser.Geom.Rectangle(
-      x - width / 2 - padding,
-      y - height / 2 - padding,
-      width + padding * 2,
-      height + padding * 2
+      x - width / 2 - sidePadding,
+      top,
+      width + sidePadding * 2,
+      bottom - top
     );
   }
 

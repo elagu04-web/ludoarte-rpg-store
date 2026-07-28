@@ -3,6 +3,23 @@ import { eventBus } from "@/game/eventBus";
 
 export const PLAYER_SPEED = 320;
 
+// Phaser captures (preventDefault) these keys globally by default so they
+// don't scroll the page -- but that also blocks typing them into an HTML
+// text input (e.g. the search screen), even while it has focus. Released
+// while a menu is open and restored when it closes.
+const CAPTURED_KEY_CODES = [
+  Phaser.Input.Keyboard.KeyCodes.W,
+  Phaser.Input.Keyboard.KeyCodes.A,
+  Phaser.Input.Keyboard.KeyCodes.S,
+  Phaser.Input.Keyboard.KeyCodes.D,
+  Phaser.Input.Keyboard.KeyCodes.E,
+  Phaser.Input.Keyboard.KeyCodes.SPACE,
+  Phaser.Input.Keyboard.KeyCodes.UP,
+  Phaser.Input.Keyboard.KeyCodes.DOWN,
+  Phaser.Input.Keyboard.KeyCodes.LEFT,
+  Phaser.Input.Keyboard.KeyCodes.RIGHT,
+];
+
 export type Direction = "down" | "left" | "right" | "up";
 
 export const IDLE_FRAME: Record<Direction, number> = {
@@ -80,6 +97,11 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     this.inputPaused = false;
     const handleMenuOpen = (open: boolean) => {
       this.inputPaused = open;
+      if (open) {
+        keyboard.removeCapture(CAPTURED_KEY_CODES);
+      } else {
+        keyboard.addCapture(CAPTURED_KEY_CODES);
+      }
     };
     eventBus.on("menu-open", handleMenuOpen);
 

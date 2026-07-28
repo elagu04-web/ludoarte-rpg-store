@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { eventBus } from "@/game/eventBus";
 import { gameState } from "@/game/gameState";
 import { playFireballSound } from "@/game/music";
 import { BasePlayerScene } from "./BasePlayerScene";
@@ -11,6 +12,8 @@ const LEG_OFFSET_Y = 60;
 
 export class ExteriorScene extends BasePlayerScene {
   private doorZone!: Phaser.Geom.Rectangle;
+  private screenZone!: Phaser.Geom.Rectangle;
+  private nearScreen = false;
 
   private spaceKey!: Phaser.Input.Keyboard.Key;
   private fireballs!: Phaser.Physics.Arcade.Group;
@@ -46,6 +49,8 @@ export class ExteriorScene extends BasePlayerScene {
 
     this.doorZone = this.addZoneMarker(795, 350, 120, 100, { visible: false });
 
+    this.addInfoScreen(970, 360, 90, 110);
+
     this.spaceKey = this.input.keyboard!.addKey(
       Phaser.Input.Keyboard.KeyCodes.SPACE
     );
@@ -53,6 +58,47 @@ export class ExteriorScene extends BasePlayerScene {
 
     if (gameState.hasExploredShelf && gameState.cartTotalItems === 0) {
       this.startEnemyEncounter();
+    }
+
+    this.events.on("shutdown", () => {
+      eventBus.emit("screen-proximity", false);
+    });
+  }
+
+  /**
+   * Decorative info kiosk mounted on the wall to the right of the door --
+   * the "pantalla con info" the player can approach and press E on to open
+   * the game search screen.
+   */
+  private addInfoScreen(x: number, y: number, width: number, height: number) {
+    this.add.rectangle(x, y, width, height, 0x1a1a2e).setStrokeStyle(4, 0x8b5a2b);
+    this.add.rectangle(x, y, width - 20, height - 26, 0x2d8f6f, 0.9);
+    this.add
+      .text(x, y, "i", {
+        fontSize: "32px",
+        color: "#eaffea",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+
+    const padding = 30;
+    this.screenZone = new Phaser.Geom.Rectangle(
+      x - width / 2 - padding,
+      y - height / 2 - padding,
+      width + padding * 2,
+      height + padding * 2
+    );
+  }
+
+  private updateScreenProximity() {
+    const inZone = Phaser.Geom.Rectangle.Overlaps(
+      this.player.getBounds(),
+      this.screenZone
+    );
+
+    if (inZone !== this.nearScreen) {
+      this.nearScreen = inZone;
+      eventBus.emit("screen-proximity", inZone);
     }
   }
 
@@ -257,6 +303,11 @@ export class ExteriorScene extends BasePlayerScene {
 
   protected onSceneUpdate() {
     this.updateEncounter();
+    this.updateScreenProximity();
+
+    if (this.nearScreen && this.isEKeyJustDown()) {
+      eventBus.emit("search-open", true);
+    }
 
     if (this.isPlayerInZone(this.doorZone)) {
       this.scene.start("GroundFloorScene");

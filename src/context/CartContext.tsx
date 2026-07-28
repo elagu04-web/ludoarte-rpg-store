@@ -1,7 +1,14 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import type { BoardGame } from "@/data/shelves";
+import { gameState } from "@/game/gameState";
 
 interface CartItem extends BoardGame {
   quantity: number;
@@ -56,6 +63,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     (sum, item) => sum + item.price * item.quantity,
     0
   );
+
+  useEffect(() => {
+    gameState.cartTotalItems = totalItems;
+  }, [totalItems]);
 
   return (
     <CartContext.Provider

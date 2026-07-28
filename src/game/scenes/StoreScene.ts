@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { eventBus } from "@/game/eventBus";
+import { gameState } from "@/game/gameState";
 import { shelves, type ShelfData } from "@/data/shelves";
 import { BasePlayerScene } from "./BasePlayerScene";
 
@@ -90,6 +91,7 @@ export class StoreScene extends BasePlayerScene {
     this.updateShelfProximity();
 
     if (this.nearbyShelfId && this.isEKeyJustDown()) {
+      gameState.hasExploredShelf = true;
       eventBus.emit("shelf-open", this.nearbyShelfId);
     }
 

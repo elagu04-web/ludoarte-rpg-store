@@ -1,8 +1,24 @@
 import Phaser from "phaser";
+import { gameState } from "@/game/gameState";
 import { BasePlayerScene } from "./BasePlayerScene";
+
+const ENEMY_SPEED = 90;
+const ENEMY_HITS_TO_WIN = 3;
+const FIREBALL_SPEED = 500;
+const LEG_OFFSET_X = 18;
+const LEG_OFFSET_Y = 60;
 
 export class ExteriorScene extends BasePlayerScene {
   private doorZone!: Phaser.Geom.Rectangle;
+
+  private spaceKey!: Phaser.Input.Keyboard.Key;
+  private fireballs!: Phaser.Physics.Arcade.Group;
+
+  private enemy: Phaser.Physics.Arcade.Sprite | null = null;
+  private leftLeg: Phaser.GameObjects.Rectangle | null = null;
+  private rightLeg: Phaser.GameObjects.Rectangle | null = null;
+  private encounterActive = false;
+  private enemyHits = 0;
 
   constructor() {
     super("ExteriorScene");
@@ -11,6 +27,7 @@ export class ExteriorScene extends BasePlayerScene {
   preload() {
     super.preload();
     this.load.image("bg-fachada", "/assets/scene/fachada.png");
+    this.load.image("catan-enemy", "/assets/boardgames/catan-box.png");
   }
 
   create() {
@@ -27,9 +44,204 @@ export class ExteriorScene extends BasePlayerScene {
     this.addObstacle(265, 635, 230, 170, { visible: false });
 
     this.doorZone = this.addZoneMarker(795, 350, 120, 100, { visible: false });
+
+    this.spaceKey = this.input.keyboard!.addKey(
+      Phaser.Input.Keyboard.KeyCodes.SPACE
+    );
+    this.fireballs = this.physics.add.group();
+
+    if (gameState.hasExploredShelf && gameState.cartTotalItems === 0) {
+      this.startEnemyEncounter();
+    }
+  }
+
+  private startEnemyEncounter() {
+    this.encounterActive = true;
+    this.enemyHits = 0;
+
+    // Physics body lives on a plain Sprite (Container + Arcade physics is
+    // unreliable in Phaser 4); the "legs" are separate shapes we reposition
+    // by hand each frame to follow the box.
+    this.enemy = this.physics.add.sprite(768, 220, "catan-enemy");
+    this.enemy.setDisplaySize(100, 120);
+    this.enemy.body?.setSize(80, 100);
+
+    this.leftLeg = this.add.rectangle(
+      this.enemy.x - LEG_OFFSET_X,
+      this.enemy.y + LEG_OFFSET_Y,
+      16,
+      40,
+      0xc9a876
+    );
+    this.rightLeg = this.add.rectangle(
+      this.enemy.x + LEG_OFFSET_X,
+      this.enemy.y + LEG_OFFSET_Y,
+      16,
+      40,
+      0xc9a876
+    );
+
+    this.physics.add.collider(this.player, this.enemy);
+    this.physics.add.overlap(
+      this.fireballs,
+      this.enemy,
+      (obj1, obj2) => this.handleFireballHit(obj1, obj2),
+      undefined,
+      this
+    );
+  }
+
+  private updateEncounter() {
+    if (!this.encounterActive || !this.enemy) return;
+
+    const dx = this.player.x - this.enemy.x;
+    const dy = this.player.y - this.enemy.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance > 1) {
+      this.enemy.setVelocity(
+        (dx / distance) * ENEMY_SPEED,
+        (dy / distance) * ENEMY_SPEED
+      );
+    }
+
+    const swingDeg = Math.sin(this.time.now / 100) * 25;
+    if (this.leftLeg) {
+      this.leftLeg.setPosition(
+        this.enemy.x - LEG_OFFSET_X,
+        this.enemy.y + LEG_OFFSET_Y
+      );
+      this.leftLeg.rotation = Phaser.Math.DegToRad(swingDeg);
+    }
+    if (this.rightLeg) {
+      this.rightLeg.setPosition(
+        this.enemy.x + LEG_OFFSET_X,
+        this.enemy.y + LEG_OFFSET_Y
+      );
+      this.rightLeg.rotation = Phaser.Math.DegToRad(-swingDeg);
+    }
+
+    if (
+      Phaser.Input.Keyboard.JustDown(this.spaceKey) ||
+      this.isEKeyJustDown()
+    ) {
+      this.fireFireball();
+    }
+  }
+
+  private fireFireball() {
+    let velocityX = 0;
+    let velocityY = 0;
+
+    switch (this.facing) {
+      case "up":
+        velocityY = -FIREBALL_SPEED;
+        break;
+      case "down":
+        velocityY = FIREBALL_SPEED;
+        break;
+      case "left":
+        velocityX = -FIREBALL_SPEED;
+        break;
+      case "right":
+        velocityX = FIREBALL_SPEED;
+        break;
+    }
+
+    const key = this.ensureFireballTexture();
+    const fireball = this.physics.add.sprite(
+      this.player.x,
+      this.player.y,
+      key
+    );
+    this.fireballs.add(fireball);
+    fireball.setVelocity(velocityX, velocityY);
+
+    this.time.delayedCall(2000, () => fireball.destroy());
+  }
+
+  private ensureFireballTexture(): string {
+    const key = "fireball";
+    if (!this.textures.exists(key)) {
+      const graphics = this.add.graphics();
+      graphics.fillStyle(0xff6600, 1);
+      graphics.fillCircle(8, 8, 8);
+      graphics.generateTexture(key, 16, 16);
+      graphics.destroy();
+    }
+    return key;
+  }
+
+  private handleFireballHit(
+    obj1: Phaser.GameObjects.GameObject,
+    obj2: Phaser.GameObjects.GameObject
+  ) {
+    // Phaser doesn't guarantee arg order for group-vs-single-object overlaps,
+    // so pick whichever of the two callback args isn't the enemy.
+    const fireball = (
+      obj1 === this.enemy ? obj2 : obj1
+    ) as Phaser.Physics.Arcade.Sprite;
+
+    // Disable (don't destroy) here: destroying a body mid-overlap-callback
+    // corrupts Arcade Physics' internal state for other bodies checked in
+    // the same step. Actually destroy it a moment later instead.
+    fireball.disableBody(true, true);
+    this.time.delayedCall(0, () => fireball.destroy());
+
+    if (!this.encounterActive || !this.enemy) return;
+
+    this.enemyHits += 1;
+    this.tweens.add({
+      targets: this.enemy,
+      alpha: 0.3,
+      duration: 80,
+      yoyo: true,
+    });
+
+    if (this.enemyHits >= ENEMY_HITS_TO_WIN) {
+      this.defeatEnemy();
+    }
+  }
+
+  private defeatEnemy() {
+    this.encounterActive = false;
+    const enemy = this.enemy;
+    const leftLeg = this.leftLeg;
+    const rightLeg = this.rightLeg;
+    this.enemy = null;
+    this.leftLeg = null;
+    this.rightLeg = null;
+
+    if (enemy) {
+      enemy.setVelocity(0, 0);
+      this.tweens.add({
+        targets: [enemy, leftLeg, rightLeg].filter(
+          (target): target is NonNullable<typeof target> => target !== null
+        ),
+        alpha: 0,
+        scale: 0,
+        duration: 400,
+        onComplete: () => {
+          enemy.destroy();
+          leftLeg?.destroy();
+          rightLeg?.destroy();
+        },
+      });
+    }
+
+    this.add
+      .text(768, 550, "Ganaste el combate!", {
+        fontSize: "28px",
+        color: "#ffffff",
+        backgroundColor: "#2d2d44",
+        padding: { x: 12, y: 8 },
+      })
+      .setOrigin(0.5);
   }
 
   protected onSceneUpdate() {
+    this.updateEncounter();
+
     if (this.isPlayerInZone(this.doorZone)) {
       this.scene.start("GroundFloorScene");
     }

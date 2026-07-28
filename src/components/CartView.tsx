@@ -7,11 +7,30 @@ import { playMenuOpenSound, playMenuCloseSound } from "@/game/music";
 import { useCart } from "@/context/CartContext";
 import styles from "./CartView.module.css";
 
+const STORE_WHATSAPP_NUMBER = "59899861116";
+
+function buildWhatsAppOrderUrl(
+  items: { name: string; quantity: number; price: number }[],
+  totalPrice: number
+): string {
+  const lines = items.map(
+    (item) => `- ${item.name} x${item.quantity} ($${item.price * item.quantity})`
+  );
+  const message = [
+    "Hola! Quiero comprar:",
+    ...lines,
+    `Total: $${totalPrice}`,
+  ].join("\n");
+
+  return `https://wa.me/${STORE_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
 export default function CartView() {
   const {
     items,
     isCartOpen,
     closeCart,
+    openCart,
     addItem,
     decreaseItem,
     removeItem,
@@ -44,6 +63,14 @@ export default function CartView() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isCartOpen, closeCart]);
+
+  useEffect(() => {
+    const handleOpenRequest = () => openCart();
+    eventBus.on("cart-open-request", handleOpenRequest);
+    return () => {
+      eventBus.off("cart-open-request", handleOpenRequest);
+    };
+  }, [openCart]);
 
   if (!isCartOpen) return null;
 
@@ -98,6 +125,14 @@ export default function CartView() {
               <span>Total</span>
               <span>${totalPrice}</span>
             </div>
+            <a
+              className={styles.whatsappButton}
+              href={buildWhatsAppOrderUrl(items, totalPrice)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Comprar por WhatsApp
+            </a>
           </>
         )}
       </div>

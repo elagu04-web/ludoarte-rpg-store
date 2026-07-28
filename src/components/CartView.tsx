@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { eventBus } from "@/game/eventBus";
+import { playMenuOpenSound, playMenuCloseSound } from "@/game/music";
 import { useCart } from "@/context/CartContext";
 import styles from "./CartView.module.css";
 
@@ -19,6 +20,16 @@ export default function CartView() {
 
   useEffect(() => {
     eventBus.emit("menu-open", isCartOpen);
+  }, [isCartOpen]);
+
+  const wasOpenRef = useRef(false);
+  useEffect(() => {
+    if (isCartOpen && !wasOpenRef.current) {
+      playMenuOpenSound();
+    } else if (!isCartOpen && wasOpenRef.current) {
+      playMenuCloseSound();
+    }
+    wasOpenRef.current = isCartOpen;
   }, [isCartOpen]);
 
   useEffect(() => {

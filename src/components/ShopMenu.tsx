@@ -3,6 +3,12 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Image from "next/image";
 import { eventBus } from "@/game/eventBus";
+import {
+  playMenuMoveSound,
+  playMenuConfirmSound,
+  playMenuOpenSound,
+  playMenuCloseSound,
+} from "@/game/music";
 import { shelves, type BoardGame } from "@/data/shelves";
 import { useCart } from "@/context/CartContext";
 import styles from "./GameOverlay.module.css";
@@ -63,6 +69,7 @@ export default function ShopMenu() {
     const handleOpen = (shelfId: string) => {
       setOpenShelfId(shelfId);
       setSelectedIndex(0);
+      playMenuOpenSound();
     };
     eventBus.on("shelf-open", handleOpen);
     return () => {
@@ -74,7 +81,10 @@ export default function ShopMenu() {
     eventBus.emit("menu-open", !!shelf);
   }, [shelf]);
 
-  const close = () => setOpenShelfId(null);
+  const close = () => {
+    setOpenShelfId(null);
+    playMenuCloseSound();
+  };
 
   useEffect(() => {
     if (!shelf) return;
@@ -84,11 +94,15 @@ export default function ShopMenu() {
         const count = gamesRef.current.length;
         return (prev + delta + count) % count;
       });
+      playMenuMoveSound();
     };
 
     const confirmSelection = () => {
       const game = gamesRef.current[selectedIndexRef.current];
-      if (game) addItem(game);
+      if (game) {
+        addItem(game);
+        playMenuConfirmSound();
+      }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {

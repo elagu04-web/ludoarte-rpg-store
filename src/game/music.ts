@@ -147,3 +147,73 @@ export function playFireballSound() {
   osc.start(now);
   osc.stop(now + 0.13);
 }
+
+/** Helper: a single short beep straight to the output, bypassing the quiet music gain. */
+function playBeep(freq: number, startOffset: number, duration: number, volume: number) {
+  const ctx = ensureContext();
+  const start = ctx.currentTime + startOffset;
+
+  const osc = ctx.createOscillator();
+  osc.type = "square";
+  osc.frequency.setValueAtTime(freq, start);
+
+  const beepGain = ctx.createGain();
+  beepGain.gain.setValueAtTime(volume, start);
+  beepGain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+
+  osc.connect(beepGain);
+  beepGain.connect(ctx.destination);
+
+  osc.start(start);
+  osc.stop(start + duration);
+}
+
+/** Short cursor-move blip for menu navigation (up/down). */
+export function playMenuMoveSound() {
+  const ctx = ensureContext();
+  if (ctx.state === "suspended") ctx.resume();
+  playBeep(660, 0, 0.06, 0.3);
+}
+
+/** Slightly richer two-note chime for confirming/adding to cart. */
+export function playMenuConfirmSound() {
+  const ctx = ensureContext();
+  if (ctx.state === "suspended") ctx.resume();
+  playBeep(660, 0, 0.09, 0.35);
+  playBeep(990, 0.07, 0.09, 0.35);
+}
+
+/** Helper: a quick frequency sweep, for opening/closing whoosh sounds. */
+function playSweep(fromFreq: number, toFreq: number, duration: number, volume: number) {
+  const ctx = ensureContext();
+  const now = ctx.currentTime;
+
+  const osc = ctx.createOscillator();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(fromFreq, now);
+  osc.frequency.exponentialRampToValueAtTime(toFreq, now + duration);
+
+  const sweepGain = ctx.createGain();
+  sweepGain.gain.setValueAtTime(volume, now);
+  sweepGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  osc.connect(sweepGain);
+  sweepGain.connect(ctx.destination);
+
+  osc.start(now);
+  osc.stop(now + duration);
+}
+
+/** Rising whoosh for when a menu (shop or cart) opens. */
+export function playMenuOpenSound() {
+  const ctx = ensureContext();
+  if (ctx.state === "suspended") ctx.resume();
+  playSweep(300, 750, 0.12, 0.4);
+}
+
+/** Falling whoosh for when a menu (shop or cart) closes. */
+export function playMenuCloseSound() {
+  const ctx = ensureContext();
+  if (ctx.state === "suspended") ctx.resume();
+  playSweep(600, 250, 0.12, 0.4);
+}

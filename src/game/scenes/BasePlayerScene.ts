@@ -51,6 +51,7 @@ export abstract class BasePlayerScene extends Phaser.Scene {
   private touchDirection = { up: false, down: false, left: false, right: false };
   private touchInteractRequested = false;
   private inputPaused = false;
+  private isDefeated = false;
 
   preload() {
     this.load.spritesheet(
@@ -221,6 +222,26 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     return { x, y };
   }
 
+  /**
+   * Knocks the player out after losing a fight -- lying on the ground,
+   * unable to move. Deliberately permanent for now (no respawn/recovery
+   * yet); reload the page to reset.
+   */
+  protected setDefeated() {
+    this.isDefeated = true;
+    this.player.setVelocity(0, 0);
+    this.player.anims.stop();
+    this.player.setAngle(90);
+    this.player.setTint(0x888888);
+  }
+
+  /** Undoes setDefeated() -- used by the secret test-combat shortcut. */
+  protected revive() {
+    this.isDefeated = false;
+    this.player.setAngle(0);
+    this.player.clearTint();
+  }
+
   protected isEKeyJustDown(): boolean {
     if (Phaser.Input.Keyboard.JustDown(this.eKey)) return true;
 
@@ -259,6 +280,11 @@ export abstract class BasePlayerScene extends Phaser.Scene {
   }
 
   update() {
+    if (this.isDefeated) {
+      this.player.setVelocity(0, 0);
+      return;
+    }
+
     if (this.inputPaused) {
       this.player.setVelocity(0, 0);
       this.updatePlayerAnimation(0, 0);

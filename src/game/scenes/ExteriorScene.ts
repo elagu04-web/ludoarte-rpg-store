@@ -36,6 +36,7 @@ export class ExteriorScene extends BasePlayerScene {
   private nearScreen = false;
 
   private spaceKey!: Phaser.Input.Keyboard.Key;
+  private nKey!: Phaser.Input.Keyboard.Key;
   private fireballs!: Phaser.Physics.Arcade.Group;
   private enemyFireballs!: Phaser.Physics.Arcade.Group;
 
@@ -90,6 +91,15 @@ export class ExteriorScene extends BasePlayerScene {
     if (gameState.hasExploredShelf && gameState.cartTotalItems === 0) {
       this.startEnemyEncounter();
     }
+
+    // Secret test shortcut: hold N and tap M to spawn/respawn a monster
+    // right away, without having to explore a shelf and empty the cart.
+    this.nKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.N);
+    this.input.keyboard!.on("keydown-M", () => {
+      if (!this.nKey.isDown || this.encounterActive) return;
+      this.revive();
+      this.startEnemyEncounter();
+    });
 
     this.events.on("shutdown", () => {
       eventBus.emit("screen-proximity", false);
@@ -172,7 +182,7 @@ export class ExteriorScene extends BasePlayerScene {
     );
 
     this.physics.add.collider(this.player, this.enemy, () =>
-      this.endEncounter("Perdiste el combate!", "#7a1f1f")
+      this.endEncounter("Perdiste el combate!", "#7a1f1f", true)
     );
     this.physics.add.overlap(
       this.fireballs,
@@ -182,7 +192,7 @@ export class ExteriorScene extends BasePlayerScene {
       this
     );
     this.physics.add.overlap(this.enemyFireballs, this.player, () =>
-      this.endEncounter("Perdiste el combate!", "#7a1f1f")
+      this.endEncounter("Perdiste el combate!", "#7a1f1f", true)
     );
 
     if (this.combatLevel >= TELEPORT_MIN_LEVEL) {
@@ -407,10 +417,18 @@ export class ExteriorScene extends BasePlayerScene {
     }
   }
 
-  private endEncounter(message: string, backgroundColor: string) {
+  private endEncounter(
+    message: string,
+    backgroundColor: string,
+    isLoss = false
+  ) {
     if (!this.encounterActive) return;
 
     this.encounterActive = false;
+
+    if (isLoss) {
+      this.setDefeated();
+    }
 
     if (this.teleportTimer) {
       this.teleportTimer.remove();

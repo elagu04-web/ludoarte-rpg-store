@@ -2,8 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { eventBus } from "@/game/eventBus";
-import { playMenuOpenSound, playMenuCloseSound } from "@/game/music";
+import {
+  playMenuOpenSound,
+  playMenuCloseSound,
+  playMenuConfirmSound,
+} from "@/game/music";
 import { shelves } from "@/data/shelves";
+import { useCart } from "@/context/CartContext";
 import styles from "./SearchScreen.module.css";
 
 const allGames = shelves.flatMap((shelf) => shelf.games);
@@ -11,6 +16,7 @@ const allGames = shelves.flatMap((shelf) => shelf.games);
 export default function SearchScreen() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const { addItem } = useCart();
 
   useEffect(() => {
     const handleOpen = () => setIsOpen(true);
@@ -105,6 +111,17 @@ export default function SearchScreen() {
                     ? "Disponible ahora"
                     : "Se puede conseguir por pedido"}
                 </span>
+                {game.stock > 0 && (
+                  <button
+                    className={styles.addButton}
+                    onClick={() => {
+                      addItem(game);
+                      playMenuConfirmSound();
+                    }}
+                  >
+                    Agregar
+                  </button>
+                )}
               </li>
             ))}
           </ul>

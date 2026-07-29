@@ -106,6 +106,22 @@
   color: #227a3c;
 }
 
+.addButton {
+  flex-shrink: 0;
+  background: #2d2d44;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.addButton:hover {
+  background: #1c1c2c;
+}
+
 .stockOrder {
   background: #fbe6c8;
   color: #965c11;

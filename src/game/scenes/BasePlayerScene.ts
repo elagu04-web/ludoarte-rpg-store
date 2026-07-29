@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { eventBus } from "@/game/eventBus";
+import { SCENE_DIMENSIONS } from "@/game/sceneDimensions";
 
 export const PLAYER_SPEED = 320;
 
@@ -57,6 +58,20 @@ export abstract class BasePlayerScene extends Phaser.Scene {
       "/assets/characters/player-walk-sheet.png",
       { frameWidth: 84, frameHeight: 108 }
     );
+  }
+
+  /**
+   * Each room's background art has its own native size now (the exterior
+   * is landscape, the interiors are portrait), so the whole game canvas is
+   * resized to match whichever scene is currently active. Must run before
+   * addBackground/createPlayer so physics/camera bounds match the art.
+   */
+  protected resizeToScene(key: string) {
+    const dims = SCENE_DIMENSIONS[key];
+    this.scale.resize(dims.width, dims.height);
+    this.physics.world.setBounds(0, 0, dims.width, dims.height);
+    this.cameras.main.setBounds(0, 0, dims.width, dims.height);
+    eventBus.emit("scene-resized", dims);
   }
 
   protected createPlayer(x: number, y: number) {

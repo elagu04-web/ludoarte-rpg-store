@@ -35,6 +35,7 @@ export class ExteriorScene extends BasePlayerScene {
   }
 
   create() {
+    this.resizeToScene("ExteriorScene");
     this.addBackground("bg-fachada");
 
     this.createPlayer(768, 850);

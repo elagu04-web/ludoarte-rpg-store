@@ -14,7 +14,7 @@ interface ShelfZone {
 export class StoreScene extends BasePlayerScene {
   private shelfZones: ShelfZone[] = [];
   private nearbyShelfId: string | null = null;
-  private stairsDownZone!: Phaser.Geom.Rectangle;
+  private topDoorZone!: Phaser.Geom.Rectangle;
   private counterZone!: Phaser.Geom.Rectangle;
   private nearCounter = false;
   private orderZone!: Phaser.Geom.Rectangle;
@@ -30,30 +30,39 @@ export class StoreScene extends BasePlayerScene {
   }
 
   create() {
+    this.resizeToScene("StoreScene");
     this.addBackground("bg-tienda");
 
-    this.createPlayer(760, 890);
+    this.createPlayer(500, 1450);
 
-    // Estanterias interactivas (sobre los muebles del dibujo)
-    this.addShelf(shelves[0], 547, 200, 275, 175);
-    this.addShelf(shelves[1], 975, 200, 270, 175);
-    this.addShelf(shelves[2], 205, 590, 230, 620);
+    // Pared de fondo, con hueco para la puerta que sube a la planta baja
+    this.addObstacle(130, 115, 260, 230, { visible: false });
+    this.addObstacle(677, 115, 694, 230, { visible: false });
+    this.topDoorZone = new Phaser.Geom.Rectangle(260, 60, 70, 170);
 
-    // Muebles decorativos (colisionables, no interactivos)
-    this.addObstacle(1350, 525, 200, 610, { visible: false }); // torre de ajedrez
-    this.addObstacle(775, 420, 260, 150, { visible: false }); // mesa de ajedrez central
-    this.addObstacle(765, 665, 350, 220, { visible: false }); // mesa de juegos
-
-    // Mostrador/caja -- interactuable para pagar por WhatsApp
-    this.addObstacle(1210, 275, 165, 165, { visible: false });
-    this.counterZone = this.addPaddedZone(1210, 275, 165, 165, 30);
-
-    // Puesto de pedidos -- para consultar juegos que se pueden conseguir
-    this.addOrderKiosk(1180, 550, 90, 110);
-
-    this.stairsDownZone = this.addZoneMarker(763, 220, 80, 70, {
-      visible: false,
+    // Estanterias interactivas (sobre los muebles del dibujo). Las de los
+    // costados corren casi toda la altura del salon, asi que la zona de
+    // interaccion se recorta antes de llegar al mostrador/mesa de pedidos
+    // de mas abajo, para que no se solapen los carteles de "Presiona E".
+    this.addObstacle(180, 740, 160, 1020, { visible: false }); // estanteria izquierda
+    this.shelfZones.push({
+      id: shelves[0].id,
+      rect: new Phaser.Geom.Rectangle(70, 200, 180, 750),
     });
+    this.addObstacle(865, 740, 130, 1020, { visible: false }); // estanteria derecha
+    this.shelfZones.push({
+      id: shelves[1].id,
+      rect: new Phaser.Geom.Rectangle(810, 200, 150, 750),
+    });
+    this.addShelf(shelves[2], 325, 640, 190, 300); // mesa de exhibicion
+
+    // Mostrador con laptop -- interactuable para pagar por WhatsApp
+    this.addObstacle(700, 1117, 200, 265, { visible: false });
+    this.counterZone = this.addPaddedZone(700, 1117, 200, 265, 30);
+
+    // Mesa de ajedrez -- puesto de pedidos (consultar juegos por pedido)
+    this.addObstacle(292, 1090, 195, 210, { visible: false });
+    this.orderZone = this.addPaddedZone(292, 1090, 195, 210, 30);
 
     this.events.on("shutdown", () => {
       eventBus.emit("shelf-proximity", null);
@@ -75,27 +84,6 @@ export class StoreScene extends BasePlayerScene {
       width + padding * 2,
       height + padding * 2
     );
-  }
-
-  /**
-   * Free-standing kiosk where the player can look up games that can be
-   * ordered (out of stock right now) -- opens the same search screen used
-   * by the exterior info screen.
-   */
-  private addOrderKiosk(x: number, y: number, width: number, height: number) {
-    this.addObstacle(x, y, width, height, { visible: false });
-
-    this.add.rectangle(x, y, width, height, 0x1a1a2e).setStrokeStyle(4, 0x8b5a2b);
-    this.add.rectangle(x, y, width - 20, height - 26, 0xc98b2e, 0.9);
-    this.add
-      .text(x, y, "?", {
-        fontSize: "32px",
-        color: "#3a2a10",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5);
-
-    this.orderZone = this.addPaddedZone(x, y, width, height, 30);
   }
 
   private addShelf(
@@ -175,7 +163,7 @@ export class StoreScene extends BasePlayerScene {
       }
     }
 
-    if (this.isPlayerInZone(this.stairsDownZone)) {
+    if (this.isPlayerInZone(this.topDoorZone)) {
       this.scene.start("GroundFloorScene");
     }
   }

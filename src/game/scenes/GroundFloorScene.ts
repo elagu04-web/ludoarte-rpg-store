@@ -15,28 +15,35 @@ export class GroundFloorScene extends BasePlayerScene {
   }
 
   create() {
+    this.resizeToScene("GroundFloorScene");
     this.addBackground("bg-planta-baja");
 
-    this.createPlayer(768, 780);
+    this.createPlayer(455, 1450);
 
-    // Mostradores laterales
-    this.addObstacle(205, 490, 250, 630, { visible: false });
-    this.addObstacle(1325, 490, 250, 630, { visible: false });
+    // Pared de fondo, con hueco para la escalera que sube a la tienda
+    this.addObstacle(260, 97, 520, 195, { visible: false });
+    this.addObstacle(783, 97, 266, 195, { visible: false });
 
-    // Mesas (2 columnas)
-    this.addObstacle(597, 480, 235, 470, { visible: false });
-    this.addObstacle(958, 480, 235, 470, { visible: false });
+    // Mesa/mostrador debajo de la pantalla decorativa
+    this.addObstacle(405, 260, 230, 150, { visible: false });
 
-    // Reja/valla inferior, con hueco para la salida
-    this.addObstacle(327, 905, 655, 100, { visible: false });
-    this.addObstacle(1208, 905, 656, 100, { visible: false });
+    // Barras/estanterias decorativas a los lados (colisionables)
+    this.addObstacle(102, 755, 165, 1110, { visible: false });
+    this.addObstacle(813, 755, 166, 1110, { visible: false });
 
-    this.stairsZone = this.addZoneMarker(768, 110, 80, 70, {
-      visible: false,
-    });
-    this.exitZone = this.addZoneMarker(768, 895, 90, 50, {
-      visible: false,
-    });
+    // Mesas centrales (2 columnas x 4 filas)
+    const tableY = [535, 735, 935, 1145];
+    for (const y of tableY) {
+      this.addObstacle(355, y, 145, 145, { visible: false });
+      this.addObstacle(560, y, 145, 145, { visible: false });
+    }
+
+    // Pared inferior, con hueco para la puerta de salida
+    this.addObstacle(170, 1550, 340, 140, { visible: false });
+    this.addObstacle(743, 1550, 346, 140, { visible: false });
+
+    this.stairsZone = new Phaser.Geom.Rectangle(520, 60, 130, 135);
+    this.exitZone = new Phaser.Geom.Rectangle(340, 1520, 230, 130);
   }
 
   protected onSceneUpdate() {

@@ -10,6 +10,10 @@
   inset: 0;
 }
 
+.canvasHostBlurred {
+  filter: blur(10px);
+}
+
 .gameWrapper canvas {
   display: block;
   width: 100% !important;

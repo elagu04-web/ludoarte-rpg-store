@@ -1,10 +1,13 @@
 import Phaser from "phaser";
+import { eventBus } from "@/game/eventBus";
 import { BasePlayerScene } from "./BasePlayerScene";
 
 export class GroundFloorScene extends BasePlayerScene {
   private stairsZone!: Phaser.Geom.Rectangle;
   private exitZone!: Phaser.Geom.Rectangle;
   private leftDoorZone!: Phaser.Geom.Rectangle;
+  private tvZone!: Phaser.Geom.Rectangle;
+  private nearTv = false;
 
   constructor() {
     super("GroundFloorScene");
@@ -30,6 +33,10 @@ export class GroundFloorScene extends BasePlayerScene {
     // Mesa/mostrador debajo de la pantalla decorativa
     this.addObstacle(405, 260, 230, 150, { visible: false });
 
+    // Tele gigante -- interactuable, abre el menu (fotos, etc.). La zona
+    // baja hasta el piso caminable, mas alla de la mesa que esta debajo.
+    this.tvZone = new Phaser.Geom.Rectangle(290, 40, 230, 360);
+
     // Barras/estanterias decorativas a los lados (colisionables)
     this.addObstacle(102, 755, 165, 1110, { visible: false });
     this.addObstacle(813, 755, 166, 1110, { visible: false });
@@ -47,9 +54,31 @@ export class GroundFloorScene extends BasePlayerScene {
 
     this.stairsZone = new Phaser.Geom.Rectangle(520, 60, 130, 135);
     this.exitZone = new Phaser.Geom.Rectangle(340, 1520, 230, 130);
+
+    this.events.on("shutdown", () => {
+      eventBus.emit("tv-proximity", false);
+    });
+  }
+
+  private updateTvProximity() {
+    const inZone = Phaser.Geom.Rectangle.Overlaps(
+      this.player.getBounds(),
+      this.tvZone
+    );
+
+    if (inZone !== this.nearTv) {
+      this.nearTv = inZone;
+      eventBus.emit("tv-proximity", inZone);
+    }
   }
 
   protected onSceneUpdate() {
+    this.updateTvProximity();
+
+    if (this.nearTv && this.isEKeyJustDown()) {
+      eventBus.emit("tv-menu-open", true);
+    }
+
     if (this.isPlayerInZone(this.stairsZone)) {
       this.scene.start("StoreScene");
     }

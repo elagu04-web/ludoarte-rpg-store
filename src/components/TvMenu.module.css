@@ -1,0 +1,141 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.panel {
+  background: #ffffff;
+  color: #1a1a1a;
+  border-radius: 8px;
+  padding: 24px;
+  width: 90%;
+  max-width: 420px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 2px solid #2d2d44;
+  padding-bottom: 8px;
+}
+
+.closeButton {
+  background: #2d2d44;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.itemList {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.item,
+.itemSelected {
+  padding: 8px 4px;
+  white-space: pre;
+  cursor: pointer;
+}
+
+.itemSelected {
+  font-weight: bold;
+  color: #8b5a2b;
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: #555555;
+}
+
+/* Vista de galeria -- sin panel propio, el fondo del juego aparece
+   difuminado detras (ver .canvasHostBlurred en GameOverlay.module.css) */
+.galleryOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+}
+
+.galleryImageWrapper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 65%;
+  height: 65%;
+}
+
+.galleryMessage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #ffffff;
+  font-size: 18px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 16px 24px;
+  border-radius: 8px;
+}
+
+.galleryClose {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 202;
+  background: #2d2d44;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.galleryNav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 202;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.galleryNavLeft {
+  left: 20px;
+}
+
+.galleryNavRight {
+  right: 20px;
+}
+
+.galleryCounter {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+}

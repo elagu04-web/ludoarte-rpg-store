@@ -6,4 +6,8 @@
 export const gameState = {
   hasExploredShelf: false,
   cartTotalItems: 0,
+  /** How many monsters spawn in the next encounter. Goes up each time you
+   * escape a fight through a door instead of finishing it; resets to 1
+   * after a win. */
+  pendingMonsters: 1,
 };

@@ -80,15 +80,15 @@ export class GroundFloorScene extends BasePlayerScene {
     }
 
     if (this.isPlayerInZone(this.stairsZone)) {
-      this.scene.start("StoreScene");
+      this.transitionTo("StoreScene");
     }
 
     if (this.isPlayerInZone(this.exitZone)) {
-      this.scene.start("ExteriorScene");
+      this.transitionTo("ExteriorScene");
     }
 
     if (this.isPlayerInZone(this.leftDoorZone)) {
-      this.scene.start("EstacionamientoScene");
+      this.transitionTo("EstacionamientoScene");
     }
   }
 }

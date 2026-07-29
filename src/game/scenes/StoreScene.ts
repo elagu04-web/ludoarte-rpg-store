@@ -163,7 +163,7 @@ export class StoreScene extends BasePlayerScene {
     }
 
     if (this.isPlayerInZone(this.topDoorZone)) {
-      this.scene.start("GroundFloorScene");
+      this.transitionTo("GroundFloorScene");
     }
   }
 }

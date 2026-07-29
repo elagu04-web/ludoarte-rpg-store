@@ -52,6 +52,7 @@ export abstract class BasePlayerScene extends Phaser.Scene {
   private touchInteractRequested = false;
   private inputPaused = false;
   private isDefeated = false;
+  private isLeavingScene = false;
 
   preload() {
     this.load.spritesheet(
@@ -260,6 +261,28 @@ export abstract class BasePlayerScene extends Phaser.Scene {
    */
   protected isPlayerInZone(zone: Phaser.Geom.Rectangle): boolean {
     return zone.contains(this.player.x, this.player.y);
+  }
+
+  /**
+   * Starts another scene, guarded against firing more than once. Standing
+   * still exactly inside a door/stairs zone means isPlayerInZone() stays
+   * true across many consecutive frames -- without this guard, each of
+   * those frames called scene.start() again before the first transition
+   * had actually finished, which left the new scene's physics bodies
+   * corrupted (especially with several sprites/colliders set up at once,
+   * like the multi-monster encounters).
+   */
+  protected transitionTo(sceneKey: string) {
+    if (this.isLeavingScene) return;
+    this.isLeavingScene = true;
+    this.scene.start(sceneKey);
+  }
+
+  /** True from the first transitionTo() call onward -- use to guard any
+   * one-time side effect (like a penalty applied on leaving) that should
+   * only ever run once per scene instance. */
+  protected get isTransitioning(): boolean {
+    return this.isLeavingScene;
   }
 
   private updatePlayerAnimation(velocityX: number, velocityY: number) {

@@ -10,14 +10,23 @@ function enemyTextureKey(gameId: string): string {
   return `enemy-${gameId}`;
 }
 
+interface Monster {
+  sprite: Phaser.Physics.Arcade.Sprite;
+  leftLeg: Phaser.GameObjects.Rectangle;
+  rightLeg: Phaser.GameObjects.Rectangle;
+  hits: number;
+}
+
 const ENEMY_SPEED = 90;
 const ENEMY_HITS_TO_WIN = 3;
 const FIREBALL_SPEED = 500;
+const FIREBALL_COOLDOWN_MS = 450;
 const LEG_OFFSET_X = 18;
 const LEG_OFFSET_Y = 60;
 
-// Combat levels: 1 = original baseline. Goes up by 1 each win (capped),
-// unlocking a new trick on top of everything from the levels before it.
+// Combat levels: 1 = original baseline, picked at random each encounter
+// (not tied to progress) -- each level unlocks a new trick on top of
+// everything from the levels before it.
 const MAX_COMBAT_LEVEL = 5;
 const TELEPORT_MIN_LEVEL = 3;
 const ENEMY_SHOOTS_MIN_LEVEL = 4;
@@ -30,6 +39,11 @@ const ENEMY_FIREBALL_SPEED = 320;
 const REPEL_CHANCE = 0.25;
 const YARD_BOUNDS = { minX: 120, maxX: 1416, minY: 580, maxY: 950 };
 
+// Escaping through a door mid-fight doesn't let you off easy -- it just
+// piles on more monsters (up to this many) for the next encounter.
+const MAX_MONSTERS = 4;
+const MONSTER_SPACING = 160;
+
 export class ExteriorScene extends BasePlayerScene {
   private doorZone!: Phaser.Geom.Rectangle;
   private screenZone!: Phaser.Geom.Rectangle;
@@ -39,12 +53,10 @@ export class ExteriorScene extends BasePlayerScene {
   private nKey!: Phaser.Input.Keyboard.Key;
   private fireballs!: Phaser.Physics.Arcade.Group;
   private enemyFireballs!: Phaser.Physics.Arcade.Group;
+  private lastFireballTime = 0;
 
-  private enemy: Phaser.Physics.Arcade.Sprite | null = null;
-  private leftLeg: Phaser.GameObjects.Rectangle | null = null;
-  private rightLeg: Phaser.GameObjects.Rectangle | null = null;
+  private monsters: Monster[] = [];
   private encounterActive = false;
-  private enemyHits = 0;
   private combatLevel = 1;
   private enemySpeed = ENEMY_SPEED;
   private teleportTimer: Phaser.Time.TimerEvent | null = null;
@@ -92,7 +104,7 @@ export class ExteriorScene extends BasePlayerScene {
       this.startEnemyEncounter();
     }
 
-    // Secret test shortcut: hold N and tap M to spawn/respawn a monster
+    // Secret test shortcut: hold N and tap M to spawn/respawn monsters
     // right away, without having to explore a shelf and empty the cart.
     this.nKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.N);
     this.input.keyboard!.on("keydown-M", () => {
@@ -153,40 +165,36 @@ export class ExteriorScene extends BasePlayerScene {
     if (gamesWithArt.length === 0) return;
 
     this.encounterActive = true;
-    this.enemyHits = 0;
     this.combatLevel = Phaser.Math.Between(1, MAX_COMBAT_LEVEL);
     this.enemySpeed = ENEMY_SPEED * (1 + (this.combatLevel - 1) * 0.15);
 
-    const monster = Phaser.Utils.Array.GetRandom(gamesWithArt);
-
-    // Physics body lives on a plain Sprite (Container + Arcade physics is
-    // unreliable in Phaser 4); the "legs" are separate shapes we reposition
-    // by hand each frame to follow the box.
-    this.enemy = this.physics.add.sprite(768, 220, enemyTextureKey(monster.id));
-    this.enemy.setDisplaySize(100, 120);
-    this.enemy.body?.setSize(80, 100);
-
-    this.leftLeg = this.add.rectangle(
-      this.enemy.x - LEG_OFFSET_X,
-      this.enemy.y + LEG_OFFSET_Y,
-      16,
-      40,
-      0xc9a876
+    const monsterCount = Phaser.Math.Clamp(
+      gameState.pendingMonsters,
+      1,
+      MAX_MONSTERS
     );
-    this.rightLeg = this.add.rectangle(
-      this.enemy.x + LEG_OFFSET_X,
-      this.enemy.y + LEG_OFFSET_Y,
-      16,
-      40,
-      0xc9a876
-    );
+    const startX = 768 - ((monsterCount - 1) * MONSTER_SPACING) / 2;
 
-    this.physics.add.collider(this.player, this.enemy, () =>
+    this.monsters = [];
+    for (let i = 0; i < monsterCount; i++) {
+      const game = Phaser.Utils.Array.GetRandom(gamesWithArt);
+      this.monsters.push(
+        this.spawnMonster(startX + i * MONSTER_SPACING, 220, game.id)
+      );
+    }
+
+    // One shared collider/overlap for the whole group of monster sprites,
+    // not one per monster -- registering several overlaps against the same
+    // fireballs group (one per monster) was cross-contaminating which
+    // sprite each callback thought it was handling and corrupting a
+    // *different* monster's physics body.
+    const monsterSprites = this.monsters.map((m) => m.sprite);
+    this.physics.add.collider(this.player, monsterSprites, () =>
       this.endEncounter("Perdiste el combate!", "#7a1f1f", true)
     );
     this.physics.add.overlap(
       this.fireballs,
-      this.enemy,
+      monsterSprites,
       (obj1, obj2) => this.handleFireballHit(obj1, obj2),
       undefined,
       this
@@ -199,69 +207,105 @@ export class ExteriorScene extends BasePlayerScene {
       this.teleportTimer = this.time.addEvent({
         delay: TELEPORT_INTERVAL_MS,
         loop: true,
-        callback: () => this.teleportEnemy(),
+        callback: () => this.teleportMonsters(),
       });
     }
     if (this.combatLevel >= ENEMY_SHOOTS_MIN_LEVEL) {
       this.enemyFireTimer = this.time.addEvent({
         delay: ENEMY_FIREBALL_INTERVAL_MS,
         loop: true,
-        callback: () => this.enemyFireFireball(),
+        callback: () => this.enemiesFireFireballs(),
       });
     }
   }
 
-  private teleportEnemy() {
-    if (!this.encounterActive || !this.enemy) return;
+  /**
+   * Physics body lives on a plain Sprite (Container + Arcade physics is
+   * unreliable in Phaser 4); the "legs" are separate shapes we reposition
+   * by hand each frame to follow the box.
+   */
+  private spawnMonster(x: number, y: number, gameId: string): Monster {
+    const sprite = this.physics.add.sprite(x, y, enemyTextureKey(gameId));
+    sprite.setDisplaySize(100, 120);
+    sprite.body?.setSize(80, 100);
 
-    const angle = Math.random() * Math.PI * 2;
-    const distance = Phaser.Math.Between(
-      TELEPORT_MIN_DISTANCE,
-      TELEPORT_MAX_DISTANCE
+    const leftLeg = this.add.rectangle(
+      x - LEG_OFFSET_X,
+      y + LEG_OFFSET_Y,
+      16,
+      40,
+      0xc9a876
     );
-    const newX = Phaser.Math.Clamp(
-      this.player.x + Math.cos(angle) * distance,
-      YARD_BOUNDS.minX,
-      YARD_BOUNDS.maxX
-    );
-    const newY = Phaser.Math.Clamp(
-      this.player.y + Math.sin(angle) * distance,
-      YARD_BOUNDS.minY,
-      YARD_BOUNDS.maxY
+    const rightLeg = this.add.rectangle(
+      x + LEG_OFFSET_X,
+      y + LEG_OFFSET_Y,
+      16,
+      40,
+      0xc9a876
     );
 
-    this.tweens.add({
-      targets: this.enemy,
-      alpha: 0,
-      duration: 120,
-      onComplete: () => {
-        if (!this.enemy) return;
-        this.enemy.setPosition(newX, newY);
-        this.enemy.setAlpha(1);
-      },
-    });
+    return { sprite, leftLeg, rightLeg, hits: 0 };
   }
 
-  private enemyFireFireball() {
-    if (!this.encounterActive || !this.enemy) return;
+  private teleportMonsters() {
+    if (!this.encounterActive) return;
 
-    const dx = this.player.x - this.enemy.x;
-    const dy = this.player.y - this.enemy.y;
-    const length = Math.sqrt(dx * dx + dy * dy) || 1;
-    const velocityX = (dx / length) * ENEMY_FIREBALL_SPEED;
-    const velocityY = (dy / length) * ENEMY_FIREBALL_SPEED;
+    for (const monster of this.monsters) {
+      if (!monster.sprite.body) continue;
 
-    const key = this.ensureEnemyFireballTexture();
-    const fireball = this.physics.add.sprite(
-      this.enemy.x,
-      this.enemy.y,
-      key
-    );
-    this.enemyFireballs.add(fireball);
-    fireball.setVelocity(velocityX, velocityY);
-    playFireballSound();
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Phaser.Math.Between(
+        TELEPORT_MIN_DISTANCE,
+        TELEPORT_MAX_DISTANCE
+      );
+      const newX = Phaser.Math.Clamp(
+        this.player.x + Math.cos(angle) * distance,
+        YARD_BOUNDS.minX,
+        YARD_BOUNDS.maxX
+      );
+      const newY = Phaser.Math.Clamp(
+        this.player.y + Math.sin(angle) * distance,
+        YARD_BOUNDS.minY,
+        YARD_BOUNDS.maxY
+      );
 
-    this.time.delayedCall(2500, () => fireball.destroy());
+      this.tweens.add({
+        targets: monster.sprite,
+        alpha: 0,
+        duration: 120,
+        onComplete: () => {
+          if (!this.monsters.includes(monster)) return;
+          monster.sprite.setPosition(newX, newY);
+          monster.sprite.setAlpha(1);
+        },
+      });
+    }
+  }
+
+  private enemiesFireFireballs() {
+    if (!this.encounterActive) return;
+
+    for (const monster of this.monsters) {
+      if (!monster.sprite.body) continue;
+
+      const dx = this.player.x - monster.sprite.x;
+      const dy = this.player.y - monster.sprite.y;
+      const length = Math.sqrt(dx * dx + dy * dy) || 1;
+      const velocityX = (dx / length) * ENEMY_FIREBALL_SPEED;
+      const velocityY = (dy / length) * ENEMY_FIREBALL_SPEED;
+
+      const key = this.ensureEnemyFireballTexture();
+      const fireball = this.physics.add.sprite(
+        monster.sprite.x,
+        monster.sprite.y,
+        key
+      );
+      this.enemyFireballs.add(fireball);
+      fireball.setVelocity(velocityX, velocityY);
+      playFireballSound();
+
+      this.time.delayedCall(2500, () => fireball.destroy());
+    }
   }
 
   private ensureEnemyFireballTexture(): string {
@@ -288,39 +332,42 @@ export class ExteriorScene extends BasePlayerScene {
   }
 
   private updateEncounter() {
-    if (!this.encounterActive || !this.enemy) return;
+    if (!this.encounterActive) return;
 
-    const dx = this.player.x - this.enemy.x;
-    const dy = this.player.y - this.enemy.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    for (const monster of this.monsters) {
+      if (!monster.sprite.body) continue; // defensive: skip a torn-down body
 
-    if (distance > 1) {
-      this.enemy.setVelocity(
-        (dx / distance) * this.enemySpeed,
-        (dy / distance) * this.enemySpeed
+      const dx = this.player.x - monster.sprite.x;
+      const dy = this.player.y - monster.sprite.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance > 1) {
+        monster.sprite.setVelocity(
+          (dx / distance) * this.enemySpeed,
+          (dy / distance) * this.enemySpeed
+        );
+      }
+
+      const swingDeg = Math.sin(this.time.now / 100) * 25;
+      monster.leftLeg.setPosition(
+        monster.sprite.x - LEG_OFFSET_X,
+        monster.sprite.y + LEG_OFFSET_Y
       );
+      monster.leftLeg.rotation = Phaser.Math.DegToRad(swingDeg);
+      monster.rightLeg.setPosition(
+        monster.sprite.x + LEG_OFFSET_X,
+        monster.sprite.y + LEG_OFFSET_Y
+      );
+      monster.rightLeg.rotation = Phaser.Math.DegToRad(-swingDeg);
     }
 
-    const swingDeg = Math.sin(this.time.now / 100) * 25;
-    if (this.leftLeg) {
-      this.leftLeg.setPosition(
-        this.enemy.x - LEG_OFFSET_X,
-        this.enemy.y + LEG_OFFSET_Y
-      );
-      this.leftLeg.rotation = Phaser.Math.DegToRad(swingDeg);
-    }
-    if (this.rightLeg) {
-      this.rightLeg.setPosition(
-        this.enemy.x + LEG_OFFSET_X,
-        this.enemy.y + LEG_OFFSET_Y
-      );
-      this.rightLeg.rotation = Phaser.Math.DegToRad(-swingDeg);
-    }
-
+    const canFire =
+      this.time.now - this.lastFireballTime >= FIREBALL_COOLDOWN_MS;
     if (
-      Phaser.Input.Keyboard.JustDown(this.spaceKey) ||
-      this.isEKeyJustDown()
+      canFire &&
+      (Phaser.Input.Keyboard.JustDown(this.spaceKey) || this.isEKeyJustDown())
     ) {
+      this.lastFireballTime = this.time.now;
       this.fireFireball();
     }
   }
@@ -383,13 +430,19 @@ export class ExteriorScene extends BasePlayerScene {
     obj1: Phaser.GameObjects.GameObject,
     obj2: Phaser.GameObjects.GameObject
   ) {
-    // Phaser doesn't guarantee arg order for group-vs-single-object overlaps,
-    // so pick whichever of the two callback args isn't the enemy.
-    const fireball = (
-      obj1 === this.enemy ? obj2 : obj1
-    ) as Phaser.Physics.Arcade.Sprite;
+    if (!this.encounterActive) return;
 
-    if (!this.encounterActive || !this.enemy) return;
+    // Phaser doesn't guarantee arg order for group-vs-group overlaps, so
+    // find whichever of the two callback args is one of our live monsters
+    // (the other one is the fireball that hit it).
+    const monster = this.monsters.find(
+      (m) => m.sprite === obj1 || m.sprite === obj2
+    );
+    if (!monster) return;
+
+    const fireball = (
+      monster.sprite === obj1 ? obj2 : obj1
+    ) as Phaser.Physics.Arcade.Sprite;
 
     // Level 5+: a chance the box bats the fireball straight back at you
     // instead of taking the hit.
@@ -404,15 +457,36 @@ export class ExteriorScene extends BasePlayerScene {
     fireball.disableBody(true, true);
     this.time.delayedCall(0, () => fireball.destroy());
 
-    this.enemyHits += 1;
+    monster.hits += 1;
     this.tweens.add({
-      targets: this.enemy,
+      targets: monster.sprite,
       alpha: 0.3,
       duration: 80,
       yoyo: true,
     });
 
-    if (this.enemyHits >= ENEMY_HITS_TO_WIN) {
+    if (monster.hits >= ENEMY_HITS_TO_WIN) {
+      this.defeatMonster(monster);
+    }
+  }
+
+  private defeatMonster(monster: Monster) {
+    this.monsters = this.monsters.filter((m) => m !== monster);
+
+    this.tweens.add({
+      targets: [monster.sprite, monster.leftLeg, monster.rightLeg],
+      alpha: 0,
+      scale: 0,
+      duration: 400,
+      onComplete: () => {
+        monster.sprite.destroy();
+        monster.leftLeg.destroy();
+        monster.rightLeg.destroy();
+      },
+    });
+
+    if (this.monsters.length === 0) {
+      gameState.pendingMonsters = 1;
       this.endEncounter("Ganaste el combate!", "#2d2d44");
     }
   }
@@ -439,26 +513,20 @@ export class ExteriorScene extends BasePlayerScene {
       this.enemyFireTimer = null;
     }
 
-    const enemy = this.enemy;
-    const leftLeg = this.leftLeg;
-    const rightLeg = this.rightLeg;
-    this.enemy = null;
-    this.leftLeg = null;
-    this.rightLeg = null;
+    const monsters = this.monsters;
+    this.monsters = [];
 
-    if (enemy) {
-      enemy.setVelocity(0, 0);
+    for (const monster of monsters) {
+      monster.sprite.setVelocity(0, 0);
       this.tweens.add({
-        targets: [enemy, leftLeg, rightLeg].filter(
-          (target): target is NonNullable<typeof target> => target !== null
-        ),
+        targets: [monster.sprite, monster.leftLeg, monster.rightLeg],
         alpha: 0,
         scale: 0,
         duration: 400,
         onComplete: () => {
-          enemy.destroy();
-          leftLeg?.destroy();
-          rightLeg?.destroy();
+          monster.sprite.destroy();
+          monster.leftLeg.destroy();
+          monster.rightLeg.destroy();
         },
       });
     }
@@ -482,7 +550,34 @@ export class ExteriorScene extends BasePlayerScene {
     }
 
     if (this.isPlayerInZone(this.doorZone)) {
-      this.scene.start("GroundFloorScene");
+      if (this.encounterActive && !this.isTransitioning) {
+        // Trying to flee through the door instead of finishing the fight
+        // doesn't work -- it just means more monsters next time.
+        gameState.pendingMonsters = Math.min(
+          gameState.pendingMonsters + 1,
+          MAX_MONSTERS
+        );
+        // Clear our own encounter bookkeeping right away: if this scene's
+        // update() fires even one more time while the transition finishes
+        // (its game objects already torn down by then), updateEncounter()
+        // must see encounterActive=false and an empty monsters array, or
+        // it crashes trying to move a monster with a destroyed body.
+        this.abandonEncounter();
+      }
+      this.transitionTo("GroundFloorScene");
     }
+  }
+
+  private abandonEncounter() {
+    this.encounterActive = false;
+    if (this.teleportTimer) {
+      this.teleportTimer.remove();
+      this.teleportTimer = null;
+    }
+    if (this.enemyFireTimer) {
+      this.enemyFireTimer.remove();
+      this.enemyFireTimer = null;
+    }
+    this.monsters = [];
   }
 }

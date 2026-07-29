@@ -63,7 +63,7 @@ export class EstacionamientoScene extends BasePlayerScene {
     }
 
     if (this.isPlayerInZone(this.buildingDoorZone)) {
-      this.scene.start("GroundFloorScene");
+      this.transitionTo("GroundFloorScene");
     }
   }
 }

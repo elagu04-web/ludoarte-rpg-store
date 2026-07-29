@@ -68,7 +68,7 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     const dims = SCENE_DIMENSIONS[this.scene.key];
     this.physics.world.setBounds(0, 0, dims.width, dims.height);
     this.cameras.main.setBounds(0, 0, dims.width, dims.height);
-    this.cameras.main.setZoom(1.5);
+    this.cameras.main.setZoom(dims.zoom);
 
     this.player = this.physics.add.sprite(x, y, "player-walk", 1);
     this.player.setCollideWorldBounds(true);

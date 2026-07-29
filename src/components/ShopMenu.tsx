@@ -98,11 +98,13 @@ export default function ShopMenu() {
 
   useEffect(() => {
     eventBus.emit("game-dialogue", selectedGame ? buildGameDialogue(selectedGame) : "");
+    eventBus.emit("game-video-open", null);
   }, [selectedGame]);
 
   const close = () => {
     setOpenShelfId(null);
     playMenuCloseSound();
+    eventBus.emit("game-video-open", null);
   };
 
   useEffect(() => {
@@ -124,6 +126,13 @@ export default function ShopMenu() {
       }
     };
 
+    const openVideo = () => {
+      const game = gamesRef.current[selectedIndexRef.current];
+      if (game?.videoUrl) {
+        eventBus.emit("game-video-open", game.videoUrl);
+      }
+    };
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowUp" || event.key === "w" || event.key === "W") {
         moveSelection(-1);
@@ -135,6 +144,8 @@ export default function ShopMenu() {
         moveSelection(1);
       } else if (event.key === "e" || event.key === "E" || event.key === "Enter") {
         confirmSelection();
+      } else if (event.key === "v" || event.key === "V") {
+        openVideo();
       } else if (event.key === "Escape") {
         close();
       }
@@ -192,6 +203,16 @@ export default function ShopMenu() {
             </li>
           ))}
         </ul>
+        {selectedGame.videoUrl && (
+          <button
+            className={styles.shopMenuVideoButton}
+            onClick={() =>
+              eventBus.emit("game-video-open", selectedGame.videoUrl!)
+            }
+          >
+            ▶ Ver video (V)
+          </button>
+        )}
         <div className={styles.shopMenuFooter}>
           <div className={styles.shopMenuPrice}>${selectedGame.price}</div>
           <div className={styles.shopMenuHint}>E: Agregar &middot; ESC: Salir</div>

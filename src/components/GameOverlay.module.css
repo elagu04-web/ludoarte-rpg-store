@@ -82,6 +82,24 @@
   color: #8b5a2b;
 }
 
+.shopMenuVideoButton {
+  display: block;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 8px;
+  background: #cc3333;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.shopMenuVideoButton:hover {
+  background: #b02929;
+}
+
 .shopMenuFooter {
   border-top: 2px solid #2d2d44;
   padding-top: 8px;
@@ -121,6 +139,43 @@
   font-size: 21px;
   line-height: 1.6;
   white-space: pre-wrap;
+}
+
+.videoPopup {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 28.75%;
+  height: 28.75%;
+  z-index: 60;
+  background: #000000;
+  border: 4px solid #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+.videoFrame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.videoCloseButton {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 61;
+  background: rgba(0, 0, 0, 0.75);
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  line-height: 1;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 .spinningBoxWrapper {

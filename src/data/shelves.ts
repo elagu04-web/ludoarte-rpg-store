@@ -23,6 +23,8 @@ export interface BoardGame {
   age?: string;
   /** Typical playtime, e.g. "30 a 45 min". */
   duration?: string;
+  /** Optional YouTube link (reglas, unboxing, etc.) shown via "Ver video". */
+  videoUrl?: string;
 }
 
 export interface ShelfData {
@@ -124,6 +126,7 @@ export const shelves: ShelfData[] = [
         players: "3 a 4",
         age: "10+",
         duration: "60 a 120 min",
+        videoUrl: "https://www.youtube.com/watch?v=5-6OVXTzVdI",
       },
       { id: "porto", name: "Porto", price: 2250, stock: 0, image: PLACEHOLDER_IMAGE },
       {

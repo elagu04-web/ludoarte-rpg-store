@@ -69,6 +69,11 @@ export class ExteriorScene extends BasePlayerScene {
   preload() {
     super.preload();
     this.load.image("bg-fachada", "/assets/scene/fachada.png");
+    this.load.spritesheet(
+      "fireball-anim",
+      "/assets/effects/fireball-sheet.png",
+      { frameWidth: 128, frameHeight: 128 }
+    );
 
     // Every game that has real box art is a potential "monster" -- load
     // them all so the encounter can pick one at random each time.
@@ -100,13 +105,30 @@ export class ExteriorScene extends BasePlayerScene {
     this.fireballs = this.physics.add.group();
     this.enemyFireballs = this.physics.add.group();
 
+    if (!this.anims.exists("fireball-fly")) {
+      this.anims.create({
+        key: "fireball-fly",
+        frames: this.anims.generateFrameNumbers("fireball-anim", {
+          start: 0,
+          end: 3,
+        }),
+        frameRate: 12,
+        repeat: -1,
+      });
+    }
+
     if (gameState.hasExploredShelf && gameState.cartTotalItems === 0) {
       this.startEnemyEncounter();
     }
 
     // Secret test shortcut: hold N and tap M to spawn/respawn monsters
     // right away, without having to explore a shelf and empty the cart.
-    this.nKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.N);
+    // enableCapture: false -- otherwise Phaser preventDefault()s every "N"
+    // keydown document-wide, which blocks typing "n" into the search input.
+    this.nKey = this.input.keyboard!.addKey(
+      Phaser.Input.Keyboard.KeyCodes.N,
+      false
+    );
     this.input.keyboard!.on("keydown-M", () => {
       if (!this.nKey.isDown || this.encounterActive) return;
       this.revive();
@@ -294,12 +316,13 @@ export class ExteriorScene extends BasePlayerScene {
       const velocityX = (dx / length) * ENEMY_FIREBALL_SPEED;
       const velocityY = (dy / length) * ENEMY_FIREBALL_SPEED;
 
-      const key = this.ensureEnemyFireballTexture();
-      const fireball = this.physics.add.sprite(
+      const fireball = this.createFireballSprite(
         monster.sprite.x,
         monster.sprite.y,
-        key
+        velocityX,
+        velocityY
       );
+      fireball.setTint(0x9b30ff);
       this.enemyFireballs.add(fireball);
       fireball.setVelocity(velocityX, velocityY);
       playFireballSound();
@@ -308,27 +331,32 @@ export class ExteriorScene extends BasePlayerScene {
     }
   }
 
-  private ensureEnemyFireballTexture(): string {
-    const key = "enemy-fireball";
-    if (!this.textures.exists(key)) {
-      const graphics = this.add.graphics();
-      graphics.fillStyle(0x9b30ff, 1);
-      graphics.fillCircle(8, 8, 8);
-      graphics.generateTexture(key, 16, 16);
-      graphics.destroy();
-    }
-    return key;
+  /** The art is a comet-style pixel fireball facing left by default, so it
+   * needs a +180deg offset to line up with the direction it's travelling. */
+  private createFireballSprite(
+    x: number,
+    y: number,
+    velocityX: number,
+    velocityY: number
+  ): Phaser.Physics.Arcade.Sprite {
+    const sprite = this.physics.add.sprite(x, y, "fireball-anim");
+    sprite.play("fireball-fly");
+    sprite.setDisplaySize(56, 56);
+    sprite.body?.setCircle(50, 14, 14);
+    sprite.rotation = Math.atan2(velocityY, velocityX) + Math.PI;
+    return sprite;
   }
 
   private repelFireball(fireball: Phaser.Physics.Arcade.Sprite) {
     const body = fireball.body as Phaser.Physics.Arcade.Body;
-    const vx = body.velocity.x;
-    const vy = body.velocity.y;
+    const vx = -body.velocity.x;
+    const vy = -body.velocity.y;
 
     this.fireballs.remove(fireball);
     this.enemyFireballs.add(fireball);
-    fireball.setVelocity(-vx, -vy);
+    fireball.setVelocity(vx, vy);
     fireball.setTint(0x9b30ff);
+    fireball.rotation = Math.atan2(vy, vx) + Math.PI;
   }
 
   private updateEncounter() {
@@ -401,29 +429,17 @@ export class ExteriorScene extends BasePlayerScene {
     const velocityX = (dirX / length) * FIREBALL_SPEED;
     const velocityY = (dirY / length) * FIREBALL_SPEED;
 
-    const key = this.ensureFireballTexture();
-    const fireball = this.physics.add.sprite(
+    const fireball = this.createFireballSprite(
       this.player.x,
       this.player.y,
-      key
+      velocityX,
+      velocityY
     );
     this.fireballs.add(fireball);
     fireball.setVelocity(velocityX, velocityY);
     playFireballSound();
 
     this.time.delayedCall(2000, () => fireball.destroy());
-  }
-
-  private ensureFireballTexture(): string {
-    const key = "fireball";
-    if (!this.textures.exists(key)) {
-      const graphics = this.add.graphics();
-      graphics.fillStyle(0xff6600, 1);
-      graphics.fillCircle(8, 8, 8);
-      graphics.generateTexture(key, 16, 16);
-      graphics.destroy();
-    }
-    return key;
   }
 
   private handleFireballHit(

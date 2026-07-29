@@ -60,7 +60,7 @@ export const shelves: ShelfData[] = [
         age: "7+",
         duration: "15 min",
       },
-      { id: "niji", name: "Niji", price: 1250, stock: 1, image: PLACEHOLDER_IMAGE },
+      { id: "niji", name: "Niji", price: 1250, stock: 1, image: "/assets/boardgames/niji.png" },
       { id: "dados-pato-mar", name: "Dados Pato Mar", price: 890, stock: 1, image: PLACEHOLDER_IMAGE },
     ],
   },

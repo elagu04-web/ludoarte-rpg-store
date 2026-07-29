@@ -3,6 +3,7 @@ import GameLoader from "@/components/GameLoader";
 import CartBadge from "@/components/CartBadge";
 import CartViewLoader from "@/components/CartViewLoader";
 import SearchScreenLoader from "@/components/SearchScreenLoader";
+import OrderTruckScreenLoader from "@/components/OrderTruckScreenLoader";
 import MusicController from "@/components/MusicController";
 import { CartProvider } from "@/context/CartContext";
 
@@ -21,6 +22,7 @@ export default function Home() {
       </div>
       <CartViewLoader />
       <SearchScreenLoader />
+      <OrderTruckScreenLoader />
     </CartProvider>
   );
 }

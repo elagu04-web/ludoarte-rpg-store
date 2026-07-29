@@ -4,6 +4,7 @@ import { BasePlayerScene } from "./BasePlayerScene";
 export class GroundFloorScene extends BasePlayerScene {
   private stairsZone!: Phaser.Geom.Rectangle;
   private exitZone!: Phaser.Geom.Rectangle;
+  private leftDoorZone!: Phaser.Geom.Rectangle;
 
   constructor() {
     super("GroundFloorScene");
@@ -19,9 +20,12 @@ export class GroundFloorScene extends BasePlayerScene {
 
     this.createPlayer(455, 1450);
 
-    // Pared de fondo, con hueco para la escalera que sube a la tienda
-    this.addObstacle(260, 97, 520, 195, { visible: false });
+    // Pared de fondo, con huecos para la puerta de la izquierda (va al
+    // estacionamiento) y la escalera que sube a la tienda
+    this.addObstacle(77, 97, 155, 195, { visible: false });
+    this.addObstacle(390, 97, 260, 195, { visible: false });
     this.addObstacle(783, 97, 266, 195, { visible: false });
+    this.leftDoorZone = new Phaser.Geom.Rectangle(155, 60, 105, 135);
 
     // Mesa/mostrador debajo de la pantalla decorativa
     this.addObstacle(405, 260, 230, 150, { visible: false });
@@ -52,6 +56,10 @@ export class GroundFloorScene extends BasePlayerScene {
 
     if (this.isPlayerInZone(this.exitZone)) {
       this.scene.start("ExteriorScene");
+    }
+
+    if (this.isPlayerInZone(this.leftDoorZone)) {
+      this.scene.start("EstacionamientoScene");
     }
   }
 }

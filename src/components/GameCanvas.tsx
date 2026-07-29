@@ -7,6 +7,7 @@ import ShelfPrompt from "./ShelfPrompt";
 import ScreenPrompt from "./ScreenPrompt";
 import CounterPrompt from "./CounterPrompt";
 import OrderPrompt from "./OrderPrompt";
+import OrderTruckPrompt from "./OrderTruckPrompt";
 import ShopMenu from "./ShopMenu";
 import TouchControls from "./TouchControls";
 import styles from "./GameOverlay.module.css";
@@ -33,6 +34,7 @@ export default function GameCanvas() {
       <ScreenPrompt />
       <CounterPrompt />
       <OrderPrompt />
+      <OrderTruckPrompt />
       <ShopMenu />
       <TouchControls />
     </div>

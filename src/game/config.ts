@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { ExteriorScene } from "./scenes/ExteriorScene";
 import { GroundFloorScene } from "./scenes/GroundFloorScene";
 import { StoreScene } from "./scenes/StoreScene";
+import { EstacionamientoScene } from "./scenes/EstacionamientoScene";
 
 export function createGameConfig(
   parent: HTMLDivElement
@@ -20,6 +21,6 @@ export function createGameConfig(
         debug: false,
       },
     },
-    scene: [ExteriorScene, GroundFloorScene, StoreScene],
+    scene: [ExteriorScene, GroundFloorScene, StoreScene, EstacionamientoScene],
   };
 }

@@ -16,6 +16,20 @@ const FIREBALL_SPEED = 500;
 const LEG_OFFSET_X = 18;
 const LEG_OFFSET_Y = 60;
 
+// Combat levels: 1 = original baseline. Goes up by 1 each win (capped),
+// unlocking a new trick on top of everything from the levels before it.
+const MAX_COMBAT_LEVEL = 5;
+const TELEPORT_MIN_LEVEL = 3;
+const ENEMY_SHOOTS_MIN_LEVEL = 4;
+const REPEL_MIN_LEVEL = 5;
+const TELEPORT_INTERVAL_MS = 2600;
+const TELEPORT_MIN_DISTANCE = 220;
+const TELEPORT_MAX_DISTANCE = 340;
+const ENEMY_FIREBALL_INTERVAL_MS = 1900;
+const ENEMY_FIREBALL_SPEED = 320;
+const REPEL_CHANCE = 0.25;
+const YARD_BOUNDS = { minX: 120, maxX: 1416, minY: 580, maxY: 950 };
+
 export class ExteriorScene extends BasePlayerScene {
   private doorZone!: Phaser.Geom.Rectangle;
   private screenZone!: Phaser.Geom.Rectangle;
@@ -23,12 +37,17 @@ export class ExteriorScene extends BasePlayerScene {
 
   private spaceKey!: Phaser.Input.Keyboard.Key;
   private fireballs!: Phaser.Physics.Arcade.Group;
+  private enemyFireballs!: Phaser.Physics.Arcade.Group;
 
   private enemy: Phaser.Physics.Arcade.Sprite | null = null;
   private leftLeg: Phaser.GameObjects.Rectangle | null = null;
   private rightLeg: Phaser.GameObjects.Rectangle | null = null;
   private encounterActive = false;
   private enemyHits = 0;
+  private combatLevel = 1;
+  private enemySpeed = ENEMY_SPEED;
+  private teleportTimer: Phaser.Time.TimerEvent | null = null;
+  private enemyFireTimer: Phaser.Time.TimerEvent | null = null;
 
   constructor() {
     super("ExteriorScene");
@@ -66,6 +85,7 @@ export class ExteriorScene extends BasePlayerScene {
       Phaser.Input.Keyboard.KeyCodes.SPACE
     );
     this.fireballs = this.physics.add.group();
+    this.enemyFireballs = this.physics.add.group();
 
     if (gameState.hasExploredShelf && gameState.cartTotalItems === 0) {
       this.startEnemyEncounter();
@@ -124,6 +144,12 @@ export class ExteriorScene extends BasePlayerScene {
 
     this.encounterActive = true;
     this.enemyHits = 0;
+    this.combatLevel = Phaser.Math.Clamp(
+      gameState.combatLevel,
+      1,
+      MAX_COMBAT_LEVEL
+    );
+    this.enemySpeed = ENEMY_SPEED * (1 + (this.combatLevel - 1) * 0.15);
 
     const monster = Phaser.Utils.Array.GetRandom(gamesWithArt);
 
@@ -159,6 +185,121 @@ export class ExteriorScene extends BasePlayerScene {
       undefined,
       this
     );
+    this.physics.add.overlap(this.enemyFireballs, this.player, () =>
+      this.endEncounter("Perdiste el combate!", "#7a1f1f")
+    );
+
+    if (this.combatLevel >= TELEPORT_MIN_LEVEL) {
+      this.teleportTimer = this.time.addEvent({
+        delay: TELEPORT_INTERVAL_MS,
+        loop: true,
+        callback: () => this.teleportEnemy(),
+      });
+    }
+    if (this.combatLevel >= ENEMY_SHOOTS_MIN_LEVEL) {
+      this.enemyFireTimer = this.time.addEvent({
+        delay: ENEMY_FIREBALL_INTERVAL_MS,
+        loop: true,
+        callback: () => this.enemyFireFireball(),
+      });
+    }
+
+    this.showLevelBanner();
+  }
+
+  private showLevelBanner() {
+    const banner = this.add
+      .text(768, 260, `Nivel ${this.combatLevel}`, {
+        fontSize: "24px",
+        color: "#ffffff",
+        backgroundColor: "#2d2d44",
+        padding: { x: 10, y: 6 },
+      })
+      .setOrigin(0.5);
+
+    this.tweens.add({
+      targets: banner,
+      alpha: 0,
+      delay: 1000,
+      duration: 500,
+      onComplete: () => banner.destroy(),
+    });
+  }
+
+  private teleportEnemy() {
+    if (!this.encounterActive || !this.enemy) return;
+
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Phaser.Math.Between(
+      TELEPORT_MIN_DISTANCE,
+      TELEPORT_MAX_DISTANCE
+    );
+    const newX = Phaser.Math.Clamp(
+      this.player.x + Math.cos(angle) * distance,
+      YARD_BOUNDS.minX,
+      YARD_BOUNDS.maxX
+    );
+    const newY = Phaser.Math.Clamp(
+      this.player.y + Math.sin(angle) * distance,
+      YARD_BOUNDS.minY,
+      YARD_BOUNDS.maxY
+    );
+
+    this.tweens.add({
+      targets: this.enemy,
+      alpha: 0,
+      duration: 120,
+      onComplete: () => {
+        if (!this.enemy) return;
+        this.enemy.setPosition(newX, newY);
+        this.enemy.setAlpha(1);
+      },
+    });
+  }
+
+  private enemyFireFireball() {
+    if (!this.encounterActive || !this.enemy) return;
+
+    const dx = this.player.x - this.enemy.x;
+    const dy = this.player.y - this.enemy.y;
+    const length = Math.sqrt(dx * dx + dy * dy) || 1;
+    const velocityX = (dx / length) * ENEMY_FIREBALL_SPEED;
+    const velocityY = (dy / length) * ENEMY_FIREBALL_SPEED;
+
+    const key = this.ensureEnemyFireballTexture();
+    const fireball = this.physics.add.sprite(
+      this.enemy.x,
+      this.enemy.y,
+      key
+    );
+    this.enemyFireballs.add(fireball);
+    fireball.setVelocity(velocityX, velocityY);
+    playFireballSound();
+
+    this.time.delayedCall(2500, () => fireball.destroy());
+  }
+
+  private ensureEnemyFireballTexture(): string {
+    const key = "enemy-fireball";
+    if (!this.textures.exists(key)) {
+      const graphics = this.add.graphics();
+      graphics.fillStyle(0x9b30ff, 1);
+      graphics.fillCircle(8, 8, 8);
+      graphics.generateTexture(key, 16, 16);
+      graphics.destroy();
+    }
+    return key;
+  }
+
+  private repelFireball(fireball: Phaser.Physics.Arcade.Sprite) {
+    const body = fireball.body as Phaser.Physics.Arcade.Body;
+    const vx = body.velocity.x;
+    const vy = body.velocity.y;
+
+    this.fireballs.remove(fireball);
+    this.enemyFireballs.add(fireball);
+    fireball.setVelocity(-vx, -vy);
+    fireball.setTint(0x9b30ff);
   }
 
   private updateEncounter() {
@@ -170,8 +311,8 @@ export class ExteriorScene extends BasePlayerScene {
 
     if (distance > 1) {
       this.enemy.setVelocity(
-        (dx / distance) * ENEMY_SPEED,
-        (dy / distance) * ENEMY_SPEED
+        (dx / distance) * this.enemySpeed,
+        (dy / distance) * this.enemySpeed
       );
     }
 
@@ -263,13 +404,20 @@ export class ExteriorScene extends BasePlayerScene {
       obj1 === this.enemy ? obj2 : obj1
     ) as Phaser.Physics.Arcade.Sprite;
 
+    if (!this.encounterActive || !this.enemy) return;
+
+    // Level 5+: a chance the box bats the fireball straight back at you
+    // instead of taking the hit.
+    if (this.combatLevel >= REPEL_MIN_LEVEL && Math.random() < REPEL_CHANCE) {
+      this.repelFireball(fireball);
+      return;
+    }
+
     // Disable (don't destroy) here: destroying a body mid-overlap-callback
     // corrupts Arcade Physics' internal state for other bodies checked in
     // the same step. Actually destroy it a moment later instead.
     fireball.disableBody(true, true);
     this.time.delayedCall(0, () => fireball.destroy());
-
-    if (!this.encounterActive || !this.enemy) return;
 
     this.enemyHits += 1;
     this.tweens.add({
@@ -280,6 +428,10 @@ export class ExteriorScene extends BasePlayerScene {
     });
 
     if (this.enemyHits >= ENEMY_HITS_TO_WIN) {
+      gameState.combatLevel = Math.min(
+        gameState.combatLevel + 1,
+        MAX_COMBAT_LEVEL
+      );
       this.endEncounter("Ganaste el combate!", "#2d2d44");
     }
   }
@@ -288,6 +440,16 @@ export class ExteriorScene extends BasePlayerScene {
     if (!this.encounterActive) return;
 
     this.encounterActive = false;
+
+    if (this.teleportTimer) {
+      this.teleportTimer.remove();
+      this.teleportTimer = null;
+    }
+    if (this.enemyFireTimer) {
+      this.enemyFireTimer.remove();
+      this.enemyFireTimer = null;
+    }
+
     const enemy = this.enemy;
     const leftLeg = this.leftLeg;
     const rightLeg = this.rightLeg;

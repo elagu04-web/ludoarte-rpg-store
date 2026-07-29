@@ -6,4 +6,6 @@
 export const gameState = {
   hasExploredShelf: false,
   cartTotalItems: 0,
+  /** Mini-combat difficulty, starts at 1 and goes up by 1 each win. */
+  combatLevel: 1,
 };

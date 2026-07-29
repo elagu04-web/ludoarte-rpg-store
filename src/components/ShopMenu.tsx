@@ -48,12 +48,27 @@ function SpinningBox({ game }: { game: BoardGame }) {
   );
 }
 
+/** Builds the flowing dialogue-box sentence for a game, or "" if it has no info. */
+function buildGameDialogue(game: BoardGame): string {
+  const parts: string[] = [];
+  if (game.description) parts.push(game.description);
+
+  const specs: string[] = [];
+  if (game.players) specs.push(`${game.players} jugadores`);
+  if (game.age) specs.push(`desde los ${game.age.replace("+", "")} años`);
+  if (game.duration) specs.push(`dura ${game.duration}`);
+  if (specs.length > 0) parts.push(`${specs.join(", ")}.`);
+
+  return parts.join(" ");
+}
+
 export default function ShopMenu() {
   const [openShelfId, setOpenShelfId] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const { addItem } = useCart();
 
   const shelf = shelves.find((item) => item.id === openShelfId) ?? null;
+  const selectedGame = shelf?.games[selectedIndex];
   const selectedIndexRef = useRef(0);
   const gamesRef = useRef(shelf?.games ?? []);
 
@@ -80,6 +95,10 @@ export default function ShopMenu() {
   useEffect(() => {
     eventBus.emit("menu-open", !!shelf);
   }, [shelf]);
+
+  useEffect(() => {
+    eventBus.emit("game-dialogue", selectedGame ? buildGameDialogue(selectedGame) : "");
+  }, [selectedGame]);
 
   const close = () => {
     setOpenShelfId(null);
@@ -143,9 +162,7 @@ export default function ShopMenu() {
     };
   }, [shelf, addItem]);
 
-  if (!shelf) return null;
-
-  const selectedGame = shelf.games[selectedIndex];
+  if (!shelf || !selectedGame) return null;
 
   return (
     <>
@@ -170,7 +187,7 @@ export default function ShopMenu() {
                   : styles.shopMenuItem
               }
             >
-              {index === selectedIndex ? "▶ " : "  "}
+              {index === selectedIndex ? "▶ " : "  "}
               {game.name}
             </li>
           ))}

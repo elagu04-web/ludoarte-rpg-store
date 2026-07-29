@@ -9,6 +9,7 @@ import CounterPrompt from "./CounterPrompt";
 import OrderPrompt from "./OrderPrompt";
 import OrderTruckPrompt from "./OrderTruckPrompt";
 import ShopMenu from "./ShopMenu";
+import GameDialogueBox from "./GameDialogueBox";
 import TouchControls from "./TouchControls";
 import styles from "./GameOverlay.module.css";
 
@@ -36,6 +37,7 @@ export default function GameCanvas() {
       <OrderPrompt />
       <OrderTruckPrompt />
       <ShopMenu />
+      <GameDialogueBox />
       <TouchControls />
     </div>
   );

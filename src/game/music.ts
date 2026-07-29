@@ -217,3 +217,10 @@ export function playMenuCloseSound() {
   if (ctx.state === "suspended") ctx.resume();
   playSweep(600, 250, 0.12, 0.4);
 }
+
+/** Tiny blip per letter for the typewriter dialogue box, old-RPG style. */
+export function playDialogueBlipSound() {
+  const ctx = ensureContext();
+  if (ctx.state === "suspended") ctx.resume();
+  playBeep(1100, 0, 0.02, 0.07);
+}

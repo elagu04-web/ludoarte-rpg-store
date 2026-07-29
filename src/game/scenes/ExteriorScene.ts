@@ -144,11 +144,7 @@ export class ExteriorScene extends BasePlayerScene {
 
     this.encounterActive = true;
     this.enemyHits = 0;
-    this.combatLevel = Phaser.Math.Clamp(
-      gameState.combatLevel,
-      1,
-      MAX_COMBAT_LEVEL
-    );
+    this.combatLevel = Phaser.Math.Between(1, MAX_COMBAT_LEVEL);
     this.enemySpeed = ENEMY_SPEED * (1 + (this.combatLevel - 1) * 0.15);
 
     const monster = Phaser.Utils.Array.GetRandom(gamesWithArt);
@@ -203,27 +199,6 @@ export class ExteriorScene extends BasePlayerScene {
         callback: () => this.enemyFireFireball(),
       });
     }
-
-    this.showLevelBanner();
-  }
-
-  private showLevelBanner() {
-    const banner = this.add
-      .text(768, 260, `Nivel ${this.combatLevel}`, {
-        fontSize: "24px",
-        color: "#ffffff",
-        backgroundColor: "#2d2d44",
-        padding: { x: 10, y: 6 },
-      })
-      .setOrigin(0.5);
-
-    this.tweens.add({
-      targets: banner,
-      alpha: 0,
-      delay: 1000,
-      duration: 500,
-      onComplete: () => banner.destroy(),
-    });
   }
 
   private teleportEnemy() {
@@ -428,10 +403,6 @@ export class ExteriorScene extends BasePlayerScene {
     });
 
     if (this.enemyHits >= ENEMY_HITS_TO_WIN) {
-      gameState.combatLevel = Math.min(
-        gameState.combatLevel + 1,
-        MAX_COMBAT_LEVEL
-      );
       this.endEncounter("Ganaste el combate!", "#2d2d44");
     }
   }

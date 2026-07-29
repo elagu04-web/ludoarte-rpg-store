@@ -30,7 +30,6 @@ export class StoreScene extends BasePlayerScene {
   }
 
   create() {
-    this.resizeToScene("StoreScene");
     this.addBackground("bg-tienda");
 
     this.createPlayer(500, 1450);

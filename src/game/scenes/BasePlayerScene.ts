@@ -60,25 +60,22 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     );
   }
 
-  /**
-   * Each room's background art has its own native size now (the exterior
-   * is landscape, the interiors are portrait), so the whole game canvas is
-   * resized to match whichever scene is currently active. Must run before
-   * addBackground/createPlayer so physics/camera bounds match the art.
-   */
-  protected resizeToScene(key: string) {
-    const dims = SCENE_DIMENSIONS[key];
-    this.scale.resize(dims.width, dims.height);
+  protected createPlayer(x: number, y: number) {
+    // Each room has its own native size (the exterior is landscape, the
+    // interiors are portrait and taller than the viewport) -- the camera
+    // zooms in and follows the player instead of shrinking the whole room
+    // to fit on screen.
+    const dims = SCENE_DIMENSIONS[this.scene.key];
     this.physics.world.setBounds(0, 0, dims.width, dims.height);
     this.cameras.main.setBounds(0, 0, dims.width, dims.height);
-    eventBus.emit("scene-resized", dims);
-  }
+    this.cameras.main.setZoom(1.5);
 
-  protected createPlayer(x: number, y: number) {
     this.player = this.physics.add.sprite(x, y, "player-walk", 1);
     this.player.setCollideWorldBounds(true);
     this.player.body?.setSize(40, 50).setOffset(22, 54);
     this.createPlayerAnimations();
+
+    this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
 
     this.obstacles = this.physics.add.staticGroup();
     this.physics.add.collider(this.player, this.obstacles);

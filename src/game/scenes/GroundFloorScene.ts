@@ -15,7 +15,6 @@ export class GroundFloorScene extends BasePlayerScene {
   }
 
   create() {
-    this.resizeToScene("GroundFloorScene");
     this.addBackground("bg-planta-baja");
 
     this.createPlayer(455, 1450);

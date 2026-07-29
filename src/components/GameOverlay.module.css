@@ -1,7 +1,7 @@
 .gameWrapper {
   position: relative;
-  width: min(100%, calc(80vh * var(--aspect, 1.5)));
-  aspect-ratio: var(--aspect, 1.5);
+  width: min(100%, calc(92vh * 1.5));
+  aspect-ratio: 1536 / 1024;
   margin: 0 auto;
 }
 

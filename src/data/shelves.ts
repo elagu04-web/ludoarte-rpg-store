@@ -143,7 +143,7 @@ export const shelves: ShelfData[] = [
         name: "Azul",
         price: 4200,
         stock: 1,
-        image: PLACEHOLDER_IMAGE,
+        image: "/assets/boardgames/azul.png",
         description: "Juego de estrategia con fichas de mosaico para decorar tu palacio.",
         players: "2 a 4",
         age: "8+",

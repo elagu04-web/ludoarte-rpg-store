@@ -21,9 +21,9 @@ interface OrderItem {
 function buildWhatsAppOrderUrl(items: OrderItem[]): string {
   const lines = items.map((item) => `- ${item.name} x${item.quantity}`);
   const message = [
-    "Hola! Quiero pedir estos juegos que no tienen stock ahora:",
+    "Hola! Quiero pedir o consultar estos juegos:",
     ...lines,
-    "Me avisan cuando esten disponibles?",
+    "Me avisan si los tienen o cuando esten disponibles?",
   ].join("\n");
 
   return `https://wa.me/${STORE_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
@@ -31,7 +31,7 @@ function buildWhatsAppOrderUrl(items: OrderItem[]): string {
 
 export default function OrderTruckScreen() {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState(outOfStockGames[0]?.id ?? "");
+  const [query, setQuery] = useState("");
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
   useEffect(() => {
@@ -71,20 +71,30 @@ export default function OrderTruckScreen() {
     };
   }, [isOpen]);
 
-  const addSelected = () => {
-    const game = outOfStockGames.find((g) => g.id === selectedId);
-    if (!game) return;
+  const addFromQuery = () => {
+    const name = query.trim();
+    if (!name) return;
+
+    // Match an existing out-of-stock game by name (so it merges quantity
+    // with itself), otherwise treat it as a free-text request -- the
+    // player can ask about any game, not just the ones already listed.
+    const known = outOfStockGames.find(
+      (g) => g.name.toLowerCase() === name.toLowerCase()
+    );
+    const id = known?.id ?? name.toLowerCase();
+    const displayName = known?.name ?? name;
 
     setOrderItems((prev) => {
-      const existing = prev.find((item) => item.id === game.id);
+      const existing = prev.find((item) => item.id === id);
       if (existing) {
         return prev.map((item) =>
-          item.id === game.id ? { ...item, quantity: item.quantity + 1 } : item
+          item.id === id ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      return [...prev, { id: game.id, name: game.name, quantity: 1 }];
+      return [...prev, { id, name: displayName, quantity: 1 }];
     });
     playMenuConfirmSound();
+    setQuery("");
   };
 
   const removeItem = (id: string) => {
@@ -108,23 +118,29 @@ export default function OrderTruckScreen() {
           </button>
         </div>
         <p className={styles.hint}>
-          Estos juegos no estan en stock ahora, pero se pueden conseguir por
-          pedido.
+          Escribi el nombre de un juego para pedirlo o preguntar si lo
+          conseguimos -- no hace falta que este en la lista.
         </p>
 
         <div className={styles.pickerRow}>
-          <select
+          <input
+            type="text"
+            autoFocus
+            list="ordertruck-suggestions"
             className={styles.picker}
-            value={selectedId}
-            onChange={(e) => setSelectedId(e.target.value)}
-          >
+            placeholder="Nombre del juego..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") addFromQuery();
+            }}
+          />
+          <datalist id="ordertruck-suggestions">
             {outOfStockGames.map((game) => (
-              <option key={game.id} value={game.id}>
-                {game.name}
-              </option>
+              <option key={game.id} value={game.name} />
             ))}
-          </select>
-          <button className={styles.addButton} onClick={addSelected}>
+          </datalist>
+          <button className={styles.addButton} onClick={addFromQuery}>
             Agregar
           </button>
         </div>

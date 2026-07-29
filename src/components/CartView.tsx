@@ -34,6 +34,7 @@ export default function CartView() {
     addItem,
     decreaseItem,
     removeItem,
+    clearCart,
     totalPrice,
   } = useCart();
 
@@ -130,6 +131,10 @@ export default function CartView() {
               href={buildWhatsAppOrderUrl(items, totalPrice)}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => {
+                clearCart();
+                closeCart();
+              }}
             >
               Comprar por WhatsApp
             </a>

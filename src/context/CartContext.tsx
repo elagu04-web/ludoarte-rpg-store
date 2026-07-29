@@ -19,6 +19,7 @@ interface CartContextValue {
   addItem: (game: BoardGame) => void;
   decreaseItem: (gameId: string) => void;
   removeItem: (gameId: string) => void;
+  clearCart: () => void;
   totalItems: number;
   totalPrice: number;
   isCartOpen: boolean;
@@ -58,6 +59,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) => prev.filter((item) => item.id !== gameId));
   };
 
+  const clearCart = () => {
+    setItems([]);
+  };
+
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -75,6 +80,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         addItem,
         decreaseItem,
         removeItem,
+        clearCart,
         totalItems,
         totalPrice,
         isCartOpen,

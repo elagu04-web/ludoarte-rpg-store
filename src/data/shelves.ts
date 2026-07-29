@@ -33,7 +33,7 @@ export interface ShelfData {
   games: BoardGame[];
 }
 
-const PLACEHOLDER_IMAGE = "/assets/placeholder-game.svg";
+export const PLACEHOLDER_IMAGE = "/assets/placeholder-game.svg";
 
 // Catalogo real de Ludoarte, cargado desde la planilla de inventario
 // (precio = "Precio de Venta Publico", stock = suma de "Cantidad en Stock"
@@ -45,7 +45,7 @@ export const shelves: ShelfData[] = [
     title: "Estanteria de Estrategia",
     games: [
       { id: "papas-queman", name: "Papas queman", price: 1250, stock: 2, image: "/assets/boardgames/papas-queman.png" },
-      { id: "salem-1692", name: "Salem 1692", price: 1790, stock: 0, image: PLACEHOLDER_IMAGE },
+      { id: "salem-1692", name: "Salem 1692", price: 1790, stock: 0, image: "/assets/boardgames/salem.png" },
       { id: "llamagedon", name: "LLamagedon", price: 1250, stock: 1, image: PLACEHOLDER_IMAGE },
       { id: "no-game-over", name: "No Game Over", price: 1390, stock: 1, image: PLACEHOLDER_IMAGE },
       { id: "yokai-pagoda", name: "Yokai Pagoda", price: 1390, stock: 2, image: PLACEHOLDER_IMAGE },
@@ -155,3 +155,9 @@ export const shelves: ShelfData[] = [
     ],
   },
 ];
+
+/** Games with real box-art (not the generic placeholder) -- used e.g. to
+ * pick a random "monster" box for the exterior mini-combat encounter. */
+export const gamesWithArt: BoardGame[] = shelves
+  .flatMap((shelf) => shelf.games)
+  .filter((game) => game.image !== PLACEHOLDER_IMAGE);

@@ -2,7 +2,13 @@ import Phaser from "phaser";
 import { eventBus } from "@/game/eventBus";
 import { gameState } from "@/game/gameState";
 import { playFireballSound } from "@/game/music";
+import { gamesWithArt } from "@/data/shelves";
 import { BasePlayerScene } from "./BasePlayerScene";
+
+/** Texture key used for a given game's box art in the mini-combat encounter. */
+function enemyTextureKey(gameId: string): string {
+  return `enemy-${gameId}`;
+}
 
 const ENEMY_SPEED = 90;
 const ENEMY_HITS_TO_WIN = 3;
@@ -31,7 +37,12 @@ export class ExteriorScene extends BasePlayerScene {
   preload() {
     super.preload();
     this.load.image("bg-fachada", "/assets/scene/fachada.png");
-    this.load.image("catan-enemy", "/assets/boardgames/catan-box.png");
+
+    // Every game that has real box art is a potential "monster" -- load
+    // them all so the encounter can pick one at random each time.
+    for (const game of gamesWithArt) {
+      this.load.image(enemyTextureKey(game.id), game.image);
+    }
   }
 
   create() {
@@ -109,13 +120,17 @@ export class ExteriorScene extends BasePlayerScene {
   }
 
   private startEnemyEncounter() {
+    if (gamesWithArt.length === 0) return;
+
     this.encounterActive = true;
     this.enemyHits = 0;
+
+    const monster = Phaser.Utils.Array.GetRandom(gamesWithArt);
 
     // Physics body lives on a plain Sprite (Container + Arcade physics is
     // unreliable in Phaser 4); the "legs" are separate shapes we reposition
     // by hand each frame to follow the box.
-    this.enemy = this.physics.add.sprite(768, 220, "catan-enemy");
+    this.enemy = this.physics.add.sprite(768, 220, enemyTextureKey(monster.id));
     this.enemy.setDisplaySize(100, 120);
     this.enemy.body?.setSize(80, 100);
 

@@ -42,7 +42,7 @@ export const shelves: ShelfData[] = [
     id: "shelf-strategy",
     title: "Estanteria de Estrategia",
     games: [
-      { id: "papas-queman", name: "Papas queman", price: 1250, stock: 2, image: PLACEHOLDER_IMAGE },
+      { id: "papas-queman", name: "Papas queman", price: 1250, stock: 2, image: "/assets/boardgames/papas-queman.png" },
       { id: "salem-1692", name: "Salem 1692", price: 1790, stock: 0, image: PLACEHOLDER_IMAGE },
       { id: "llamagedon", name: "LLamagedon", price: 1250, stock: 1, image: PLACEHOLDER_IMAGE },
       { id: "no-game-over", name: "No Game Over", price: 1390, stock: 1, image: PLACEHOLDER_IMAGE },

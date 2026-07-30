@@ -122,6 +122,29 @@
   color: #555555;
 }
 
+.rentalMenuPanel {
+  /* top+bottom (instead of a vh-based max-height) so the panel's height is
+     always derived from its actual container -- vh is relative to the
+     browser viewport, which doesn't match gameWrapper's own size, and that
+     mismatch let the tall 57-game list spill down past the description box
+     at the bottom of the screen. */
+  display: flex;
+  flex-direction: column;
+  bottom: 220px;
+}
+
+.rentalMenuList {
+  overflow-x: hidden;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.rentalMenuList .shopMenuItem,
+.rentalMenuList .shopMenuItemSelected {
+  white-space: normal;
+}
+
 .dialogueBox {
   position: absolute;
   left: 24px;

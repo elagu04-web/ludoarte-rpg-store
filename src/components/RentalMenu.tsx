@@ -4,85 +4,67 @@ import { useEffect, useRef, useState } from "react";
 import { eventBus } from "@/game/eventBus";
 import {
   playMenuMoveSound,
-  playMenuConfirmSound,
   playMenuOpenSound,
   playMenuCloseSound,
 } from "@/game/music";
-import { shelves } from "@/data/shelves";
-import { useCart } from "@/context/CartContext";
+import { rentalGames } from "@/data/rentals";
 import { buildGameDialogue } from "@/game/gameDialogue";
 import SpinningBox from "./SpinningBox";
 import styles from "./GameOverlay.module.css";
 
-export default function ShopMenu() {
-  const [openShelfId, setOpenShelfId] = useState<string | null>(null);
+export default function RentalMenu() {
+  const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const { addItem } = useCart();
-
-  const shelf = shelves.find((item) => item.id === openShelfId) ?? null;
-  const selectedGame = shelf?.games[selectedIndex];
   const selectedIndexRef = useRef(0);
-  const gamesRef = useRef(shelf?.games ?? []);
+  const selectedItemRef = useRef<HTMLLIElement | null>(null);
+
+  const selectedGame = rentalGames[selectedIndex];
 
   useEffect(() => {
     selectedIndexRef.current = selectedIndex;
   }, [selectedIndex]);
 
   useEffect(() => {
-    gamesRef.current = shelf?.games ?? [];
-  }, [shelf]);
-
-  useEffect(() => {
-    const handleOpen = (shelfId: string) => {
-      setOpenShelfId(shelfId);
+    const handleOpen = () => {
+      setIsOpen(true);
       setSelectedIndex(0);
       playMenuOpenSound();
     };
-    eventBus.on("shelf-open", handleOpen);
+    eventBus.on("rental-open", handleOpen);
     return () => {
-      eventBus.off("shelf-open", handleOpen);
+      eventBus.off("rental-open", handleOpen);
     };
   }, []);
 
   useEffect(() => {
-    eventBus.emit("menu-open", !!shelf);
-  }, [shelf]);
+    eventBus.emit("menu-open", isOpen);
+  }, [isOpen]);
 
   useEffect(() => {
-    eventBus.emit("game-dialogue", selectedGame ? buildGameDialogue(selectedGame) : "");
-    eventBus.emit("game-video-open", null);
-  }, [selectedGame]);
+    eventBus.emit(
+      "game-dialogue",
+      isOpen && selectedGame ? buildGameDialogue(selectedGame) : ""
+    );
+  }, [isOpen, selectedGame]);
+
+  useEffect(() => {
+    selectedItemRef.current?.scrollIntoView({ block: "nearest" });
+  }, [selectedIndex]);
 
   const close = () => {
-    setOpenShelfId(null);
+    setIsOpen(false);
     playMenuCloseSound();
-    eventBus.emit("game-video-open", null);
   };
 
   useEffect(() => {
-    if (!shelf) return;
+    if (!isOpen) return;
 
     const moveSelection = (delta: number) => {
       setSelectedIndex((prev) => {
-        const count = gamesRef.current.length;
+        const count = rentalGames.length;
         return (prev + delta + count) % count;
       });
       playMenuMoveSound();
-    };
-
-    const confirmSelection = () => {
-      const game = gamesRef.current[selectedIndexRef.current];
-      if (game) {
-        addItem(game);
-        playMenuConfirmSound();
-      }
-    };
-
-    const openVideo = () => {
-      const game = gamesRef.current[selectedIndexRef.current];
-      if (game?.videoUrl) {
-        eventBus.emit("game-video-open", game.videoUrl);
-      }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -94,10 +76,6 @@ export default function ShopMenu() {
         event.key === "S"
       ) {
         moveSelection(1);
-      } else if (event.key === "e" || event.key === "E" || event.key === "Enter") {
-        confirmSelection();
-      } else if (event.key === "v" || event.key === "V") {
-        openVideo();
       } else if (event.key === "Escape") {
         close();
       }
@@ -112,20 +90,15 @@ export default function ShopMenu() {
       if (payload.direction === "down") moveSelection(1);
     };
 
-    const handleTouchInteract = () => confirmSelection();
-
     window.addEventListener("keydown", handleKeyDown);
     eventBus.on("touch-direction", handleTouchDirection);
-    eventBus.on("touch-interact", handleTouchInteract);
-
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       eventBus.off("touch-direction", handleTouchDirection);
-      eventBus.off("touch-interact", handleTouchInteract);
     };
-  }, [shelf, addItem]);
+  }, [isOpen]);
 
-  if (!shelf || !selectedGame) return null;
+  if (!isOpen || !selectedGame) return null;
 
   return (
     <>
@@ -133,17 +106,18 @@ export default function ShopMenu() {
         <SpinningBox game={selectedGame} key={selectedGame.id} />
       </div>
 
-      <div className={styles.shopMenu}>
+      <div className={`${styles.shopMenu} ${styles.rentalMenuPanel}`}>
         <div className={styles.shopMenuTitle}>
-          <span>{shelf.title}</span>
+          <span>Alquiler de juegos</span>
           <button className={styles.shopMenuClose} onClick={close}>
             ESC
           </button>
         </div>
-        <ul className={styles.shopMenuList}>
-          {shelf.games.map((game, index) => (
+        <ul className={`${styles.shopMenuList} ${styles.rentalMenuList}`}>
+          {rentalGames.map((game, index) => (
             <li
               key={game.id}
+              ref={index === selectedIndex ? selectedItemRef : undefined}
               className={
                 index === selectedIndex
                   ? styles.shopMenuItemSelected
@@ -155,19 +129,13 @@ export default function ShopMenu() {
             </li>
           ))}
         </ul>
-        {selectedGame.videoUrl && (
-          <button
-            className={styles.shopMenuVideoButton}
-            onClick={() =>
-              eventBus.emit("game-video-open", selectedGame.videoUrl!)
-            }
-          >
-            ▶ Ver video (V)
-          </button>
-        )}
         <div className={styles.shopMenuFooter}>
-          <div className={styles.shopMenuPrice}>${selectedGame.price}</div>
-          <div className={styles.shopMenuHint}>E: Agregar &middot; ESC: Salir</div>
+          <div className={styles.shopMenuPrice}>
+            {selectedGame.price !== null
+              ? `$${selectedGame.price}`
+              : "Consultar precio"}
+          </div>
+          <div className={styles.shopMenuHint}>ESC: Salir</div>
         </div>
       </div>
     </>

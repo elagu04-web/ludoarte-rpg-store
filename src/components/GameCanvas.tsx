@@ -10,10 +10,12 @@ import CounterPrompt from "./CounterPrompt";
 import OrderPrompt from "./OrderPrompt";
 import OrderTruckPrompt from "./OrderTruckPrompt";
 import TvPrompt from "./TvPrompt";
+import RentalPrompt from "./RentalPrompt";
 import ShopMenu from "./ShopMenu";
 import GameDialogueBox from "./GameDialogueBox";
 import GameVideoPopup from "./GameVideoPopup";
 import TvMenu from "./TvMenu";
+import RentalMenu from "./RentalMenu";
 import TouchControls from "./TouchControls";
 import styles from "./GameOverlay.module.css";
 
@@ -57,10 +59,12 @@ export default function GameCanvas() {
       <OrderPrompt />
       <OrderTruckPrompt />
       <TvPrompt />
+      <RentalPrompt />
       <ShopMenu />
       <GameDialogueBox />
       <GameVideoPopup />
       <TvMenu />
+      <RentalMenu />
       <TouchControls />
     </div>
   );

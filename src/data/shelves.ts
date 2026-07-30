@@ -103,13 +103,13 @@ export const shelves: ShelfData[] = [
     title: "Estanteria Familiar",
     games: [
       { id: "patachof", name: "Patachof", price: 1350, stock: 1, image: "/assets/boardgames/patachof.png" },
-      { id: "vaalbara", name: "Vaalbara", price: 1700, stock: 1, image: PLACEHOLDER_IMAGE },
+      { id: "vaalbara", name: "Vaalbara", price: 1700, stock: 1, image: "/assets/boardgames/vaalbara.png" },
       {
         id: "tummple",
         name: "Tummple",
         price: 1900,
         stock: 1,
-        image: PLACEHOLDER_IMAGE,
+        image: "/assets/boardgames/tummple.png",
         description: "Juego de apilar piezas de madera en 3D sin que se caigan.",
         players: "2 a 4",
         age: "8+",
@@ -140,7 +140,7 @@ export const shelves: ShelfData[] = [
         age: "7+",
         duration: "30 a 45 min",
       },
-      { id: "banana-azul", name: "Banana Azul", price: 1450, stock: 1, image: PLACEHOLDER_IMAGE },
+      { id: "banana-azul", name: "Banana Azul", price: 1450, stock: 1, image: "/assets/boardgames/banana-azul.png" },
       {
         id: "azul",
         name: "Azul",

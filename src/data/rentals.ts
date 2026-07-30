@@ -1,4 +1,4 @@
-import { gamesWithArt, PLACEHOLDER_IMAGE } from "./shelves";
+import { gamesWithArt, PLACEHOLDER_IMAGE, type SpinSheet } from "./shelves";
 
 export interface RentalGame {
   id: string;
@@ -6,6 +6,11 @@ export interface RentalGame {
   /** Precio de alquiler en pesos uruguayos. null = todavia no cargado. */
   price: number | null;
   image: string;
+  spinSheet?: SpinSheet;
+  description?: string;
+  players?: string;
+  age?: string;
+  duration?: string;
 }
 
 // Unicode escapes (not literal combining-mark characters) to avoid an
@@ -23,16 +28,27 @@ function slugify(name: string): string {
     .replace(/(^-+|-+$)/g, "");
 }
 
-// Si ya tenemos la caja real de este juego en el catalogo de venta (misma
-// planilla, otra hoja), la reutilizamos aca en vez de pedir una de nuevo.
-function findRealArt(name: string): string {
+// Si ya tenemos la caja real (y ficha) de este juego en el catalogo de
+// venta (misma planilla, otra hoja), la reutilizamos aca en vez de pedir
+// una caja nueva o escribir la descripcion de nuevo.
+function findSaleMatch(name: string) {
   const target = normalize(name);
-  const match = gamesWithArt.find((game) => normalize(game.name) === target);
-  return match ? match.image : PLACEHOLDER_IMAGE;
+  return gamesWithArt.find((game) => normalize(game.name) === target);
 }
 
 function rentalGame(name: string, price: number | null): RentalGame {
-  return { id: slugify(name), name, price, image: findRealArt(name) };
+  const match = findSaleMatch(name);
+  return {
+    id: slugify(name),
+    name,
+    price,
+    image: match?.image ?? PLACEHOLDER_IMAGE,
+    spinSheet: match?.spinSheet,
+    description: match?.description,
+    players: match?.players,
+    age: match?.age,
+    duration: match?.duration,
+  };
 }
 
 // Catalogo de alquiler, cargado desde la hoja "Alquiler" de la planilla

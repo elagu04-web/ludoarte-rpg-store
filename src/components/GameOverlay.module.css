@@ -127,10 +127,22 @@
      always derived from its actual container -- vh is relative to the
      browser viewport, which doesn't match gameWrapper's own size, and that
      mismatch let the tall 57-game list spill down past the description box
-     at the bottom of the screen. */
+     at the bottom of the screen. Smaller font/padding than the shop menu
+     and a bigger bottom margin: the description box can grow to 4-5 lines
+     now (Edad/Jugadores/Tiempo each on their own line), so it needs more
+     clearance than the shop menu's short one-line footer ever did. */
   display: flex;
   flex-direction: column;
-  bottom: 220px;
+  top: 24px;
+  bottom: 320px;
+  font-size: 14px;
+  padding: 10px 12px;
+}
+
+.rentalMenuPanel .shopMenuTitle {
+  font-size: 15px;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
 }
 
 .rentalMenuList {
@@ -138,11 +150,21 @@
   overflow-y: auto;
   flex: 1;
   min-height: 0;
+  margin-bottom: 6px;
 }
 
 .rentalMenuList .shopMenuItem,
 .rentalMenuList .shopMenuItemSelected {
+  padding: 3px 4px;
   white-space: normal;
+}
+
+.rentalMenuPanel .shopMenuFooter {
+  padding-top: 6px;
+}
+
+.rentalMenuPanel .shopMenuPrice {
+  font-size: 14px;
 }
 
 .dialogueBox {

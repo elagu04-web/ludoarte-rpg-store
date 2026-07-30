@@ -209,7 +209,7 @@ export const shelves: ShelfData[] = [
         name: "Flores",
         price: 1550,
         stock: 1,
-        image: PLACEHOLDER_IMAGE,
+        image: "/assets/boardgames/flores.png",
         description: "Coloca tus cartas con cuidado: los valores importan, pero los colores son los que dan los puntos.",
         players: "2 a 4",
         age: "8+",

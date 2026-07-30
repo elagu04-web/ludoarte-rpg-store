@@ -36,7 +36,22 @@ function findSaleMatch(name: string) {
   return gamesWithArt.find((game) => normalize(game.name) === target);
 }
 
-function rentalGame(name: string, price: number | null): RentalGame {
+interface RentalInfo {
+  description?: string;
+  players?: string;
+  age?: string;
+  duration?: string;
+}
+
+// Los juegos que tambien estan a la venta heredan su ficha (descripcion,
+// jugadores, edad, duracion) del catalogo de venta -- esa es la fuente
+// unica de verdad para esos. Los que solo se alquilan (no estan a la
+// venta) llevan su propia ficha aca via el 3er parametro.
+function rentalGame(
+  name: string,
+  price: number | null,
+  info: RentalInfo = {}
+): RentalGame {
   const match = findSaleMatch(name);
   return {
     id: slugify(name),
@@ -44,10 +59,10 @@ function rentalGame(name: string, price: number | null): RentalGame {
     price,
     image: match?.image ?? PLACEHOLDER_IMAGE,
     spinSheet: match?.spinSheet,
-    description: match?.description,
-    players: match?.players,
-    age: match?.age,
-    duration: match?.duration,
+    description: match?.description ?? info.description,
+    players: match?.players ?? info.players,
+    age: match?.age ?? info.age,
+    duration: match?.duration ?? info.duration,
   };
 }
 

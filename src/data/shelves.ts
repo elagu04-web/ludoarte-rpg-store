@@ -135,9 +135,9 @@ export const shelves: ShelfData[] = [
       {
         id: "terraforming-mars",
         name: "Terraforming Mars",
-        price: 1500,
+        price: 5000,
         stock: 1,
-        image: PLACEHOLDER_IMAGE,
+        image: "/assets/boardgames/terraforming-mars.png",
         description: "Competi contra otras corporaciones para hacer habitable el planeta Marte, subiendo la temperatura, el oxigeno y los oceanos.",
         players: "1 a 5",
         age: "12+",
@@ -146,7 +146,7 @@ export const shelves: ShelfData[] = [
       {
         id: "pandemia",
         name: "Pandemia!",
-        price: 1500,
+        price: 500,
         stock: 1,
         image: PLACEHOLDER_IMAGE,
         description: "Mantene tu cuerpo sano mientras infectas a tus rivales con virus: se el primero en juntar 4 organos sanos para ganar.",
@@ -242,7 +242,7 @@ export const shelves: ShelfData[] = [
         name: "La Noche de Gansferatu",
         price: 990,
         stock: 1,
-        image: PLACEHOLDER_IMAGE,
+        image: "/assets/boardgames/la-noche-de-gansferatu.png",
         description: "Explora el castillo buscando aldeanos perdidos y tesoros, pero si te cruzas con Gansferatu perdes todo lo que juntaste. Memoria y riesgo en partidas cortas.",
         players: "2 a 6",
         age: "8+",
@@ -284,7 +284,7 @@ export const shelves: ShelfData[] = [
       {
         id: "hombres-lobo",
         name: "Hombres Lobo",
-        price: 1500,
+        price: 990,
         stock: 1,
         image: PLACEHOLDER_IMAGE,
         description: "De noche los hombres lobo eligen una victima; de dia el pueblo discute y vota a quien creen que es el lobo. Un clasico de la deduccion social.",
@@ -295,7 +295,7 @@ export const shelves: ShelfData[] = [
       {
         id: "secret-hitler",
         name: "Secret Hitler",
-        price: 1500,
+        price: 2450,
         stock: 1,
         image: PLACEHOLDER_IMAGE,
         description: "Juego de roles ocultos e intriga politica: liberales contra fascistas, sin saber quien es quien.",
@@ -400,7 +400,7 @@ export const shelves: ShelfData[] = [
       {
         id: "catan",
         name: "Catan",
-        price: 3690,
+        price: 3650,
         stock: 1,
         image: "/assets/boardgames/catan-box.png",
         description: "Comercia y construye para colonizar una isla.",
@@ -456,7 +456,7 @@ export const shelves: ShelfData[] = [
       {
         id: "ajedrez",
         name: "Ajedrez",
-        price: 1500,
+        price: 650,
         stock: 1,
         image: PLACEHOLDER_IMAGE,
         description: "El clasico juego de estrategia sobre un tablero de 64 casillas: dos ejercitos de piezas se enfrentan hasta dar jaque mate.",
@@ -467,7 +467,7 @@ export const shelves: ShelfData[] = [
       {
         id: "burako",
         name: "Burako",
-        price: 1500,
+        price: 900,
         stock: 1,
         image: PLACEHOLDER_IMAGE,
         description: "Juego de cartas tipo rummy: formas escaleras y grupos de la misma pinta para bajar tus cartas antes que nadie.",
@@ -478,7 +478,7 @@ export const shelves: ShelfData[] = [
       {
         id: "flip-7",
         name: "Flip 7",
-        price: 1500,
+        price: 1090,
         stock: 1,
         image: PLACEHOLDER_IMAGE,
         description: "Juego de cartas de arriesgar o plantarse: das vuelta cartas para sumar puntos, pero si repetis un numero perdes todo.",

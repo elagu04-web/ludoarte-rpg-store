@@ -341,7 +341,7 @@ export const shelves: ShelfData[] = [
         name: "El Rebaño",
         price: 1500,
         stock: 1,
-        image: PLACEHOLDER_IMAGE,
+        image: "/assets/boardgames/el-rebano.png",
         description: "Juego de cartas de reflejos con ovejas, lobos y pastores: hay que estar atento a quien le toca jugar.",
         players: "3 a 6",
         age: "5+",

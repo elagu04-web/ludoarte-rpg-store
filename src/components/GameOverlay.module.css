@@ -1,8 +1,21 @@
 .gameWrapper {
   position: relative;
+  /* Biggest box that keeps the 1536x1024 aspect ratio while fitting
+     entirely within the viewport, in either orientation: pick whichever
+     of "full width" or "height-derived width" is smaller. */
   width: min(100%, calc(92vh * 1.5));
   aspect-ratio: 1536 / 1024;
   margin: 0 auto;
+}
+
+/* Phones in landscape: fill the screen edge to edge (see page.module.css,
+   which hides the surrounding page chrome in this same media query) --
+   92vh left room for a page header that no longer shows here. */
+@media (max-width: 900px) and (orientation: landscape) {
+  .gameWrapper {
+    width: min(100vw, calc(100vh * 1.5));
+    margin: 0 auto;
+  }
 }
 
 .canvasHost {

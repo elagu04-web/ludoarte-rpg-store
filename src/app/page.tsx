@@ -20,6 +20,10 @@ export default function Home() {
           <GameLoader />
         </main>
       </div>
+      <div className={styles.rotateOverlay}>
+        <span className={styles.rotateIcon}>📱↻</span>
+        <p>Gira tu telefono para jugar</p>
+      </div>
       <CartViewLoader />
       <SearchScreenLoader />
       <OrderTruckScreenLoader />

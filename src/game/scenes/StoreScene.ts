@@ -32,7 +32,9 @@ export class StoreScene extends BasePlayerScene {
   create() {
     this.addBackground("bg-tienda");
 
-    this.createPlayer(500, 1450);
+    // Aparece justo debajo de la puerta de arriba (la unica entrada a este
+    // salon), no en el medio del negocio.
+    this.createPlayer(295, 260);
 
     // Pared de fondo, con hueco para la puerta que sube a la planta baja
     this.addObstacle(130, 115, 260, 230, { visible: false });

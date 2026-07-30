@@ -53,6 +53,23 @@ export abstract class BasePlayerScene extends Phaser.Scene {
   private inputPaused = false;
   private isDefeated = false;
   private isLeavingScene = false;
+  /** Key of the scene we just came from, so a room with more than one door
+   * can spawn the player next to the door actually used instead of always
+   * the same fixed point. Set by transitionTo() on the way out; read back
+   * via Phaser's init(data) on the way in. */
+  protected fromScene: string | null = null;
+
+  init(data: { from?: string } = {}) {
+    this.fromScene = data.from ?? null;
+    // Phaser reuses the same Scene instance every time a scene is
+    // (re)started -- it does not construct a fresh object, so field
+    // initializers like `= false` only ever run once, at game boot. Without
+    // resetting this here, the first time you ever left a room would leave
+    // isLeavingScene stuck at true forever, silently no-op'ing every door
+    // in that room on every later visit (transitionTo() would just return
+    // immediately, with no error and no visible cause).
+    this.isLeavingScene = false;
+  }
 
   preload() {
     this.load.spritesheet(
@@ -275,7 +292,7 @@ export abstract class BasePlayerScene extends Phaser.Scene {
   protected transitionTo(sceneKey: string) {
     if (this.isLeavingScene) return;
     this.isLeavingScene = true;
-    this.scene.start(sceneKey);
+    this.scene.start(sceneKey, { from: this.scene.key });
   }
 
   /** True from the first transitionTo() call onward -- use to guard any

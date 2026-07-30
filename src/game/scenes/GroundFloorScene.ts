@@ -20,10 +20,30 @@ export class GroundFloorScene extends BasePlayerScene {
     this.load.image("bg-planta-baja", "/assets/scene/planta-baja.png");
   }
 
+  /**
+   * This is the only room with three doors, so unlike the other scenes it
+   * can't just spawn the player at one fixed point -- each door needs to
+   * drop you back in next to itself, not wherever another door happens to
+   * be. Coordinates are just past each door's wall gap, on the walkable
+   * side.
+   */
+  private getSpawnPoint(): { x: number; y: number } {
+    switch (this.fromScene) {
+      case "StoreScene":
+        return { x: 585, y: 230 }; // below the stairs (top-right gap)
+      case "EstacionamientoScene":
+        return { x: 207, y: 230 }; // below the left door
+      case "ExteriorScene":
+      default:
+        return { x: 455, y: 1450 }; // above the street-side door
+    }
+  }
+
   create() {
     this.addBackground("bg-planta-baja");
 
-    this.createPlayer(455, 1450);
+    const spawn = this.getSpawnPoint();
+    this.createPlayer(spawn.x, spawn.y);
 
     // Pared de fondo, con huecos para la puerta de la izquierda (va al
     // estacionamiento) y la escalera que sube a la tienda

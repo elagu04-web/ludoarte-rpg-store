@@ -85,7 +85,9 @@ export class ExteriorScene extends BasePlayerScene {
   create() {
     this.addBackground("bg-fachada");
 
-    this.createPlayer(768, 850);
+    // Aparece justo debajo de la puerta del edificio (la unica entrada a
+    // este patio), no en el medio del patio.
+    this.createPlayer(795, 410);
 
     // Fachada del edificio, con hueco central para la puerta (invisibles,
     // el dibujo de fondo ya muestra las paredes)

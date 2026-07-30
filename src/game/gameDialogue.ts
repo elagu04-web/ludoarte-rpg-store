@@ -5,16 +5,18 @@ interface DescribableGame {
   duration?: string;
 }
 
-/** Builds the flowing dialogue-box sentence for a game, or "" if it has no info. */
+/** Builds the dialogue-box text for a game: the description as its own
+ * paragraph, followed by Edad/Jugadores/Tiempo each on their own line.
+ * Returns "" if the game has no info at all. */
 export function buildGameDialogue(game: DescribableGame): string {
   const parts: string[] = [];
   if (game.description) parts.push(game.description);
 
   const specs: string[] = [];
-  if (game.players) specs.push(`${game.players} jugadores`);
-  if (game.age) specs.push(`desde los ${game.age.replace("+", "")} años`);
-  if (game.duration) specs.push(`dura ${game.duration}`);
-  if (specs.length > 0) parts.push(`${specs.join(", ")}.`);
+  if (game.age) specs.push(`Edad: desde los ${game.age.replace("+", "")} años`);
+  if (game.players) specs.push(`Jugadores: ${game.players}`);
+  if (game.duration) specs.push(`Tiempo: ${game.duration}`);
+  if (specs.length > 0) parts.push(specs.join("\n"));
 
-  return parts.join(" ");
+  return parts.join("\n\n");
 }

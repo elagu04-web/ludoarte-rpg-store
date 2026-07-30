@@ -41,12 +41,15 @@ interface RentalInfo {
   players?: string;
   age?: string;
   duration?: string;
+  /** Caja real para juegos que solo se alquilan (no estan en el catalogo
+   * de venta, asi que no hay de donde heredarla). */
+  image?: string;
 }
 
 // Los juegos que tambien estan a la venta heredan su ficha (descripcion,
-// jugadores, edad, duracion) del catalogo de venta -- esa es la fuente
-// unica de verdad para esos. Los que solo se alquilan (no estan a la
-// venta) llevan su propia ficha aca via el 3er parametro.
+// jugadores, edad, duracion, caja) del catalogo de venta -- esa es la
+// fuente unica de verdad para esos. Los que solo se alquilan (no estan a
+// la venta) llevan su propia ficha aca via el 3er parametro.
 function rentalGame(
   name: string,
   price: number | null,
@@ -57,7 +60,7 @@ function rentalGame(
     id: slugify(name),
     name,
     price,
-    image: match?.image ?? PLACEHOLDER_IMAGE,
+    image: match?.image ?? info.image ?? PLACEHOLDER_IMAGE,
     spinSheet: match?.spinSheet,
     description: match?.description ?? info.description,
     players: match?.players ?? info.players,
@@ -70,15 +73,56 @@ function rentalGame(
 // "Ludoteca Ludoarte" (nombre + precio en UYU; el resto de columnas todavia
 // no tiene datos cargados).
 export const rentalGames: RentalGame[] = [
-  rentalGame("Akropolis", 440),
-  rentalGame("Avalon", 110),
-  rentalGame("Aventureros al Tren", 220),
+  rentalGame("Akropolis", 440, {
+    description: "Construi tu ciudad griega en varios niveles, encastrando barrios para conseguir la mejor puntuacion.",
+    players: "1 a 4",
+    age: "8+",
+    duration: "20 a 30 min",
+    image: "/assets/boardgames/akropolis.png",
+  }),
+  rentalGame("Avalon", 110, {
+    description: "Deduccion social en el reino del Rey Arturo: leales a Arturo contra secuaces de Mordred, sin saber quien es quien.",
+    players: "5 a 10",
+    age: "12+",
+    duration: "30 min",
+  }),
+  rentalGame("Aventureros al Tren", 220, {
+    description: "Junta cartas de vagones para construir tus rutas de tren por el mapa y cumplir tus billetes de destino.",
+    players: "2 a 5",
+    age: "8+",
+    duration: "30 a 60 min",
+  }),
   rentalGame("Barrio", 110),
-  rentalGame("Bohnanza", 110),
-  rentalGame("Brass: Birmingham", 440),
-  rentalGame("Brawl", 440),
-  rentalGame("Camarero", 220),
-  rentalGame("Can't Stop", 110),
+  rentalGame("Bohnanza", 110, {
+    description: "Cultiva y comercia porotos con los demas jugadores para juntar la mayor fortuna posible.",
+    players: "2 a 7",
+    age: "12+",
+    duration: "45 min",
+  }),
+  rentalGame("Brass: Birmingham", 440, {
+    description: "Juego de estrategia economica: desarrolla industrias y redes de transporte durante la revolucion industrial.",
+    players: "2 a 4",
+    age: "14+",
+    duration: "60 a 120 min",
+  }),
+  rentalGame("Brawl", 440, {
+    description: "Duelo rapido de cartas: bloquea, esquiva y golpea a tu rival hasta dejarlo sin vida.",
+    players: "2",
+    age: "13+",
+    duration: "5 min",
+  }),
+  rentalGame("Camarero", 220, {
+    description: "Unos son mozos y otros son clientes: hay que memorizar y entregar cada pedido sin equivocarse.",
+    players: "2 a 10",
+    age: "8+",
+    duration: "30 min",
+  }),
+  rentalGame("Can't Stop", 110, {
+    description: "Tira los dados y avanza en tres columnas, pero cuidado: podes perder todo lo ganado en el turno si segui arriesgando.",
+    players: "2 a 4",
+    age: "9+",
+    duration: "30 min",
+  }),
   rentalGame("Carcassonne", 440),
   rentalGame("Catan", 440),
   rentalGame("Código Secreto", 220),

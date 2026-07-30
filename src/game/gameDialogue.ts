@@ -18,5 +18,5 @@ export function buildGameDialogue(game: DescribableGame): string {
   if (game.duration) specs.push(`Tiempo: ${game.duration}`);
   if (specs.length > 0) parts.push(specs.join("\n"));
 
-  return parts.join("\n\n");
+  return parts.join("\n");
 }

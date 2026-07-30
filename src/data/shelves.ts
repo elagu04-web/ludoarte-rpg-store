@@ -177,17 +177,6 @@ export const shelves: ShelfData[] = [
         duration: "15 a 30 min",
       },
       {
-        id: "kites",
-        name: "Kites",
-        price: 1500,
-        stock: 1,
-        image: PLACEHOLDER_IMAGE,
-        description: "Cooperativo: mantene las cometas en el aire jugando tus cartas en el momento justo.",
-        players: "2 a 6",
-        age: "8+",
-        duration: "10 min",
-      },
-      {
         id: "faraway",
         name: "Faraway",
         price: 1500,

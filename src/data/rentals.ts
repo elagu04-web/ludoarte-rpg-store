@@ -1,4 +1,6 @@
-import { gamesWithArt, PLACEHOLDER_IMAGE, type SpinSheet } from "./shelves";
+import { shelves, PLACEHOLDER_IMAGE, type SpinSheet } from "./shelves";
+
+const allSaleGames = shelves.flatMap((shelf) => shelf.games);
 
 export interface RentalGame {
   id: string;
@@ -28,12 +30,14 @@ function slugify(name: string): string {
     .replace(/(^-+|-+$)/g, "");
 }
 
-// Si ya tenemos la caja real (y ficha) de este juego en el catalogo de
-// venta (misma planilla, otra hoja), la reutilizamos aca en vez de pedir
-// una caja nueva o escribir la descripcion de nuevo.
+// Si este juego ya esta en el catalogo de venta (misma planilla, otra
+// hoja), reutilizamos su ficha (descripcion, jugadores, edad, duracion,
+// y la caja real si la tiene) en vez de escribirla de nuevo. Busca en
+// TODOS los juegos de venta, no solo los que ya tienen caja real --
+// muchos tienen ficha completa mientras esperan la caja.
 function findSaleMatch(name: string) {
   const target = normalize(name);
-  return gamesWithArt.find((game) => normalize(game.name) === target);
+  return allSaleGames.find((game) => normalize(game.name) === target);
 }
 
 interface RentalInfo {
@@ -278,17 +282,62 @@ export const rentalGames: RentalGame[] = [
     age: "10+",
     duration: "20 min",
   }),
-  rentalGame("Sequence", 220),
-  rentalGame("Shiki", 110),
-  rentalGame("Splendor", 440),
-  rentalGame("Sushi Go Party", 220),
+  rentalGame("Sequence", 220, {
+    description: "Consegui 5 fichas seguidas jugando tus cartas, y jugale en contra a tus rivales para frenarlos.",
+    players: "2 a 12",
+    age: "7+",
+    duration: "10 a 30 min",
+  }),
+  rentalGame("Shiki", 110, {
+    description: "Juego de cartas y dados sobre las estaciones del año: descartate de toda tu mano para ganar.",
+    players: "2 a 5",
+    age: "4+",
+    duration: "15 min",
+  }),
+  rentalGame("Splendor", 440, {
+    description: "Sos un mercader del Renacimiento: junta piedras preciosas para comprar cartas y ganarte el favor de la nobleza.",
+    players: "2 a 4",
+    age: "8+",
+    duration: "30 min",
+  }),
+  rentalGame("Sushi Go Party", 220, {
+    description: "Elegi las mejores cartas de sushi a medida que pasan por la mesa, y dejale lugar al postre.",
+    players: "2 a 8",
+    age: "8+",
+    duration: "20 min",
+  }),
   rentalGame("Taco Cat Goat Cheese Pizza", 110),
-  rentalGame("Terra Nova", 440),
+  rentalGame("Terra Nova", 440, {
+    description: "Version mas simple de Terra Mystica: elegi una facción y compite para explorar territorios y construir tu imperio.",
+    players: "2 a 4",
+    age: "12+",
+    duration: "60 a 90 min",
+  }),
   rentalGame("Terraforming Mars", 440),
-  rentalGame("T.E.G.", 110),
-  rentalGame("Trio", 110),
+  rentalGame("T.E.G.", 110, {
+    description: "El clasico juego de guerra argentino: conquista territorios en el mapa y cumpli tu objetivo secreto antes que los demas.",
+    players: "2 a 6",
+    age: "12+",
+    duration: "180 min",
+  }),
+  rentalGame("Trio", 110, {
+    description: "Adivina si la carta de otro jugador es mas alta o mas baja, y juntá tres iguales antes que los demas.",
+    players: "3 a 6",
+    age: "6+",
+    duration: "15 min",
+  }),
   rentalGame("Vaalbara", 110),
-  rentalGame("Valdés", 110),
+  rentalGame("Valdés", 110, {
+    description: "Recorre la peninsula juntando postales de animales: gana quien junte 4 distintas o 2 iguales primero.",
+    players: "2 a 4",
+    age: "5+",
+    duration: "15 min",
+  }),
   rentalGame("Yokai Pagoda", 110),
-  rentalGame("Zero", 110),
+  rentalGame("Zero", 110, {
+    description: "Juego de cartas de manejo de mano: el objetivo es terminar la ronda con cero puntos, combinando numeros y colores.",
+    players: "3 a 5",
+    age: "8+",
+    duration: "30 min",
+  }),
 ];

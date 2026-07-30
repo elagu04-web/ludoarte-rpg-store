@@ -102,7 +102,7 @@ export const shelves: ShelfData[] = [
     id: "shelf-family",
     title: "Estanteria Familiar",
     games: [
-      { id: "patachof", name: "Patachof", price: 1350, stock: 1, image: PLACEHOLDER_IMAGE },
+      { id: "patachof", name: "Patachof", price: 1350, stock: 1, image: "/assets/boardgames/patachof.png" },
       { id: "vaalbara", name: "Vaalbara", price: 1700, stock: 1, image: PLACEHOLDER_IMAGE },
       {
         id: "tummple",

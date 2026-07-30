@@ -159,7 +159,7 @@ export const shelves: ShelfData[] = [
         name: "Katamino",
         price: 1500,
         stock: 1,
-        image: PLACEHOLDER_IMAGE,
+        image: "/assets/boardgames/katamino.png",
         description: "Rompecabezas de encastrar piezas de distintas formas para llenar el tablero perfectamente.",
         players: "1 a 2",
         age: "3+",

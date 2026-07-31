@@ -58,30 +58,58 @@ export class GroundFloorScene extends BasePlayerScene {
     // Tele gigante -- interactuable, abre el menu (fotos, etc.). La zona
     // baja hasta el piso caminable, mas alla de la mesa que esta debajo.
     this.tvZone = new Phaser.Geom.Rectangle(290, 40, 230, 360);
+    this.addTapHotspot(
+      290 + 230 / 2,
+      40 + 360 / 2,
+      230,
+      360,
+      () => this.nearTv,
+      () => eventBus.emit("tv-menu-open", true)
+    );
 
     // Barras/estanterias decorativas a los lados (colisionables)
     this.addObstacle(102, 755, 165, 1110, { visible: false });
     this.addObstacle(813, 755, 166, 1110, { visible: false });
 
-    // Mesas centrales (2 columnas x 4 filas). La de arriba a la derecha
-    // (la mas cerca de la tele) tambien es el punto de alquiler -- de
-    // momento solo el texto "ALQUILER" sobre la mesa, para que se entienda,
-    // hasta que haya un cartel de verdad.
-    const RENTAL_TABLE = { x: 560, y: 535, width: 145, height: 145 };
-    const tableY = [535, 735, 935, 1145];
-    for (const y of tableY) {
-      this.addObstacle(355, y, 145, 145, { visible: false });
-      this.addObstacle(560, y, 145, 145, { visible: false });
+    // Mesas centrales (2 columnas x 4 filas). Cada una tiene su cartel de
+    // que actividad se hace ahi -- de momento solo el texto (como el de
+    // Alquiler), hasta que haya carteles de verdad. Solo la de Alquiler
+    // es interactiva por ahora.
+    const TABLE_SIZE = 145;
+    const RENTAL_TABLE = { x: 560, y: 535, width: TABLE_SIZE, height: TABLE_SIZE };
+    const tables: { x: number; y: number; label?: string }[] = [
+      { x: 355, y: 535, label: "AJEDREZ" },
+      { x: 560, y: 535, label: "ALQUILER" },
+      { x: 355, y: 735, label: "ARTE" },
+      { x: 560, y: 735, label: "ARCILLA" },
+      { x: 355, y: 935, label: "EVENTOS" },
+      { x: 560, y: 935 },
+      { x: 355, y: 1145 },
+      { x: 560, y: 1145 },
+    ];
+    for (const table of tables) {
+      this.addObstacle(table.x, table.y, TABLE_SIZE, TABLE_SIZE, { visible: false });
+      if (table.label) {
+        this.add
+          .text(table.x, table.y, table.label, {
+            fontSize: "20px",
+            color: "#ffffff",
+            fontStyle: "bold",
+            align: "center",
+            wordWrap: { width: TABLE_SIZE - 20 },
+          })
+          .setOrigin(0.5);
+      }
     }
-    this.add
-      .text(RENTAL_TABLE.x, RENTAL_TABLE.y, "ALQUILER", {
-        fontSize: "20px",
-        color: "#ffffff",
-        fontStyle: "bold",
-        align: "center",
-        wordWrap: { width: RENTAL_TABLE.width - 20 },
-      })
-      .setOrigin(0.5);
+    this.addTapHotspot(
+      RENTAL_TABLE.x,
+      RENTAL_TABLE.y,
+      RENTAL_TABLE.width,
+      RENTAL_TABLE.height,
+      () => this.nearRental,
+      () => eventBus.emit("rental-open", true)
+    );
+
     const rentalPadding = 30;
     this.rentalZone = new Phaser.Geom.Rectangle(
       RENTAL_TABLE.x - RENTAL_TABLE.width / 2 - rentalPadding,

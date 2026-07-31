@@ -162,6 +162,15 @@ export class ExteriorScene extends BasePlayerScene {
       })
       .setOrigin(0.5);
 
+    this.addTapHotspot(
+      x,
+      y,
+      width,
+      height,
+      () => this.nearScreen,
+      () => eventBus.emit("search-open", true)
+    );
+
     const sidePadding = 30;
     const top = y - height / 2 - sidePadding;
     const bottom = 590; // reaches into the walkable yard below the wall

@@ -108,6 +108,7 @@
 
 .shopMenuItem,
 .shopMenuItemSelected {
+  cursor: pointer;
   padding: 6px 4px;
   white-space: pre;
 }
@@ -438,4 +439,33 @@
   font-weight: bold;
   pointer-events: auto;
   touch-action: manipulation;
+}
+
+/* Big, unmistakable way to back out of whatever menu is open on a phone --
+   there's no Escape key, and the small "ESC" text button each menu has is
+   easy to miss on a touchscreen. Same visibility rule as the D-pad (touch
+   devices only): with a mouse/keyboard, Escape and the per-menu buttons
+   are already enough. */
+.mobileCloseButton {
+  display: none;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 2000;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.75);
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: bold;
+  line-height: 1;
+  touch-action: manipulation;
+}
+
+@media (pointer: coarse) {
+  .mobileCloseButton {
+    display: block;
+  }
 }

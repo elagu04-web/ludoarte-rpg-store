@@ -197,6 +197,29 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     return obstacle;
   }
 
+  /**
+   * Lets touch/mouse users tap a point of interest directly instead of
+   * having to walk the character onto it first -- but only fires if
+   * isNear() is already true at tap time, same as pressing E; tapping a
+   * shelf/counter/etc. from across the room does nothing, exactly like
+   * walking up to it does nothing until you're actually in the zone.
+   */
+  protected addTapHotspot(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    isNear: () => boolean,
+    onTap: () => void
+  ) {
+    this.add
+      .zone(x, y, width, height)
+      .setInteractive()
+      .on("pointerdown", () => {
+        if (isNear()) onTap();
+      });
+  }
+
   /** A walkable (non-colliding) marker zone, e.g. a door or staircase. */
   protected addZoneMarker(
     x: number,

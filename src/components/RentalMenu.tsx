@@ -123,6 +123,10 @@ export default function RentalMenu() {
                   ? styles.shopMenuItemSelected
                   : styles.shopMenuItem
               }
+              onClick={() => {
+                if (index !== selectedIndexRef.current) playMenuMoveSound();
+                setSelectedIndex(index);
+              }}
             >
               {index === selectedIndex ? "▶ " : "  "}
               {game.name}

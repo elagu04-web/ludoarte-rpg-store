@@ -17,6 +17,7 @@ import GameVideoPopup from "./GameVideoPopup";
 import TvMenu from "./TvMenu";
 import RentalMenu from "./RentalMenu";
 import TouchControls from "./TouchControls";
+import MobileCloseButton from "./MobileCloseButton";
 import styles from "./GameOverlay.module.css";
 
 export default function GameCanvas() {
@@ -66,6 +67,7 @@ export default function GameCanvas() {
       <TvMenu />
       <RentalMenu />
       <TouchControls />
+      <MobileCloseButton />
     </div>
   );
 }

@@ -50,20 +50,32 @@ export class StoreScene extends BasePlayerScene {
       id: shelves[0].id,
       rect: new Phaser.Geom.Rectangle(70, 200, 180, 750),
     });
+    this.addTapHotspot(160, 575, 180, 750, () => this.nearbyShelfId === shelves[0].id, () =>
+      this.openShelf(shelves[0].id)
+    );
     this.addObstacle(865, 740, 130, 1020, { visible: false }); // estanteria derecha
     this.shelfZones.push({
       id: shelves[1].id,
       rect: new Phaser.Geom.Rectangle(810, 200, 150, 750),
     });
+    this.addTapHotspot(885, 575, 150, 750, () => this.nearbyShelfId === shelves[1].id, () =>
+      this.openShelf(shelves[1].id)
+    );
     this.addShelf(shelves[2], 325, 640, 190, 300); // mesa de exhibicion
 
     // Mostrador con laptop -- interactuable para pagar por WhatsApp
     this.addObstacle(700, 1117, 200, 265, { visible: false });
     this.counterZone = this.addPaddedZone(700, 1117, 200, 265, 30);
+    this.addTapHotspot(700, 1117, 260, 325, () => this.nearCounter, () =>
+      eventBus.emit("cart-open-request", true)
+    );
 
     // Mesa de ajedrez -- puesto de pedidos (consultar juegos por pedido)
     this.addObstacle(292, 1090, 195, 210, { visible: false });
     this.orderZone = this.addPaddedZone(292, 1090, 195, 210, 30);
+    this.addTapHotspot(292, 1090, 255, 270, () => this.nearOrderKiosk, () =>
+      eventBus.emit("search-open", true)
+    );
 
     this.events.on("shutdown", () => {
       eventBus.emit("shelf-proximity", null);
@@ -105,6 +117,19 @@ export class StoreScene extends BasePlayerScene {
         height + SHELF_INTERACTION_PADDING * 2
       ),
     });
+    this.addTapHotspot(
+      x,
+      y,
+      width + SHELF_INTERACTION_PADDING * 2,
+      height + SHELF_INTERACTION_PADDING * 2,
+      () => this.nearbyShelfId === shelf.id,
+      () => this.openShelf(shelf.id)
+    );
+  }
+
+  private openShelf(shelfId: string) {
+    gameState.hasExploredShelf = true;
+    eventBus.emit("shelf-open", shelfId);
   }
 
   private updateShelfProximity() {
@@ -155,8 +180,7 @@ export class StoreScene extends BasePlayerScene {
 
     if (this.isEKeyJustDown()) {
       if (this.nearbyShelfId) {
-        gameState.hasExploredShelf = true;
-        eventBus.emit("shelf-open", this.nearbyShelfId);
+        this.openShelf(this.nearbyShelfId);
       } else if (this.nearCounter) {
         eventBus.emit("cart-open-request", true);
       } else if (this.nearOrderKiosk) {

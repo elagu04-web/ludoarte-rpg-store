@@ -28,6 +28,14 @@ export class EstacionamientoScene extends BasePlayerScene {
     // Camion de LUDOARTE -- interactuable para pedir juegos que no hay en stock
     this.addObstacle(732, 190, 465, 260, { visible: false });
     this.truckZone = new Phaser.Geom.Rectangle(460, 20, 545, 340);
+    this.addTapHotspot(
+      460 + 545 / 2,
+      20 + 340 / 2,
+      545,
+      340,
+      () => this.nearTruck,
+      () => eventBus.emit("order-truck-open", true)
+    );
 
     // Cambios de nivel decorativos (colisionables)
     this.addObstacle(1060, 380, 140, 35, { visible: false });

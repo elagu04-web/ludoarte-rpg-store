@@ -149,6 +149,14 @@ export default function ShopMenu() {
                   ? styles.shopMenuItemSelected
                   : styles.shopMenuItem
               }
+              onClick={() => {
+                if (index !== selectedIndexRef.current) playMenuMoveSound();
+                setSelectedIndex(index);
+              }}
+              onDoubleClick={() => {
+                addItem(game);
+                playMenuConfirmSound();
+              }}
             >
               {index === selectedIndex ? "▶ " : "  "}
               {game.name}

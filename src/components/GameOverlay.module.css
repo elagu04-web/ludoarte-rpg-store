@@ -23,7 +23,14 @@
        3:2 that the stretch to fill it isn't really noticeable, and it
        reads better than empty bars. */
     width: 100vw;
+    /* 100vh is the LARGEST possible viewport (toolbars collapsed) on
+       mobile Safari, not the currently-visible one -- with the address
+       bar showing, the real visible area is shorter, so bottom-anchored
+       controls (D-pad, interact button) ended up partly below the fold
+       and needed a scroll to reach. 100dvh tracks the actual visible
+       viewport as Safari's chrome shows/hides. */
     height: 100vh;
+    height: 100dvh;
     aspect-ratio: auto;
     margin: 0;
   }

@@ -5,6 +5,7 @@ import CartViewLoader from "@/components/CartViewLoader";
 import SearchScreenLoader from "@/components/SearchScreenLoader";
 import OrderTruckScreenLoader from "@/components/OrderTruckScreenLoader";
 import MusicController from "@/components/MusicController";
+import FullscreenButton from "@/components/FullscreenButton";
 import { CartProvider } from "@/context/CartContext";
 
 export default function Home() {
@@ -16,6 +17,7 @@ export default function Home() {
           <div className={styles.headerRow}>
             <CartBadge />
             <MusicController />
+            <FullscreenButton />
           </div>
           <GameLoader />
         </main>

@@ -17,8 +17,15 @@
    devices and fell back to the smaller desktop sizing). */
 @media (max-height: 500px) and (orientation: landscape) {
   .gameWrapper {
-    width: min(100vw, calc(100vh * 1.5));
-    margin: 0 auto;
+    /* Fill the screen exactly, dropping the aspect-ratio lock -- on a
+       phone whose screen is wider than 1536:1024, keeping that ratio left
+       solid-color bars down the side. A phone screen is close enough to
+       3:2 that the stretch to fill it isn't really noticeable, and it
+       reads better than empty bars. */
+    width: 100vw;
+    height: 100vh;
+    aspect-ratio: auto;
+    margin: 0;
   }
 }
 
@@ -205,6 +212,53 @@
   font-size: 21px;
   line-height: 1.6;
   white-space: pre-wrap;
+}
+
+/* Phones in landscape: the phone's whole screen is barely taller than
+   this box was alone at desktop size, so it needs to take a lot less
+   room -- and the rental list's own bottom clearance (which exists
+   specifically to stay above this box) has to shrink by the same
+   amount, or the list gets squeezed down to a sliver. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .dialogueBox {
+    left: 8px;
+    right: 8px;
+    bottom: 6px;
+    min-height: 0;
+    padding: 6px 10px;
+  }
+
+  .dialogueText {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .rentalMenuPanel {
+    top: 6px;
+    bottom: 110px;
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+
+  .rentalMenuPanel .shopMenuTitle {
+    font-size: 13px;
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+  }
+
+  .shopMenu {
+    top: 6px;
+    right: 6px;
+    width: 220px;
+    font-size: 13px;
+    padding: 8px;
+    max-height: calc(100vh - 116px);
+    overflow-y: auto;
+  }
+
+  .spinningBoxWrapper {
+    transform: translate(-50%, -50%) scale(0.6);
+  }
 }
 
 .videoPopup {

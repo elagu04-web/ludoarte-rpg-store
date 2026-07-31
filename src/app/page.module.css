@@ -83,8 +83,14 @@
 /* Phones in landscape: let the game fill the screen edge to edge instead
    of sitting inside the normal page layout. The title moves out of the
    way; the cart/music buttons stay reachable as a small floating corner
-   instead of a row that would otherwise push the game down. */
-@media (max-width: 900px) and (orientation: landscape) {
+   instead of a row that would otherwise push the game down.
+   Checked by max-height, not max-width: rotated, a phone's WIDTH becomes
+   its long dimension (900px+ on many modern phones, e.g. 926px on an
+   iPhone Pro Max), so a max-width check missed those and silently fell
+   back to the default desktop sizing -- the game rendered, just small.
+   The short dimension (now the height) reliably stays under ~500px for
+   phones in landscape regardless of model. */
+@media (max-height: 500px) and (orientation: landscape) {
   .page {
     min-height: 100vh;
     background: #000;

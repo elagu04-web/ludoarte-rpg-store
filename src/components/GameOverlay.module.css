@@ -10,8 +10,12 @@
 
 /* Phones in landscape: fill the screen edge to edge (see page.module.css,
    which hides the surrounding page chrome in this same media query) --
-   92vh left room for a page header that no longer shows here. */
-@media (max-width: 900px) and (orientation: landscape) {
+   92vh left room for a page header that no longer shows here. Matched by
+   max-height, not max-width -- see the matching comment in
+   page.module.css for why (a rotated phone's width is its long
+   dimension, often 900px+, so a width check silently missed real
+   devices and fell back to the smaller desktop sizing). */
+@media (max-height: 500px) and (orientation: landscape) {
   .gameWrapper {
     width: min(100vw, calc(100vh * 1.5));
     margin: 0 auto;

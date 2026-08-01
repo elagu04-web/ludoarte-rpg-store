@@ -72,7 +72,7 @@ export default function ShopMenu() {
 
     const confirmSelection = () => {
       const game = gamesRef.current[selectedIndexRef.current];
-      if (game) {
+      if (game && game.stock > 0) {
         addItem(game);
         playMenuConfirmSound();
       }
@@ -154,8 +154,10 @@ export default function ShopMenu() {
                 setSelectedIndex(index);
               }}
               onDoubleClick={() => {
-                addItem(game);
-                playMenuConfirmSound();
+                if (game.stock > 0) {
+                  addItem(game);
+                  playMenuConfirmSound();
+                }
               }}
             >
               {index === selectedIndex ? "▶ " : "  "}
@@ -174,8 +176,19 @@ export default function ShopMenu() {
           </button>
         )}
         <div className={styles.shopMenuFooter}>
-          <div className={styles.shopMenuPrice}>${selectedGame.price}</div>
-          <div className={styles.shopMenuHint}>E: Agregar &middot; ESC: Salir</div>
+          <div className={styles.shopMenuPrice}>
+            ${selectedGame.price}
+            {selectedGame.stock === 0 && (
+              <span className={styles.shopMenuOrderOnly}>
+                {" "}
+                &middot; Solo por pedido
+              </span>
+            )}
+          </div>
+          <div className={styles.shopMenuHint}>
+            {selectedGame.stock > 0 ? "E: Agregar" : "Sin stock"} &middot; ESC:
+            Salir
+          </div>
         </div>
       </div>
     </>

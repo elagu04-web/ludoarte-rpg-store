@@ -228,7 +228,11 @@ export class ExteriorScene extends BasePlayerScene {
     this.physics.add.overlap(
       this.fireballs,
       monsterSprites,
-      (obj1, obj2) => this.handleFireballHit(obj1, obj2),
+      (obj1, obj2) =>
+        this.handleFireballHit(
+          obj1 as Phaser.GameObjects.GameObject,
+          obj2 as Phaser.GameObjects.GameObject
+        ),
       undefined,
       this
     );

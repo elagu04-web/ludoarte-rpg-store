@@ -297,7 +297,7 @@ export const shelves: ShelfData[] = [
         name: "Secret Hitler",
         price: 2450,
         stock: 1,
-        image: PLACEHOLDER_IMAGE,
+        image: "/assets/boardgames/secret-hitler.png",
         description: "Juego de roles ocultos e intriga politica: liberales contra fascistas, sin saber quien es quien.",
         players: "5 a 10",
         age: "17+",

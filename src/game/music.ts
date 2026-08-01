@@ -122,6 +122,23 @@ export function isMusicPlaying(): boolean {
   return isPlaying;
 }
 
+// The scheduler keeps ticking via setTimeout regardless of whether the tab
+// is actually visible -- on mobile in particular, backgrounding/switching
+// away doesn't reliably tear down the page, so without this the music (and
+// its AudioContext clock) keeps running silently-then-audibly out of sync
+// once you come back. Suspending on hide and resuming on show keeps the
+// audible state tied to whether the player can actually see the game.
+if (typeof document !== "undefined") {
+  document.addEventListener("visibilitychange", () => {
+    if (!audioContext) return;
+    if (document.hidden) {
+      audioContext.suspend();
+    } else if (isPlaying) {
+      audioContext.resume();
+    }
+  });
+}
+
 /** Short synthesized "zap" sound for firing a fireball -- also self-generated, no audio files. */
 export function playFireballSound() {
   const ctx = ensureContext();

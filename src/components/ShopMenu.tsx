@@ -20,16 +20,20 @@ export default function ShopMenu() {
   const { addItem } = useCart();
 
   const shelf = shelves.find((item) => item.id === openShelfId) ?? null;
-  const selectedGame = shelf?.games[selectedIndex];
+  // Order-only games (stock 0) don't belong on the shelf you're physically
+  // standing in front of -- they show up in the order kiosk's search
+  // instead, where "solo por pedido" actually makes sense.
+  const availableGames = shelf?.games.filter((game) => game.stock > 0) ?? [];
+  const selectedGame = availableGames[selectedIndex];
   const selectedIndexRef = useRef(0);
-  const gamesRef = useRef(shelf?.games ?? []);
+  const gamesRef = useRef(availableGames);
 
   useEffect(() => {
     selectedIndexRef.current = selectedIndex;
   }, [selectedIndex]);
 
   useEffect(() => {
-    gamesRef.current = shelf?.games ?? [];
+    gamesRef.current = availableGames;
   }, [shelf]);
 
   useEffect(() => {
@@ -72,7 +76,7 @@ export default function ShopMenu() {
 
     const confirmSelection = () => {
       const game = gamesRef.current[selectedIndexRef.current];
-      if (game && game.stock > 0) {
+      if (game) {
         addItem(game);
         playMenuConfirmSound();
       }
@@ -141,7 +145,7 @@ export default function ShopMenu() {
           </button>
         </div>
         <ul className={styles.shopMenuList}>
-          {shelf.games.map((game, index) => (
+          {availableGames.map((game, index) => (
             <li
               key={game.id}
               className={
@@ -154,10 +158,8 @@ export default function ShopMenu() {
                 setSelectedIndex(index);
               }}
               onDoubleClick={() => {
-                if (game.stock > 0) {
-                  addItem(game);
-                  playMenuConfirmSound();
-                }
+                addItem(game);
+                playMenuConfirmSound();
               }}
             >
               {index === selectedIndex ? "▶ " : "  "}
@@ -176,19 +178,8 @@ export default function ShopMenu() {
           </button>
         )}
         <div className={styles.shopMenuFooter}>
-          <div className={styles.shopMenuPrice}>
-            ${selectedGame.price}
-            {selectedGame.stock === 0 && (
-              <span className={styles.shopMenuOrderOnly}>
-                {" "}
-                &middot; Solo por pedido
-              </span>
-            )}
-          </div>
-          <div className={styles.shopMenuHint}>
-            {selectedGame.stock > 0 ? "E: Agregar" : "Sin stock"} &middot; ESC:
-            Salir
-          </div>
+          <div className={styles.shopMenuPrice}>${selectedGame.price}</div>
+          <div className={styles.shopMenuHint}>E: Agregar &middot; ESC: Salir</div>
         </div>
       </div>
     </>

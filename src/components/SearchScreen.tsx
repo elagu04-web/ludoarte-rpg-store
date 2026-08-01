@@ -101,6 +101,11 @@ export default function SearchScreen() {
                 <div className={styles.resultInfo}>
                   <div className={styles.resultName}>{game.name}</div>
                   <div className={styles.resultPrice}>${game.price}</div>
+                  {game.stock === 0 && (
+                    <div className={styles.orderHint}>
+                      Pedilo ya en el camión del estacionamiento
+                    </div>
+                  )}
                 </div>
                 <span
                   className={`${styles.stockBadge} ${

@@ -92,6 +92,12 @@
   color: #666666;
 }
 
+.orderHint {
+  font-size: 12px;
+  color: #965c11;
+  margin-top: 2px;
+}
+
 .stockBadge {
   flex-shrink: 0;
   font-size: 12px;

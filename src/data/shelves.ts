@@ -480,7 +480,7 @@ export const shelves: ShelfData[] = [
         name: "Flip 7",
         price: 1090,
         stock: 1,
-        image: PLACEHOLDER_IMAGE,
+        image: "/assets/boardgames/flip-7.png",
         description: "Juego de cartas de arriesgar o plantarse: das vuelta cartas para sumar puntos, pero si repetis un numero perdes todo.",
         players: "3 a 18",
         age: "8+",

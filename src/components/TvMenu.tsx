@@ -16,11 +16,14 @@ interface MenuItem {
   label: string;
 }
 
-const MENU_ITEMS: MenuItem[] = [{ id: "fotos", label: "Fotos" }];
+const MENU_ITEMS: MenuItem[] = [
+  { id: "fotos", label: "Fotos" },
+  { id: "videos", label: "Videos" },
+];
 
 export default function TvMenu() {
   const [isOpen, setIsOpen] = useState(false);
-  const [view, setView] = useState<"menu" | "gallery">("menu");
+  const [view, setView] = useState<"menu" | "gallery" | "video">("menu");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [photos, setPhotos] = useState<string[]>([]);
   const [photoIndex, setPhotoIndex] = useState(0);
@@ -53,7 +56,7 @@ export default function TvMenu() {
 
   useEffect(() => {
     eventBus.emit("menu-open", isOpen);
-    eventBus.emit("background-blur", isOpen && view === "gallery");
+    eventBus.emit("background-blur", isOpen && view !== "menu");
   }, [isOpen, view]);
 
   const wasOpenRef = useRef(false);
@@ -69,6 +72,12 @@ export default function TvMenu() {
   const closeAll = () => setIsOpen(false);
 
   const openItem = async (item: MenuItem) => {
+    if (item.id === "videos") {
+      playMenuConfirmSound();
+      setView("video");
+      return;
+    }
+
     if (item.id !== "fotos") return;
 
     playMenuConfirmSound();
@@ -105,6 +114,8 @@ export default function TvMenu() {
         } else if (event.key === "Escape") {
           closeAll();
         }
+      } else if (viewRef.current === "video") {
+        if (event.key === "Escape") setView("menu");
       } else {
         const count = photosRef.current.length;
         if (event.key === "ArrowLeft" || event.key === "a" || event.key === "A") {
@@ -128,6 +139,22 @@ export default function TvMenu() {
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  if (view === "video") {
+    return (
+      <div className={styles.galleryOverlay}>
+        <button className={styles.galleryClose} onClick={() => setView("menu")}>
+          ESC
+        </button>
+        <video
+          className={styles.videoPlayer}
+          src="/assets/videos/videos.mp4"
+          controls
+          autoPlay
+        />
+      </div>
+    );
+  }
 
   if (view === "gallery") {
     return (

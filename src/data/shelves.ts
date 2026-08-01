@@ -469,7 +469,7 @@ export const shelves: ShelfData[] = [
         name: "Burako",
         price: 900,
         stock: 1,
-        image: PLACEHOLDER_IMAGE,
+        image: "/assets/boardgames/burako.png",
         description: "Juego de cartas tipo rummy: formas escaleras y grupos de la misma pinta para bajar tus cartas antes que nadie.",
         players: "2 a 6",
         age: "8+",

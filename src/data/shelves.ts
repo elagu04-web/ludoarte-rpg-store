@@ -148,7 +148,7 @@ export const shelves: ShelfData[] = [
         name: "Pandemia!",
         price: 500,
         stock: 1,
-        image: PLACEHOLDER_IMAGE,
+        image: "/assets/boardgames/pandemia.png",
         description: "Mantene tu cuerpo sano mientras infectas a tus rivales con virus: se el primero en juntar 4 organos sanos para ganar.",
         players: "2 a 6",
         age: "8+",

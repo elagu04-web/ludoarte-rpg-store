@@ -130,7 +130,7 @@ export function isMusicPlaying(): boolean {
 // audible state tied to whether the player can actually see the game.
 if (typeof document !== "undefined") {
   document.addEventListener("visibilitychange", () => {
-    if (!audioContext) return;
+    if (!audioContext || audioContext.state === "closed") return;
     if (document.hidden) {
       audioContext.suspend();
     } else if (isPlaying) {

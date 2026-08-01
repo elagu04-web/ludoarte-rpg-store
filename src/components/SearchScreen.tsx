@@ -3,20 +3,57 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { eventBus } from "@/game/eventBus";
 import {
+  playMenuMoveSound,
+  playMenuConfirmSound,
   playMenuOpenSound,
   playMenuCloseSound,
-  playMenuConfirmSound,
 } from "@/game/music";
 import { shelves } from "@/data/shelves";
 import { useCart } from "@/context/CartContext";
-import styles from "./SearchScreen.module.css";
+import SpinningBox from "./SpinningBox";
+import styles from "./GameOverlay.module.css";
 
 const allGames = shelves.flatMap((shelf) => shelf.games);
 
 export default function SearchScreen() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [appliedQuery, setAppliedQuery] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const { addItem } = useCart();
+
+  const inputRef = useRef<HTMLInputElement>(null);
+  const selectedItemRef = useRef<HTMLLIElement | null>(null);
+  const selectedIndexRef = useRef(0);
+  const queryRef = useRef(query);
+
+  const results = useMemo(() => {
+    const normalized = appliedQuery.trim().toLowerCase();
+    if (!normalized) return allGames;
+    return allGames.filter((game) =>
+      game.name.toLowerCase().includes(normalized)
+    );
+  }, [appliedQuery]);
+
+  const resultsRef = useRef(results);
+  const selectedGame = results[selectedIndex];
+
+  useEffect(() => {
+    selectedIndexRef.current = selectedIndex;
+  }, [selectedIndex]);
+
+  useEffect(() => {
+    queryRef.current = query;
+  }, [query]);
+
+  useEffect(() => {
+    resultsRef.current = results;
+    setSelectedIndex(0);
+  }, [results]);
+
+  useEffect(() => {
+    selectedItemRef.current?.scrollIntoView({ block: "nearest" });
+  }, [selectedIndex]);
 
   useEffect(() => {
     const handleOpen = () => setIsOpen(true);
@@ -35,6 +72,8 @@ export default function SearchScreen() {
     if (isOpen && !wasOpenRef.current) {
       playMenuOpenSound();
       setQuery("");
+      setAppliedQuery("");
+      setSelectedIndex(0);
     } else if (!isOpen && wasOpenRef.current) {
       playMenuCloseSound();
     }
@@ -43,95 +82,182 @@ export default function SearchScreen() {
 
   const close = () => setIsOpen(false);
 
+  const runSearch = () => {
+    setAppliedQuery(queryRef.current);
+    setSelectedIndex(0);
+    playMenuConfirmSound();
+  };
+
   useEffect(() => {
     if (!isOpen) return;
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") close();
+    const moveSelection = (delta: number) => {
+      setSelectedIndex((prev) => {
+        const count = resultsRef.current.length;
+        if (count === 0) return 0;
+        return (prev + delta + count) % count;
+      });
+      playMenuMoveSound();
     };
+
+    const confirmSelection = () => {
+      const game = resultsRef.current[selectedIndexRef.current];
+      if (game && game.stock > 0) {
+        addItem(game);
+        playMenuConfirmSound();
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const typingInSearch = document.activeElement === inputRef.current;
+
+      if (event.key === "Escape") {
+        close();
+        return;
+      }
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        if (typingInSearch) {
+          runSearch();
+          inputRef.current?.blur();
+        } else {
+          // Enter is how you get INTO the search box from the list (the
+          // other way in is a mouse click) -- it doesn't double as "add",
+          // that's what E is for, same as every other menu in the game.
+          inputRef.current?.focus();
+        }
+        return;
+      }
+
+      if (event.key === "ArrowUp") {
+        moveSelection(-1);
+        return;
+      }
+      if (event.key === "ArrowDown") {
+        moveSelection(1);
+        return;
+      }
+
+      // Letter shortcuts only apply once you're out of the search box --
+      // otherwise typing a name like "Saboteur" would move the selection
+      // and add games to the cart instead of spelling out the word.
+      if (typingInSearch) return;
+
+      if (event.key === "w" || event.key === "W") {
+        moveSelection(-1);
+      } else if (event.key === "s" || event.key === "S") {
+        moveSelection(1);
+      } else if (event.key === "e" || event.key === "E") {
+        confirmSelection();
+      }
+    };
+
+    const handleTouchDirection = (payload: {
+      direction: "up" | "down" | "left" | "right";
+      pressed: boolean;
+    }) => {
+      if (!payload.pressed) return;
+      if (payload.direction === "up") moveSelection(-1);
+      if (payload.direction === "down") moveSelection(1);
+    };
+
+    const handleTouchInteract = () => confirmSelection();
 
     window.addEventListener("keydown", handleKeyDown);
+    eventBus.on("touch-direction", handleTouchDirection);
+    eventBus.on("touch-interact", handleTouchInteract);
+
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
+      eventBus.off("touch-direction", handleTouchDirection);
+      eventBus.off("touch-interact", handleTouchInteract);
     };
-  }, [isOpen]);
-
-  const results = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) return allGames;
-    return allGames.filter((game) =>
-      game.name.toLowerCase().includes(normalized)
-    );
-  }, [query]);
+  }, [isOpen, addItem]);
 
   if (!isOpen) return null;
 
   return (
-    <div className={styles.backdrop} onClick={close}>
-      <div className={styles.panel} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.header}>
-          <h2>Buscador de juegos</h2>
-          <button className={styles.closeButton} onClick={close}>
+    <>
+      {selectedGame && (
+        <div className={styles.spinningBoxWrapper}>
+          <SpinningBox game={selectedGame} key={selectedGame.id} />
+        </div>
+      )}
+
+      <div className={`${styles.shopMenu} ${styles.searchMenuPanel}`}>
+        <div className={styles.shopMenuTitle}>
+          <span>Buscador de juegos</span>
+          <button className={styles.shopMenuClose} onClick={close}>
             ESC
           </button>
         </div>
 
         <input
+          ref={inputRef}
           type="text"
-          autoFocus
-          placeholder="Buscar por nombre..."
+          placeholder="Enter o clic para escribir..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className={styles.searchInput}
+          className={styles.searchMenuInput}
         />
 
-        <p className={styles.resultCount}>
-          {results.length} juego{results.length === 1 ? "" : "s"} encontrado
-          {results.length === 1 ? "" : "s"}
-        </p>
-
         {results.length === 0 ? (
-          <p className={styles.emptyMessage}>
+          <p className={styles.searchMenuEmpty}>
             No encontramos ningun juego con ese nombre.
           </p>
         ) : (
-          <ul className={styles.resultList}>
-            {results.map((game) => (
-              <li key={game.id} className={styles.resultItem}>
-                <div className={styles.resultInfo}>
-                  <div className={styles.resultName}>{game.name}</div>
-                  <div className={styles.resultPrice}>${game.price}</div>
-                  {game.stock === 0 && (
-                    <div className={styles.orderHint}>
-                      Pedilo ya en el camión del estacionamiento
-                    </div>
-                  )}
-                </div>
-                <span
-                  className={`${styles.stockBadge} ${
-                    game.stock > 0 ? styles.stockAvailable : styles.stockOrder
-                  }`}
-                >
-                  {game.stock > 0
-                    ? "Disponible ahora"
-                    : "Se puede conseguir por pedido"}
-                </span>
-                {game.stock > 0 && (
-                  <button
-                    className={styles.addButton}
-                    onClick={() => {
-                      addItem(game);
-                      playMenuConfirmSound();
-                    }}
-                  >
-                    Agregar
-                  </button>
-                )}
+          <ul className={`${styles.shopMenuList} ${styles.searchMenuList}`}>
+            {results.map((game, index) => (
+              <li
+                key={game.id}
+                ref={index === selectedIndex ? selectedItemRef : undefined}
+                className={
+                  index === selectedIndex
+                    ? styles.shopMenuItemSelected
+                    : styles.shopMenuItem
+                }
+                onClick={() => {
+                  if (index !== selectedIndexRef.current) playMenuMoveSound();
+                  setSelectedIndex(index);
+                  inputRef.current?.blur();
+                }}
+                onDoubleClick={() => {
+                  if (game.stock > 0) {
+                    addItem(game);
+                    playMenuConfirmSound();
+                  }
+                }}
+              >
+                {index === selectedIndex ? "▶ " : "  "}
+                {game.name}
               </li>
             ))}
           </ul>
         )}
+
+        {selectedGame && (
+          <>
+            <div
+              className={`${styles.searchMenuStatus} ${
+                selectedGame.stock > 0
+                  ? styles.searchMenuStatusAvailable
+                  : styles.searchMenuStatusOrder
+              }`}
+            >
+              {selectedGame.stock > 0
+                ? "Disponible ahora"
+                : "Pedilo ya en el camión del estacionamiento"}
+            </div>
+            <div className={styles.shopMenuFooter}>
+              <div className={styles.shopMenuPrice}>${selectedGame.price}</div>
+              <div className={styles.shopMenuHint}>
+                {selectedGame.stock > 0 ? "E: Agregar" : ""} &middot; ESC: Salir
+              </div>
+            </div>
+          </>
+        )}
       </div>
-    </div>
+    </>
   );
 }

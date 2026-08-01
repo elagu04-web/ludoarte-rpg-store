@@ -199,6 +199,66 @@
   font-size: 14px;
 }
 
+/* Buscador de juegos -- same panel/list/footer language as the shop and
+   rental menus (navigable list, ▶ selection, E/ESC footer hint) plus a
+   text input up top. No dialogue box competes for space here, so it can
+   use the full height instead of the rental menu's reserved bottom gap. */
+.searchMenuPanel {
+  display: flex;
+  flex-direction: column;
+  top: 24px;
+  bottom: 24px;
+  font-size: 14px;
+  padding: 10px 12px;
+}
+
+.searchMenuInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  font-size: 15px;
+  border: 2px solid #2d2d44;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  background: #ffffff;
+  color: #1a1a1a;
+}
+
+.searchMenuList {
+  overflow-x: hidden;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  margin-bottom: 6px;
+}
+
+.searchMenuList .shopMenuItem,
+.searchMenuList .shopMenuItemSelected {
+  padding: 3px 4px;
+  white-space: normal;
+}
+
+.searchMenuEmpty {
+  font-size: 13px;
+  color: #555555;
+  text-align: center;
+  padding: 16px 0;
+}
+
+.searchMenuStatus {
+  font-size: 12px;
+  font-weight: bold;
+  padding-top: 4px;
+}
+
+.searchMenuStatusAvailable {
+  color: #227a3c;
+}
+
+.searchMenuStatusOrder {
+  color: #965c11;
+}
+
 .dialogueBox {
   position: absolute;
   left: 24px;
@@ -249,6 +309,19 @@
   }
 
   .rentalMenuPanel .shopMenuTitle {
+    font-size: 13px;
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+  }
+
+  .searchMenuPanel {
+    top: 6px;
+    bottom: 6px;
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+
+  .searchMenuPanel .shopMenuTitle {
     font-size: 13px;
     margin-bottom: 4px;
     padding-bottom: 4px;

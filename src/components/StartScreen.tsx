@@ -110,9 +110,13 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
     // The tint cache is per-browser, not per-account -- without this,
     // logging out would keep showing the just-logged-out account's
     // chosen color as if it belonged to whoever uses this browser next.
+    // Note: hasChosenCharacter is deliberately left alone here -- setting
+    // it false while `user` is still the old (truthy) value for one more
+    // render would make forcedCharacterSelect true and flash the picker
+    // open right before signOut() finishes. The [user, loading] effect
+    // recomputes it correctly once `user` actually becomes null.
     localStorage.removeItem(CHARACTER_TINT_KEY);
     gameState.playerTint = 0xffffff;
-    setHasChosenCharacter(false);
     signOut();
   };
 

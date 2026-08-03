@@ -67,15 +67,23 @@ export class GroundFloorScene extends BasePlayerScene {
       () => eventBus.emit("tv-menu-open", true)
     );
 
-    // Barras/estanterias decorativas a los lados (colisionables)
-    this.addObstacle(102, 755, 165, 1110, { visible: false });
-    this.addObstacle(813, 755, 166, 1110, { visible: false });
+    // Barras/estanterias decorativas a los lados (colisionables). Se
+    // extienden hasta encontrarse con la pared de abajo (wallB1/wallB2) --
+    // antes terminaban en y=1310 y la pared empezaba en y=1480, dejando
+    // una franja de pared sin colision de 170px donde se podia caminar
+    // "sobre lo negro" del fondo.
+    this.addObstacle(102, 840, 165, 1280, { visible: false });
+    this.addObstacle(813, 840, 166, 1280, { visible: false });
 
     // Mesas centrales (2 columnas x 4 filas). Cada una tiene su cartel de
     // que actividad se hace ahi -- de momento solo el texto (como el de
     // Alquiler), hasta que haya carteles de verdad. Solo la de Alquiler
     // es interactiva por ahora.
-    const TABLE_SIZE = 145;
+    // Un poco mas chica que el dibujo de la mesa (que incluye las patas,
+    // mas anchas que el tablero) para dejar un pasillo comodo entre
+    // columnas -- con el tamaño real completo el hueco quedaba demasiado
+    // justo para cruzar en diagonal.
+    const TABLE_SIZE = 125;
     const RENTAL_TABLE = { x: 560, y: 535, width: TABLE_SIZE, height: TABLE_SIZE };
     const tables: { x: number; y: number; label?: string }[] = [
       { x: 355, y: 535, label: "AJEDREZ" },

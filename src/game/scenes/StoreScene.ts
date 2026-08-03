@@ -45,7 +45,14 @@ export class StoreScene extends BasePlayerScene {
     // costados corren casi toda la altura del salon, asi que la zona de
     // interaccion se recorta antes de llegar al mostrador/mesa de pedidos
     // de mas abajo, para que no se solapen los carteles de "Presiona E".
-    this.addObstacle(180, 740, 160, 1020, { visible: false }); // estanteria izquierda
+    // Ensanchada bastante hacia el pasillo (era 160 de ancho, borde en
+    // x=260): la estanteria esta dibujada en perspectiva con los juegos
+    // apilados bien alto, y esos objetos altos "asoman" hacia el pasillo
+    // en el dibujo mas de lo que ocupa la base real del mueble -- con el
+    // borde justo en la base, el personaje podia acercarse lo suficiente
+    // para quedar visualmente parado detras/adentro de esas cajas apiladas.
+    // Con mas margen ya no se puede acercar tanto.
+    this.addObstacle(180, 740, 240, 1020, { visible: false }); // estanteria izquierda
     this.shelfZones.push({
       id: shelves[0].id,
       rect: new Phaser.Geom.Rectangle(70, 200, 180, 750),
@@ -53,7 +60,7 @@ export class StoreScene extends BasePlayerScene {
     this.addTapHotspot(160, 575, 180, 750, () => this.nearbyShelfId === shelves[0].id, () =>
       this.openShelf(shelves[0].id)
     );
-    this.addObstacle(865, 740, 130, 1020, { visible: false }); // estanteria derecha
+    this.addObstacle(825, 740, 210, 1020, { visible: false }); // estanteria derecha
     this.shelfZones.push({
       id: shelves[1].id,
       rect: new Phaser.Geom.Rectangle(810, 200, 150, 750),

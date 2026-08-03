@@ -107,12 +107,12 @@ export const rentalGames: RentalGame[] = [
     duration: "45 min",
     image: "/assets/boardgames/bohnanza.png",
   }),
-  rentalGame("Brass: Birmingham", 440, {
-    description: "Juego de estrategia economica: desarrolla industrias y redes de transporte durante la revolucion industrial.",
+  rentalGame("Brass: Lancashire", 440, {
+    description: "Juego de estrategia economica: desarrolla industrias y redes de transporte en el Lancashire de la revolucion industrial.",
     players: "2 a 4",
     age: "14+",
     duration: "60 a 120 min",
-    image: "/assets/boardgames/brass-birmingham.png",
+    image: "/assets/boardgames/brass-lancashire.png",
   }),
   rentalGame("Brawl", 440, {
     description: "Duelo rapido de cartas: bloquea, esquiva y golpea a tu rival hasta dejarlo sin vida.",

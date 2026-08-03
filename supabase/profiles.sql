@@ -5,6 +5,7 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text,
   display_name text,
+  character_tint integer,
   created_at timestamptz not null default now()
 );
 
@@ -19,6 +20,11 @@ drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile"
   on public.profiles for update
   using (auth.uid() = id);
+
+drop policy if exists "Users can insert own profile" on public.profiles;
+create policy "Users can insert own profile"
+  on public.profiles for insert
+  with check (auth.uid() = id);
 
 -- Crea automaticamente una fila en "profiles" cada vez que alguien
 -- se registra (via Google) en auth.users.
@@ -38,3 +44,7 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- Migracion: si la tabla "profiles" ya existia de antes (sin la
+-- columna character_tint), correr esto para agregarla.
+alter table public.profiles add column if not exists character_tint integer;

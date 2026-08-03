@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { playMenuMoveSound, playMenuConfirmSound } from "@/game/music";
 import { useAuth } from "@/context/AuthContext";
+import { createClient } from "@/lib/supabase/client";
 import { gameState } from "@/game/gameState";
 import CharacterSelectScreen from "./CharacterSelectScreen";
 import styles from "./StartScreen.module.css";
@@ -44,23 +45,57 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
   const [characterMenuOpen, setCharacterMenuOpen] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem(CHARACTER_TINT_KEY);
-    if (saved) {
-      gameState.playerTint = Number(saved);
-      setHasChosenCharacter(true);
+    if (loading) return;
+
+    if (!user) {
+      const saved = localStorage.getItem(CHARACTER_TINT_KEY);
+      if (saved) {
+        gameState.playerTint = Number(saved);
+        setHasChosenCharacter(true);
+      } else {
+        setHasChosenCharacter(false);
+      }
+      setTintChecked(true);
+      return;
     }
-    setTintChecked(true);
-  }, []);
+
+    let cancelled = false;
+    createClient()
+      .from("profiles")
+      .select("character_tint")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        if (data?.character_tint != null) {
+          gameState.playerTint = data.character_tint;
+          setHasChosenCharacter(true);
+        } else {
+          setHasChosenCharacter(false);
+        }
+        setTintChecked(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, loading]);
 
   const forcedCharacterSelect =
     !loading && !!user && tintChecked && !hasChosenCharacter;
   const showCharacterSelect = forcedCharacterSelect || characterMenuOpen;
 
   const confirmCharacter = (tint: number) => {
-    localStorage.setItem(CHARACTER_TINT_KEY, String(tint));
     gameState.playerTint = tint;
     setHasChosenCharacter(true);
     setCharacterMenuOpen(false);
+    if (user) {
+      createClient()
+        .from("profiles")
+        .upsert({ id: user.id, email: user.email, character_tint: tint });
+    } else {
+      localStorage.setItem(CHARACTER_TINT_KEY, String(tint));
+    }
   };
 
   const selectedIndexRef = useRef(0);

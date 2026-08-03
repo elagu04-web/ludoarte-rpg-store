@@ -97,6 +97,16 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
     !loading && !!user && tintChecked && !hasChosenCharacter;
   const showCharacterSelect = forcedCharacterSelect || characterMenuOpen;
 
+  const handleSignOut = () => {
+    // The tint cache is per-browser, not per-account -- without this,
+    // logging out would keep showing the just-logged-out account's
+    // chosen color as if it belonged to whoever uses this browser next.
+    localStorage.removeItem(CHARACTER_TINT_KEY);
+    gameState.playerTint = 0xffffff;
+    setHasChosenCharacter(false);
+    signOut();
+  };
+
   const confirmCharacter = (tint: number) => {
     gameState.playerTint = tint;
     setHasChosenCharacter(true);
@@ -192,7 +202,7 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
       {!loading && (
         <div className={styles.authCorner}>
           {user ? (
-            <button className={styles.authButton} onClick={signOut}>
+            <button className={styles.authButton} onClick={handleSignOut}>
               Cerrar sesion ({user.email})
             </button>
           ) : (

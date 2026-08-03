@@ -10,4 +10,6 @@ export const gameState = {
    * escape a fight through a door instead of finishing it; resets to 1
    * after a win. */
   pendingMonsters: 1,
+  /** Tint applied to the player sprite (0xffffff = no tint, original colors). */
+  playerTint: 0xffffff,
 };

@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { eventBus } from "@/game/eventBus";
+import { gameState } from "@/game/gameState";
 import { SCENE_DIMENSIONS } from "@/game/sceneDimensions";
 
 export const PLAYER_SPEED = 320;
@@ -92,6 +93,7 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(x, y, "player-walk", 1);
     this.player.setCollideWorldBounds(true);
     this.player.body?.setSize(40, 50).setOffset(22, 54);
+    this.player.setTint(gameState.playerTint);
     this.createPlayerAnimations();
 
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
@@ -280,7 +282,7 @@ export abstract class BasePlayerScene extends Phaser.Scene {
   protected revive() {
     this.isDefeated = false;
     this.player.setAngle(0);
-    this.player.clearTint();
+    this.player.setTint(gameState.playerTint);
   }
 
   protected isEKeyJustDown(): boolean {

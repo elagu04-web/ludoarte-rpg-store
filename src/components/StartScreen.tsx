@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { playMenuMoveSound, playMenuConfirmSound } from "@/game/music";
 import { useAuth } from "@/context/AuthContext";
+import { gameState } from "@/game/gameState";
+import CharacterSelectScreen from "./CharacterSelectScreen";
 import styles from "./StartScreen.module.css";
+
+const CHARACTER_TINT_KEY = "ludoarte-character-tint";
 
 // The menu doesn't wait for the whole rise animation to finish -- that
 // made it feel like a long dead wait before you could do anything, even
@@ -11,9 +15,15 @@ import styles from "./StartScreen.module.css";
 const MENU_REVEAL_MS = 1800;
 
 interface MenuItem {
-  id: "historia" | "tienda" | "login" | "logout";
+  id: "historia" | "tienda" | "personaje";
   label: string;
 }
+
+const MENU_ITEMS: MenuItem[] = [
+  { id: "historia", label: "Modo Historia" },
+  { id: "tienda", label: "Modo Tienda" },
+  { id: "personaje", label: "Elegir Personaje" },
+];
 
 const TICKER_TEXT =
   "Tienda de Juegos de Mesa — Abierto de martes a domingo en Épico Atlántida, calle 20 entre 11 y 1 — ";
@@ -29,31 +39,34 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const menuItems = useMemo<MenuItem[]>(() => {
-    const items: MenuItem[] = [
-      { id: "historia", label: "Modo Historia" },
-      { id: "tienda", label: "Modo Tienda" },
-    ];
-    if (!loading) {
-      items.push(
-        user
-          ? { id: "logout", label: `Cerrar sesion (${user.email})` }
-          : { id: "login", label: "Iniciar sesion con Google" }
-      );
+  const [tintChecked, setTintChecked] = useState(false);
+  const [hasChosenCharacter, setHasChosenCharacter] = useState(false);
+  const [characterMenuOpen, setCharacterMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(CHARACTER_TINT_KEY);
+    if (saved) {
+      gameState.playerTint = Number(saved);
+      setHasChosenCharacter(true);
     }
-    return items;
-  }, [user, loading]);
+    setTintChecked(true);
+  }, []);
+
+  const forcedCharacterSelect =
+    !loading && !!user && tintChecked && !hasChosenCharacter;
+  const showCharacterSelect = forcedCharacterSelect || characterMenuOpen;
+
+  const confirmCharacter = (tint: number) => {
+    localStorage.setItem(CHARACTER_TINT_KEY, String(tint));
+    gameState.playerTint = tint;
+    setHasChosenCharacter(true);
+    setCharacterMenuOpen(false);
+  };
 
   const selectedIndexRef = useRef(0);
   useEffect(() => {
     selectedIndexRef.current = selectedIndex;
   }, [selectedIndex]);
-
-  useEffect(() => {
-    if (selectedIndex >= menuItems.length) {
-      setSelectedIndex(0);
-    }
-  }, [menuItems, selectedIndex]);
 
   useEffect(() => {
     const riseTimer = setTimeout(() => setRisen(true), 50);
@@ -65,22 +78,20 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
   }, []);
 
   useEffect(() => {
-    if (!showMenu) return;
+    if (!showMenu || showCharacterSelect) return;
 
     const runAction = (item: MenuItem) => {
       if (item.id === "historia") {
         onStart();
       } else if (item.id === "tienda") {
         onTienda();
-      } else if (item.id === "login") {
-        signInWithGoogle();
-      } else if (item.id === "logout") {
-        signOut();
+      } else if (item.id === "personaje") {
+        setCharacterMenuOpen(true);
       }
     };
 
     const confirmSelection = () => {
-      const item = menuItems[selectedIndexRef.current];
+      const item = MENU_ITEMS[selectedIndexRef.current];
       if (!item) return;
       playMenuConfirmSound();
       runAction(item);
@@ -88,10 +99,10 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowUp" || event.key === "w" || event.key === "W") {
-        setSelectedIndex((prev) => (prev - 1 + menuItems.length) % menuItems.length);
+        setSelectedIndex((prev) => (prev - 1 + MENU_ITEMS.length) % MENU_ITEMS.length);
         playMenuMoveSound();
       } else if (event.key === "ArrowDown" || event.key === "s" || event.key === "S") {
-        setSelectedIndex((prev) => (prev + 1) % menuItems.length);
+        setSelectedIndex((prev) => (prev + 1) % MENU_ITEMS.length);
         playMenuMoveSound();
       } else if (event.key === "e" || event.key === "E" || event.key === "Enter") {
         confirmSelection();
@@ -100,7 +111,7 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showMenu, onStart, onTienda, menuItems, signInWithGoogle, signOut]);
+  }, [showMenu, showCharacterSelect, onStart, onTienda]);
 
   const selectItem = (item: MenuItem, index: number) => {
     if (index !== selectedIndexRef.current) playMenuMoveSound();
@@ -113,17 +124,38 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
       onStart();
     } else if (item.id === "tienda") {
       onTienda();
-    } else if (item.id === "login") {
-      signInWithGoogle();
-    } else if (item.id === "logout") {
-      signOut();
+    } else if (item.id === "personaje") {
+      setCharacterMenuOpen(true);
     }
   };
+
+  if (showCharacterSelect) {
+    return (
+      <CharacterSelectScreen
+        onConfirm={confirmCharacter}
+        onCancel={forcedCharacterSelect ? undefined : () => setCharacterMenuOpen(false)}
+      />
+    );
+  }
 
   return (
     <div className={styles.screen}>
       <div className={styles.background} />
       <div className={`${styles.darkOverlay} ${risen ? styles.darkOverlayOn : ""}`} />
+
+      {!loading && (
+        <div className={styles.authCorner}>
+          {user ? (
+            <button className={styles.authButton} onClick={signOut}>
+              Cerrar sesion ({user.email})
+            </button>
+          ) : (
+            <button className={styles.authButton} onClick={signInWithGoogle}>
+              Iniciar sesion con Google
+            </button>
+          )}
+        </div>
+      )}
 
       <div className={`${styles.logoWrapper} ${risen ? styles.logoWrapperRisen : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element -- plain <img>
@@ -136,7 +168,7 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
       {showMenu && (
         <div className={styles.menu}>
           <ul className={styles.menuList}>
-            {menuItems.map((item, index) => (
+            {MENU_ITEMS.map((item, index) => (
               <li
                 key={item.id}
                 className={

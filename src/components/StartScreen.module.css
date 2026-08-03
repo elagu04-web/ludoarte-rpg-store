@@ -27,6 +27,28 @@
   opacity: 0.8;
 }
 
+.authCorner {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  z-index: 5;
+}
+
+.authButton {
+  font-family: var(--font-pixel), monospace;
+  font-size: 9px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.45);
+  color: #e8e0d0;
+  cursor: pointer;
+}
+
+.authButton:hover {
+  background: rgba(0, 0, 0, 0.65);
+}
+
 .logoWrapper {
   position: absolute;
   left: 50%;
@@ -162,5 +184,9 @@
   }
   .tickerTrack span {
     font-size: 12px;
+  }
+  .authButton {
+    font-size: 8px;
+    padding: 6px 8px;
   }
 }

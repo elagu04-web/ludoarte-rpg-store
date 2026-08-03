@@ -204,7 +204,7 @@ export const rentalGames: RentalGame[] = [
   rentalGame("Exploding Kittens", 110),
   rentalGame("Faraway", 220),
   rentalGame("Flip 7", 110),
-  rentalGame("GLC: El Resurgir de la Comunidad del Anillo", 440, {
+  rentalGame("El Señor de los Anillos: El Destino de la Comunidad", 440, {
     description: "Como miembros de la Comunidad, viven una aventura cooperativa para salvar (o condenar) la Tierra Media.",
     players: "1 a 5",
     age: "14+",

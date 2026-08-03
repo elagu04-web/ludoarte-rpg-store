@@ -145,9 +145,9 @@ export class ExteriorScene extends BasePlayerScene {
   /**
    * Info screen on the glass door to the right of the entrance -- the
    * "pantalla con info" the player can approach and press E on to open the
-   * game search screen. It's purely decorative (no collision, like the
-   * door art itself); the interaction zone is a separate, taller rectangle
-   * that reaches down past the wall's collision area (y > 530) into the
+   * lore crawl. It's purely decorative (no collision, like the door art
+   * itself); the interaction zone is a separate, taller rectangle that
+   * reaches down past the wall's collision area (y > 530) into the
    * walkable yard, so it stays reachable even though the screen art sits
    * higher up on the facade.
    */
@@ -168,7 +168,7 @@ export class ExteriorScene extends BasePlayerScene {
       width,
       height,
       () => this.nearScreen,
-      () => eventBus.emit("search-open", true)
+      () => eventBus.emit("lore-open", true)
     );
 
     const sidePadding = 30;
@@ -578,7 +578,7 @@ export class ExteriorScene extends BasePlayerScene {
     this.updateScreenProximity();
 
     if (this.nearScreen && this.isEKeyJustDown()) {
-      eventBus.emit("search-open", true);
+      eventBus.emit("lore-open", true);
     }
 
     if (this.isPlayerInZone(this.doorZone)) {

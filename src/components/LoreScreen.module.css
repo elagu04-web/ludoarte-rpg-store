@@ -1,0 +1,80 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  overflow: hidden;
+  background: #000;
+}
+
+.background {
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/Pantalla de inicio/fachada.png");
+  background-size: cover;
+  background-position: center;
+}
+
+.darkOverlay {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0.75;
+}
+
+.crawlWrapper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.crawl {
+  position: absolute;
+  top: 100vh;
+  width: min(640px, 86vw);
+  margin: 0;
+  font-family: var(--font-pixel), monospace;
+  font-size: 15px;
+  line-height: 2;
+  color: #f5d060;
+  text-align: center;
+  white-space: pre-wrap;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+  animation: crawlUp 55s linear forwards;
+}
+
+@keyframes crawlUp {
+  from {
+    top: 100vh;
+  }
+  to {
+    top: -230vh;
+  }
+}
+
+.exitButton {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  font-family: var(--font-pixel), monospace;
+  font-size: 9px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.45);
+  color: #e8e0d0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.exitButton:hover {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+@media (max-width: 700px) {
+  .crawl {
+    font-size: 12px;
+    line-height: 1.9;
+  }
+}

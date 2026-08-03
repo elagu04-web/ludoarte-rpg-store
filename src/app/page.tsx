@@ -7,6 +7,7 @@ import CartBadge from "@/components/CartBadge";
 import CartViewLoader from "@/components/CartViewLoader";
 import SearchScreenLoader from "@/components/SearchScreenLoader";
 import OrderTruckScreenLoader from "@/components/OrderTruckScreenLoader";
+import LoreScreenLoader from "@/components/LoreScreenLoader";
 import MusicController from "@/components/MusicController";
 import FullscreenButton from "@/components/FullscreenButton";
 import StartScreen from "@/components/StartScreen";
@@ -58,6 +59,7 @@ export default function Home() {
         <CartViewLoader />
         <SearchScreenLoader />
         <OrderTruckScreenLoader />
+        <LoreScreenLoader />
       </CartProvider>
     </AuthProvider>
   );

@@ -137,8 +137,18 @@ export class ExteriorScene extends BasePlayerScene {
       this.startEnemyEncounter();
     });
 
+    // Reading the lore crawl all the way through risks a monster jumping
+    // you the moment you walk away -- LoreScreen.tsx rolls the chance and
+    // only fires this when it lands.
+    const handleLoreAmbush = () => {
+      if (this.encounterActive) return;
+      this.startEnemyEncounter();
+    };
+    eventBus.on("lore-ambush", handleLoreAmbush);
+
     this.events.on("shutdown", () => {
       eventBus.emit("screen-proximity", false);
+      eventBus.off("lore-ambush", handleLoreAmbush);
     });
   }
 

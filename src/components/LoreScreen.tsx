@@ -35,8 +35,17 @@ Tu misión, mago sin señal: cruza la plaza y llega a Ludoarte.
 
 El mundo no se salva solo. Se salva jugando.`;
 
+// Keep this in sync with the "crawlUp" animation duration in
+// LoreScreen.module.css -- it's how "leiste el 100%" is measured.
+const CRAWL_DURATION_MS = 65000;
+// Chance of a monster ambushing you right as you leave, IF you waited
+// for the whole crawl. Leaving earlier scales it down proportionally to
+// how much you actually watched -- barely peek and the risk is near zero.
+const MAX_AMBUSH_CHANCE = 0.1;
+
 export default function LoreScreen() {
   const [isOpen, setIsOpen] = useState(false);
+  const openedAtRef = useRef<number | null>(null);
 
   useEffect(() => {
     const handleOpen = () => setIsOpen(true);
@@ -55,6 +64,7 @@ export default function LoreScreen() {
     if (isOpen && !wasOpenRef.current) {
       playMenuOpenSound();
       startLoreMusic();
+      openedAtRef.current = Date.now();
     } else if (!isOpen && wasOpenRef.current) {
       playMenuCloseSound();
       stopLoreMusic();
@@ -68,6 +78,13 @@ export default function LoreScreen() {
 
   const close = () => {
     playMenuCloseSound();
+
+    const elapsed = openedAtRef.current ? Date.now() - openedAtRef.current : 0;
+    const readFraction = Math.min(elapsed / CRAWL_DURATION_MS, 1);
+    if (Math.random() < MAX_AMBUSH_CHANCE * readFraction) {
+      eventBus.emit("lore-ambush");
+    }
+
     setIsOpen(false);
   };
 

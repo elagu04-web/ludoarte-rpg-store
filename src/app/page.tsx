@@ -12,6 +12,7 @@ import FullscreenButton from "@/components/FullscreenButton";
 import StartScreen from "@/components/StartScreen";
 import TiendaScreen from "@/components/TiendaScreen";
 import { CartProvider } from "@/context/CartContext";
+import { AuthProvider } from "@/context/AuthContext";
 
 type Mode = "start" | "historia" | "tienda";
 
@@ -20,40 +21,44 @@ export default function Home() {
 
   if (mode === "start") {
     return (
-      <StartScreen
-        onStart={() => setMode("historia")}
-        onTienda={() => setMode("tienda")}
-      />
+      <AuthProvider>
+        <StartScreen
+          onStart={() => setMode("historia")}
+          onTienda={() => setMode("tienda")}
+        />
+      </AuthProvider>
     );
   }
 
   return (
-    <CartProvider>
-      {mode === "historia" && (
-        <div className={styles.page}>
-          <main className={styles.main}>
-            <h1>Ludoarte RPG Store</h1>
-            <div className={styles.headerRow}>
-              <CartBadge />
-              <MusicController />
-              <FullscreenButton />
-            </div>
-            <GameLoader />
-          </main>
-        </div>
-      )}
-      {mode === "tienda" && (
-        <TiendaScreen onExit={() => setMode("start")} />
-      )}
-      {mode === "historia" && (
-        <div className={styles.rotateOverlay}>
-          <span className={styles.rotateIcon}>📱↻</span>
-          <p>Gira tu telefono para jugar</p>
-        </div>
-      )}
-      <CartViewLoader />
-      <SearchScreenLoader />
-      <OrderTruckScreenLoader />
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        {mode === "historia" && (
+          <div className={styles.page}>
+            <main className={styles.main}>
+              <h1>Ludoarte RPG Store</h1>
+              <div className={styles.headerRow}>
+                <CartBadge />
+                <MusicController />
+                <FullscreenButton />
+              </div>
+              <GameLoader />
+            </main>
+          </div>
+        )}
+        {mode === "tienda" && (
+          <TiendaScreen onExit={() => setMode("start")} />
+        )}
+        {mode === "historia" && (
+          <div className={styles.rotateOverlay}>
+            <span className={styles.rotateIcon}>📱↻</span>
+            <p>Gira tu telefono para jugar</p>
+          </div>
+        )}
+        <CartViewLoader />
+        <SearchScreenLoader />
+        <OrderTruckScreenLoader />
+      </CartProvider>
+    </AuthProvider>
   );
 }

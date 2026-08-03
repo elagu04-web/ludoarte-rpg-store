@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { playMenuMoveSound, playMenuConfirmSound } from "@/game/music";
+import { useAuth } from "@/context/AuthContext";
 import styles from "./StartScreen.module.css";
 
 // The menu doesn't wait for the whole rise animation to finish -- that
@@ -10,14 +11,9 @@ import styles from "./StartScreen.module.css";
 const MENU_REVEAL_MS = 1800;
 
 interface MenuItem {
-  id: "historia" | "tienda";
+  id: "historia" | "tienda" | "login" | "logout";
   label: string;
 }
-
-const MENU_ITEMS: MenuItem[] = [
-  { id: "historia", label: "Modo Historia" },
-  { id: "tienda", label: "Modo Tienda" },
-];
 
 const TICKER_TEXT =
   "Tienda de Juegos de Mesa — Abierto de martes a domingo en Épico Atlántida, calle 20 entre 11 y 1 — ";
@@ -28,14 +24,36 @@ interface StartScreenProps {
 }
 
 export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
+  const { user, loading, signInWithGoogle, signOut } = useAuth();
   const [risen, setRisen] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const menuItems = useMemo<MenuItem[]>(() => {
+    const items: MenuItem[] = [
+      { id: "historia", label: "Modo Historia" },
+      { id: "tienda", label: "Modo Tienda" },
+    ];
+    if (!loading) {
+      items.push(
+        user
+          ? { id: "logout", label: `Cerrar sesion (${user.email})` }
+          : { id: "login", label: "Iniciar sesion con Google" }
+      );
+    }
+    return items;
+  }, [user, loading]);
 
   const selectedIndexRef = useRef(0);
   useEffect(() => {
     selectedIndexRef.current = selectedIndex;
   }, [selectedIndex]);
+
+  useEffect(() => {
+    if (selectedIndex >= menuItems.length) {
+      setSelectedIndex(0);
+    }
+  }, [menuItems, selectedIndex]);
 
   useEffect(() => {
     const riseTimer = setTimeout(() => setRisen(true), 50);
@@ -49,22 +67,31 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
   useEffect(() => {
     if (!showMenu) return;
 
-    const confirmSelection = () => {
-      const item = MENU_ITEMS[selectedIndexRef.current];
-      playMenuConfirmSound();
+    const runAction = (item: MenuItem) => {
       if (item.id === "historia") {
         onStart();
-      } else {
+      } else if (item.id === "tienda") {
         onTienda();
+      } else if (item.id === "login") {
+        signInWithGoogle();
+      } else if (item.id === "logout") {
+        signOut();
       }
+    };
+
+    const confirmSelection = () => {
+      const item = menuItems[selectedIndexRef.current];
+      if (!item) return;
+      playMenuConfirmSound();
+      runAction(item);
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowUp" || event.key === "w" || event.key === "W") {
-        setSelectedIndex((prev) => (prev - 1 + MENU_ITEMS.length) % MENU_ITEMS.length);
+        setSelectedIndex((prev) => (prev - 1 + menuItems.length) % menuItems.length);
         playMenuMoveSound();
       } else if (event.key === "ArrowDown" || event.key === "s" || event.key === "S") {
-        setSelectedIndex((prev) => (prev + 1) % MENU_ITEMS.length);
+        setSelectedIndex((prev) => (prev + 1) % menuItems.length);
         playMenuMoveSound();
       } else if (event.key === "e" || event.key === "E" || event.key === "Enter") {
         confirmSelection();
@@ -73,7 +100,7 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showMenu, onStart, onTienda]);
+  }, [showMenu, onStart, onTienda, menuItems, signInWithGoogle, signOut]);
 
   const selectItem = (item: MenuItem, index: number) => {
     if (index !== selectedIndexRef.current) playMenuMoveSound();
@@ -84,8 +111,12 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
     playMenuConfirmSound();
     if (item.id === "historia") {
       onStart();
-    } else {
+    } else if (item.id === "tienda") {
       onTienda();
+    } else if (item.id === "login") {
+      signInWithGoogle();
+    } else if (item.id === "logout") {
+      signOut();
     }
   };
 
@@ -105,7 +136,7 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
       {showMenu && (
         <div className={styles.menu}>
           <ul className={styles.menuList}>
-            {MENU_ITEMS.map((item, index) => (
+            {menuItems.map((item, index) => (
               <li
                 key={item.id}
                 className={

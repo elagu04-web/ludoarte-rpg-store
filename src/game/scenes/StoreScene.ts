@@ -45,14 +45,14 @@ export class StoreScene extends BasePlayerScene {
     // costados corren casi toda la altura del salon, asi que la zona de
     // interaccion se recorta antes de llegar al mostrador/mesa de pedidos
     // de mas abajo, para que no se solapen los carteles de "Presiona E".
-    // Ensanchada bastante hacia el pasillo (era 160 de ancho, borde en
-    // x=260): la estanteria esta dibujada en perspectiva con los juegos
-    // apilados bien alto, y esos objetos altos "asoman" hacia el pasillo
-    // en el dibujo mas de lo que ocupa la base real del mueble -- con el
-    // borde justo en la base, el personaje podia acercarse lo suficiente
-    // para quedar visualmente parado detras/adentro de esas cajas apiladas.
-    // Con mas margen ya no se puede acercar tanto.
-    this.addObstacle(180, 740, 240, 1020, { visible: false }); // estanteria izquierda
+    // OJO: la zona de interaccion (arriba) requiere estar bastante cerca
+    // del mueble (hasta x=250 para la de la izquierda, desde x=810 para
+    // la derecha) -- ensanchar esta caja de colision mas alla de eso
+    // bloquea el acceso a la zona entera y "Presiona E" deja de aparecer.
+    // Se probo ensanchar para evitar que el personaje se vea parado sobre
+    // las cajas apiladas del dibujo, pero eso rompia la interaccion, asi
+    // que se volvio al ancho original.
+    this.addObstacle(180, 740, 160, 1020, { visible: false }); // estanteria izquierda
     this.shelfZones.push({
       id: shelves[0].id,
       rect: new Phaser.Geom.Rectangle(70, 200, 180, 750),
@@ -60,7 +60,7 @@ export class StoreScene extends BasePlayerScene {
     this.addTapHotspot(160, 575, 180, 750, () => this.nearbyShelfId === shelves[0].id, () =>
       this.openShelf(shelves[0].id)
     );
-    this.addObstacle(825, 740, 210, 1020, { visible: false }); // estanteria derecha
+    this.addObstacle(865, 740, 130, 1020, { visible: false }); // estanteria derecha
     this.shelfZones.push({
       id: shelves[1].id,
       rect: new Phaser.Geom.Rectangle(810, 200, 150, 750),
@@ -83,6 +83,14 @@ export class StoreScene extends BasePlayerScene {
     this.addTapHotspot(292, 1090, 255, 270, () => this.nearOrderKiosk, () =>
       eventBus.emit("search-open", true)
     );
+
+    // Pared de abajo (puerta de calle decorativa, sin uso todavia -- no
+    // hay transicion de escena conectada a ella). Antes no tenia ninguna
+    // colision aca, asi que se podia atravesar toda esta pared y salir del
+    // salon hacia el fondo negro.
+    this.addObstacle(180, 1450, 360, 300, { visible: false });
+    this.addObstacle(822, 1450, 404, 300, { visible: false });
+    this.addObstacle(490, 1450, 260, 300, { visible: false }); // hueco de la puerta, tambien pared por ahora
 
     this.events.on("shutdown", () => {
       eventBus.emit("shelf-proximity", null);

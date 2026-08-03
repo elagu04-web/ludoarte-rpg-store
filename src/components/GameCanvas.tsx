@@ -54,8 +54,19 @@ export default function GameCanvas() {
 
   useEffect(() => {
     const handleMonsterDefeated = () => {
-      if (!userIdRef.current) return;
-      createClient().rpc("increment_monsters_defeated");
+      if (!userIdRef.current) {
+        console.log("[monster-defeated] no user logged in, skipping");
+        return;
+      }
+      createClient()
+        .rpc("increment_monsters_defeated")
+        .then(({ error }) => {
+          if (error) {
+            console.error("[monster-defeated] rpc failed:", error);
+          } else {
+            console.log("[monster-defeated] rpc ok");
+          }
+        });
     };
     eventBus.on("monster-defeated", handleMonsterDefeated);
     return () => {

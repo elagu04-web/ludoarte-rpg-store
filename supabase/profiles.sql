@@ -74,3 +74,28 @@ drop policy if exists "Users can view own profile" on public.profiles;
 create policy "Users can view own profile"
   on public.profiles for select
   using (auth.uid() = id or auth.jwt() ->> 'email' = 'elagu04@gmail.com');
+
+-- Migracion: cuentas que iniciaron sesion antes de que existiera la
+-- tabla "profiles" (o el trigger) nunca recibieron su fila -- el
+-- trigger solo se dispara en un registro nuevo, no en logins
+-- posteriores. Crea la fila que falte para cualquier cuenta ya
+-- existente en auth.users.
+insert into public.profiles (id, email)
+select id, email from auth.users
+where id not in (select id from public.profiles);
+
+-- Version mas robusta: crea la fila del jugador si todavia no
+-- existe (en vez de asumir que el trigger ya la creo), y despues
+-- suma 1. Reemplaza a la version anterior de esta misma funcion.
+create or replace function public.increment_monsters_defeated()
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, email, monsters_defeated)
+  values (auth.uid(), (select email from auth.users where id = auth.uid()), 1)
+  on conflict (id) do update
+    set monsters_defeated = public.profiles.monsters_defeated + 1;
+end;
+$$;

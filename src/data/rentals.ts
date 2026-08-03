@@ -209,7 +209,7 @@ export const rentalGames: RentalGame[] = [
     players: "1 a 5",
     age: "14+",
     duration: "60 a 150 min",
-    image: "/assets/boardgames/glc-el-resurgir-de-la-comunidad-del-anillo.png",
+    image: "/assets/boardgames/glc-el-destino-de-la-comunidad.png",
   }),
   rentalGame("Heat", 440, {
     description: "Carreras de autos: lleva tu auto al limite sin que el motor se sobrecaliente para cruzar primero la meta.",

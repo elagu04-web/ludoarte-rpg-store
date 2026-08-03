@@ -1,29 +1,23 @@
 /**
- * Tiny original 8-bit style background music, synthesized entirely in the
- * browser with the Web Audio API (triangle-wave oscillators). No audio
- * files, no external source -- so no licensing concerns whatsoever.
- * Slow, gentle "shop theme" pace rather than an action tune.
+ * Background music: a playlist of real audio files dropped into
+ * public/assets/game songs/, fetched from /api/songs (so adding a new
+ * song is just adding a file there, no code change needed). Plays one
+ * track, then advances to the next when it ends, looping back to the
+ * first after the last -- with a single song that's just "repeat it".
+ *
+ * Short sound effects (below) are separate: those stay fully synthesized
+ * with the Web Audio API, no audio files, no licensing concerns.
  */
 
-const NOTE_DURATION = 0.55; // seconds each note rings for (soft, lingering)
-const TEMPO_INTERVAL = 0.6; // seconds between note starts (relaxed pace)
-const SCHEDULE_AHEAD = 0.2; // how far ahead we schedule notes
-const SCHEDULER_INTERVAL_MS = 50;
-const BASS_NOTE = 130.81; // C3, a soft continuous drone underneath
-
-// A calm, wandering original pentatonic melody (C D E G A) -- not copied
-// from any existing game.
-const MELODY = [
-  523.25, 659.25, 783.99, 659.25, 880.0, 783.99, 659.25, 587.33,
-];
+const MUSIC_VOLUME = 0.35;
 
 let audioContext: AudioContext | null = null;
 let gainNode: GainNode | null = null;
-let bassOscillator: OscillatorNode | null = null;
+let musicElement: HTMLAudioElement | null = null;
+let playlist: string[] = [];
+let playlistLoaded = false;
+let playlistIndex = 0;
 let isPlaying = false;
-let nextNoteTime = 0;
-let currentNoteIndex = 0;
-let schedulerHandle: ReturnType<typeof setTimeout> | null = null;
 
 function ensureContext(): AudioContext {
   if (!audioContext) {
@@ -35,78 +29,52 @@ function ensureContext(): AudioContext {
   return audioContext;
 }
 
-function playNote(freq: number, time: number) {
-  if (!audioContext || !gainNode) return;
-
-  const osc = audioContext.createOscillator();
-  osc.type = "triangle"; // softer/mellower than a square wave
-  osc.frequency.setValueAtTime(freq, time);
-
-  const noteGain = audioContext.createGain();
-  noteGain.gain.setValueAtTime(0, time);
-  noteGain.gain.linearRampToValueAtTime(0.7, time + 0.03); // gentle fade-in
-  noteGain.gain.exponentialRampToValueAtTime(0.001, time + NOTE_DURATION);
-
-  osc.connect(noteGain);
-  noteGain.connect(gainNode);
-
-  osc.start(time);
-  osc.stop(time + NOTE_DURATION);
-}
-
-function startBassDrone() {
-  if (!audioContext || !gainNode || bassOscillator) return;
-
-  const bassGain = audioContext.createGain();
-  bassGain.gain.value = 0.35; // quiet, just adds warmth underneath
-
-  bassOscillator = audioContext.createOscillator();
-  bassOscillator.type = "triangle";
-  bassOscillator.frequency.value = BASS_NOTE;
-  bassOscillator.connect(bassGain);
-  bassGain.connect(gainNode);
-  bassOscillator.start();
-}
-
-function stopBassDrone() {
-  bassOscillator?.stop();
-  bassOscillator = null;
-}
-
-function scheduler() {
-  if (!audioContext || !isPlaying) return;
-
-  while (nextNoteTime < audioContext.currentTime + SCHEDULE_AHEAD) {
-    playNote(MELODY[currentNoteIndex], nextNoteTime);
-    nextNoteTime += TEMPO_INTERVAL;
-    currentNoteIndex = (currentNoteIndex + 1) % MELODY.length;
+async function loadPlaylist(): Promise<string[]> {
+  if (playlistLoaded) return playlist;
+  try {
+    const res = await fetch("/api/songs");
+    const data = await res.json();
+    playlist = Array.isArray(data.songs) ? data.songs : [];
+  } catch {
+    playlist = [];
   }
+  playlistLoaded = true;
+  return playlist;
+}
 
-  schedulerHandle = setTimeout(scheduler, SCHEDULER_INTERVAL_MS);
+function ensureMusicElement(): HTMLAudioElement {
+  if (!musicElement) {
+    musicElement = new Audio();
+    musicElement.volume = MUSIC_VOLUME;
+    musicElement.addEventListener("ended", () => {
+      if (playlist.length === 0) return;
+      playlistIndex = (playlistIndex + 1) % playlist.length;
+      playCurrentTrack();
+    });
+  }
+  return musicElement;
+}
+
+function playCurrentTrack() {
+  if (!musicElement || playlist.length === 0) return;
+  musicElement.src = playlist[playlistIndex];
+  musicElement.play().catch(() => {});
 }
 
 export function startMusic() {
   if (isPlaying) return;
-
-  const ctx = ensureContext();
-  if (ctx.state === "suspended") {
-    ctx.resume();
-  }
-
   isPlaying = true;
-  nextNoteTime = ctx.currentTime + 0.05;
-  currentNoteIndex = 0;
-  startBassDrone();
-  scheduler();
+
+  ensureMusicElement();
+  loadPlaylist().then((list) => {
+    if (!isPlaying || list.length === 0) return;
+    playCurrentTrack();
+  });
 }
 
 export function stopMusic() {
   isPlaying = false;
-  if (schedulerHandle !== null) {
-    clearTimeout(schedulerHandle);
-    schedulerHandle = null;
-  }
-  stopBassDrone();
+  musicElement?.pause();
 }
 
 export function toggleMusic(): boolean {
@@ -122,19 +90,18 @@ export function isMusicPlaying(): boolean {
   return isPlaying;
 }
 
-// The scheduler keeps ticking via setTimeout regardless of whether the tab
-// is actually visible -- on mobile in particular, backgrounding/switching
-// away doesn't reliably tear down the page, so without this the music (and
-// its AudioContext clock) keeps running silently-then-audibly out of sync
-// once you come back. Suspending on hide and resuming on show keeps the
-// audible state tied to whether the player can actually see the game.
+// A background <audio> element keeps playing even while the tab is
+// hidden/backgrounded (unlike the AudioContext-driven scheduler this
+// replaced) -- but on mobile in particular that's exactly when you don't
+// want it audibly running on. Pausing on hide and resuming on show keeps
+// the audible state tied to whether the player can actually see the game.
 if (typeof document !== "undefined") {
   document.addEventListener("visibilitychange", () => {
-    if (!audioContext || audioContext.state === "closed") return;
+    if (!musicElement) return;
     if (document.hidden) {
-      audioContext.suspend();
+      musicElement.pause();
     } else if (isPlaying) {
-      audioContext.resume();
+      musicElement.play().catch(() => {});
     }
   });
 }

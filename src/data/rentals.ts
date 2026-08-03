@@ -99,6 +99,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/aventureros-al-tren.png",
   }),
   rentalGame("Barrio", 110),
+  rentalGame("Batawaf", 100),
   rentalGame("Bohnanza", 110, {
     description: "Cultiva y comercia porotos con los demas jugadores para juntar la mayor fortuna posible.",
     players: "2 a 7",

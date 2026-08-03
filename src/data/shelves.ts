@@ -387,6 +387,17 @@ export const shelves: ShelfData[] = [
         duration: "20 min",
       },
       {
+        id: "batawaf",
+        name: "Batawaf",
+        price: 600,
+        stock: 1,
+        image: "/assets/boardgames/batawaf.png",
+        description: "Juego de cartas de guerra con monstruos: la carta con el numero mas alto se lleva la mano.",
+        players: "2 a 4",
+        age: "4+",
+        duration: "15 a 20 min",
+      },
+      {
         id: "barrio",
         name: "Barrio",
         price: 1290,

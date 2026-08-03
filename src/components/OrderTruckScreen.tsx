@@ -8,58 +8,18 @@ import {
   playMenuOpenSound,
   playMenuCloseSound,
 } from "@/game/music";
-import { shelves, type SpinSheet } from "@/data/shelves";
-import { rentalGames } from "@/data/rentals";
+import { orderableGames, normalizeName, type OrderableGame } from "@/data/orderCatalog";
 import SpinningBox from "./SpinningBox";
 import styles from "./GameOverlay.module.css";
 
 const STORE_WHATSAPP_NUMBER = "59899861116";
 
-interface TruckGame {
-  id: string;
-  name: string;
-  price: number | null;
-  /** Solo aparece en el catalogo de alquiler -- el precio es de alquiler,
-   * no sirve para saber cuanto cuesta traerlo del proveedor. */
-  isRentalOnly: boolean;
-  image: string;
-  spinSheet?: SpinSheet;
-}
+type TruckGame = OrderableGame;
 
-// Unicode escapes (not literal combining-mark characters) -- see the same
-// note in data/rentals.ts, typing the raw diacritic range directly mangled
-// that file on an encoding round-trip.
-const DIACRITICS_REGEX = /[\u0300-\u036f]/g;
-
-function normalizeName(name: string): string {
-  return name.toLowerCase().normalize("NFD").replace(DIACRITICS_REGEX, "").trim();
-}
-
-// Todo lo que hay que encargarle al proveedor: los juegos a la venta sin
-// stock mas los que solo estan en el catalogo de alquiler. Un mismo juego
-// puede estar en las dos listas (p. ej. Porto se vende Y se alquila) --
-// aca no importa esa diferencia, es un solo pedido al proveedor, asi que
-// se junta en una sola entrada (con prioridad al precio de venta si lo tiene).
-const saleOutOfStock = shelves.flatMap((shelf) => shelf.games).filter((game) => game.stock === 0);
-
-const rawTruckGames = [
-  ...saleOutOfStock.map((game) => ({ ...game, isRentalOnly: false })),
-  ...rentalGames.map((game) => ({ ...game, isRentalOnly: true })),
-];
-
-const truckGames: TruckGame[] = rawTruckGames.reduce<TruckGame[]>((unique, game) => {
-  const key = normalizeName(game.name);
-  if (unique.some((existing) => normalizeName(existing.name) === key)) return unique;
-  unique.push({
-    id: game.id,
-    name: game.name,
-    price: game.price,
-    isRentalOnly: game.isRentalOnly,
-    image: game.image,
-    spinSheet: game.spinSheet,
-  });
-  return unique;
-}, []);
+// Same combined "not on a shelf" list used by the Tienda mode's "Por
+// pedido" tab -- kept in one place (data/orderCatalog.ts) so both stay in
+// sync automatically.
+const truckGames: TruckGame[] = orderableGames;
 
 interface OrderItem {
   id: string;

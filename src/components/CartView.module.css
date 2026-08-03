@@ -19,7 +19,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 200;
+  /* Higher than StartScreen/TiendaScreen's 2000 -- those are full-screen
+     "modes" rendered as siblings of this modal, not underneath it like the
+     in-game overlays, so the cart needs to out-rank them too or it opens
+     invisibly behind whichever one is showing. */
+  z-index: 2100;
 }
 
 .panel {

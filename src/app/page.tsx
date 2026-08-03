@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import styles from "./page.module.css";
 import GameLoader from "@/components/GameLoader";
 import CartBadge from "@/components/CartBadge";
@@ -6,9 +9,16 @@ import SearchScreenLoader from "@/components/SearchScreenLoader";
 import OrderTruckScreenLoader from "@/components/OrderTruckScreenLoader";
 import MusicController from "@/components/MusicController";
 import FullscreenButton from "@/components/FullscreenButton";
+import StartScreen from "@/components/StartScreen";
 import { CartProvider } from "@/context/CartContext";
 
 export default function Home() {
+  const [started, setStarted] = useState(false);
+
+  if (!started) {
+    return <StartScreen onStart={() => setStarted(true)} />;
+  }
+
   return (
     <CartProvider>
       <div className={styles.page}>

@@ -38,10 +38,12 @@ El mundo no se salva solo. Se salva jugando.`;
 // Keep this in sync with the "crawlUp" animation duration in
 // LoreScreen.module.css -- it's how "leiste el 100%" is measured.
 const CRAWL_DURATION_MS = 65000;
-// Chance of a monster ambushing you right as you leave, IF you waited
-// for the whole crawl. Leaving earlier scales it down proportionally to
-// how much you actually watched -- barely peek and the risk is near zero.
-const MAX_AMBUSH_CHANCE = 0.1;
+// Chance of a monster ambushing you the moment you leave. Reading the
+// whole crawl is the safe way out (10%); bailing almost instantly is
+// nearly guaranteed to jump you (100%), scaling linearly in between --
+// the Tecnologia punishes not paying attention, not the other way around.
+const MIN_AMBUSH_CHANCE = 0.1; // at 100% read
+const MAX_AMBUSH_CHANCE = 1.0; // at ~0% read
 
 export default function LoreScreen() {
   const [isOpen, setIsOpen] = useState(false);
@@ -81,7 +83,9 @@ export default function LoreScreen() {
 
     const elapsed = openedAtRef.current ? Date.now() - openedAtRef.current : 0;
     const readFraction = Math.min(elapsed / CRAWL_DURATION_MS, 1);
-    if (Math.random() < MAX_AMBUSH_CHANCE * readFraction) {
+    const ambushChance =
+      MAX_AMBUSH_CHANCE - (MAX_AMBUSH_CHANCE - MIN_AMBUSH_CHANCE) * readFraction;
+    if (Math.random() < ambushChance) {
       eventBus.emit("lore-ambush");
     }
 

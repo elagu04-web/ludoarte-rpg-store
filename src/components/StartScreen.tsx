@@ -141,7 +141,7 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
         onStart();
       } else if (item.id === "tienda") {
         onTienda();
-      } else if (item.id === "personaje") {
+      } else if (item.id === "personaje" && user) {
         setCharacterMenuOpen(true);
       }
     };
@@ -167,7 +167,7 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showMenu, showCharacterSelect, onStart, onTienda]);
+  }, [showMenu, showCharacterSelect, onStart, onTienda, user]);
 
   const selectItem = (item: MenuItem, index: number) => {
     if (index !== selectedIndexRef.current) playMenuMoveSound();
@@ -180,7 +180,7 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
       onStart();
     } else if (item.id === "tienda") {
       onTienda();
-    } else if (item.id === "personaje") {
+    } else if (item.id === "personaje" && user) {
       setCharacterMenuOpen(true);
     }
   };

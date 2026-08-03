@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { playMenuMoveSound, playMenuConfirmSound } from "@/game/music";
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/lib/supabase/client";
@@ -20,11 +20,11 @@ interface MenuItem {
   label: string;
 }
 
-const MENU_ITEMS: MenuItem[] = [
+const BASE_MENU_ITEMS: MenuItem[] = [
   { id: "historia", label: "Modo Historia" },
   { id: "tienda", label: "Modo Tienda" },
-  { id: "personaje", label: "Elegir Personaje" },
 ];
+const PERSONAJE_ITEM: MenuItem = { id: "personaje", label: "Elegir Personaje" };
 
 const TICKER_TEXT =
   "Tienda de Juegos de Mesa — Abierto de martes a domingo en Épico Atlántida, calle 20 entre 11 y 1 — ";
@@ -43,6 +43,15 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
   const [tintChecked, setTintChecked] = useState(false);
   const [hasChosenCharacter, setHasChosenCharacter] = useState(false);
   const [characterMenuOpen, setCharacterMenuOpen] = useState(false);
+
+  const menuItems = useMemo(
+    () => (user ? [...BASE_MENU_ITEMS, PERSONAJE_ITEM] : BASE_MENU_ITEMS),
+    [user]
+  );
+
+  useEffect(() => {
+    if (selectedIndex >= menuItems.length) setSelectedIndex(0);
+  }, [menuItems.length, selectedIndex]);
 
   useEffect(() => {
     if (loading) return;
@@ -141,13 +150,13 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
         onStart();
       } else if (item.id === "tienda") {
         onTienda();
-      } else if (item.id === "personaje" && user) {
+      } else if (item.id === "personaje") {
         setCharacterMenuOpen(true);
       }
     };
 
     const confirmSelection = () => {
-      const item = MENU_ITEMS[selectedIndexRef.current];
+      const item = menuItems[selectedIndexRef.current];
       if (!item) return;
       playMenuConfirmSound();
       runAction(item);
@@ -155,10 +164,10 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowUp" || event.key === "w" || event.key === "W") {
-        setSelectedIndex((prev) => (prev - 1 + MENU_ITEMS.length) % MENU_ITEMS.length);
+        setSelectedIndex((prev) => (prev - 1 + menuItems.length) % menuItems.length);
         playMenuMoveSound();
       } else if (event.key === "ArrowDown" || event.key === "s" || event.key === "S") {
-        setSelectedIndex((prev) => (prev + 1) % MENU_ITEMS.length);
+        setSelectedIndex((prev) => (prev + 1) % menuItems.length);
         playMenuMoveSound();
       } else if (event.key === "e" || event.key === "E" || event.key === "Enter") {
         confirmSelection();
@@ -167,7 +176,7 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showMenu, showCharacterSelect, onStart, onTienda, user]);
+  }, [showMenu, showCharacterSelect, onStart, onTienda, menuItems]);
 
   const selectItem = (item: MenuItem, index: number) => {
     if (index !== selectedIndexRef.current) playMenuMoveSound();
@@ -180,7 +189,7 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
       onStart();
     } else if (item.id === "tienda") {
       onTienda();
-    } else if (item.id === "personaje" && user) {
+    } else if (item.id === "personaje") {
       setCharacterMenuOpen(true);
     }
   };
@@ -224,7 +233,7 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
       {showMenu && (
         <div className={styles.menu}>
           <ul className={styles.menuList}>
-            {MENU_ITEMS.map((item, index) => (
+            {menuItems.map((item, index) => (
               <li
                 key={item.id}
                 className={

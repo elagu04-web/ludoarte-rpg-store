@@ -22,11 +22,15 @@ const MENU_ITEMS: MenuItem[] = [
 const TICKER_TEXT =
   "Tienda de Juegos de Mesa — Abierto de martes a domingo en Épico Atlántida, calle 20 entre 11 y 1 — ";
 
-export default function StartScreen({ onStart }: { onStart: () => void }) {
+interface StartScreenProps {
+  onStart: () => void;
+  onTienda: () => void;
+}
+
+export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
   const [risen, setRisen] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [tiendaMessage, setTiendaMessage] = useState(false);
 
   const selectedIndexRef = useRef(0);
   useEffect(() => {
@@ -51,18 +55,11 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
       if (item.id === "historia") {
         onStart();
       } else {
-        setTiendaMessage(true);
+        onTienda();
       }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (tiendaMessage) {
-        if (event.key === "Escape" || event.key === "e" || event.key === "E" || event.key === "Enter") {
-          setTiendaMessage(false);
-        }
-        return;
-      }
-
       if (event.key === "ArrowUp" || event.key === "w" || event.key === "W") {
         setSelectedIndex((prev) => (prev - 1 + MENU_ITEMS.length) % MENU_ITEMS.length);
         playMenuMoveSound();
@@ -76,7 +73,7 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showMenu, tiendaMessage, onStart]);
+  }, [showMenu, onStart, onTienda]);
 
   const selectItem = (item: MenuItem, index: number) => {
     if (index !== selectedIndexRef.current) playMenuMoveSound();
@@ -88,7 +85,7 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
     if (item.id === "historia") {
       onStart();
     } else {
-      setTiendaMessage(true);
+      onTienda();
     }
   };
 
@@ -123,13 +120,6 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
             ))}
           </ul>
           <p className={styles.menuHint}>FLECHAS: ELEGIR &middot; E: CONFIRMAR</p>
-        </div>
-      )}
-
-      {tiendaMessage && (
-        <div className={styles.tiendaMessage} onClick={() => setTiendaMessage(false)}>
-          <p>Modo Tienda: proximamente.</p>
-          <p className={styles.tiendaMessageHint}>E o ESC para volver</p>
         </div>
       )}
 

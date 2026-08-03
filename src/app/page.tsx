@@ -10,32 +10,47 @@ import OrderTruckScreenLoader from "@/components/OrderTruckScreenLoader";
 import MusicController from "@/components/MusicController";
 import FullscreenButton from "@/components/FullscreenButton";
 import StartScreen from "@/components/StartScreen";
+import TiendaScreen from "@/components/TiendaScreen";
 import { CartProvider } from "@/context/CartContext";
 
-export default function Home() {
-  const [started, setStarted] = useState(false);
+type Mode = "start" | "historia" | "tienda";
 
-  if (!started) {
-    return <StartScreen onStart={() => setStarted(true)} />;
+export default function Home() {
+  const [mode, setMode] = useState<Mode>("start");
+
+  if (mode === "start") {
+    return (
+      <StartScreen
+        onStart={() => setMode("historia")}
+        onTienda={() => setMode("tienda")}
+      />
+    );
   }
 
   return (
     <CartProvider>
-      <div className={styles.page}>
-        <main className={styles.main}>
-          <h1>Ludoarte RPG Store</h1>
-          <div className={styles.headerRow}>
-            <CartBadge />
-            <MusicController />
-            <FullscreenButton />
-          </div>
-          <GameLoader />
-        </main>
-      </div>
-      <div className={styles.rotateOverlay}>
-        <span className={styles.rotateIcon}>📱↻</span>
-        <p>Gira tu telefono para jugar</p>
-      </div>
+      {mode === "historia" && (
+        <div className={styles.page}>
+          <main className={styles.main}>
+            <h1>Ludoarte RPG Store</h1>
+            <div className={styles.headerRow}>
+              <CartBadge />
+              <MusicController />
+              <FullscreenButton />
+            </div>
+            <GameLoader />
+          </main>
+        </div>
+      )}
+      {mode === "tienda" && (
+        <TiendaScreen onExit={() => setMode("start")} />
+      )}
+      {mode === "historia" && (
+        <div className={styles.rotateOverlay}>
+          <span className={styles.rotateIcon}>📱↻</span>
+          <p>Gira tu telefono para jugar</p>
+        </div>
+      )}
       <CartViewLoader />
       <SearchScreenLoader />
       <OrderTruckScreenLoader />

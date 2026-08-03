@@ -1,0 +1,256 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  background: #1a1a2e;
+  color: #e8e0d0;
+  font-family: var(--font-pixel), monospace;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: #12121f;
+  border-bottom: 3px solid #4a4a6a;
+}
+
+.title {
+  font-size: 14px;
+  color: #f5d060;
+}
+
+.headerButtons {
+  display: flex;
+  gap: 10px;
+}
+
+.cartButton,
+.exitButton {
+  font-family: var(--font-pixel), monospace;
+  font-size: 11px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 2px solid #4a4a6a;
+  background: #2d2d44;
+  color: #e8e0d0;
+  cursor: pointer;
+}
+
+.cartButton:hover,
+.exitButton:hover {
+  background: #3d3d5c;
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.preview {
+  width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border-right: 3px solid #4a4a6a;
+  overflow-y: auto;
+}
+
+.previewImageWrapper {
+  width: 100%;
+  aspect-ratio: 1;
+  background: #12121f;
+  border: 2px solid #4a4a6a;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.previewImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.previewName {
+  font-size: 13px;
+  color: #f5d060;
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+.previewDescription {
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #cfc8b8;
+  margin: 0 0 12px;
+}
+
+.previewSpecs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 9px;
+  color: #a8a090;
+  margin-bottom: 16px;
+}
+
+.previewFooter {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.previewPrice {
+  font-size: 20px;
+  color: #f5d060;
+}
+
+.buyButton,
+.requestButton {
+  font-family: var(--font-pixel), monospace;
+  font-size: 11px;
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  color: #ffffff;
+}
+
+.buyButton {
+  background: #2f9e44;
+}
+
+.buyButton:hover {
+  background: #268a3a;
+}
+
+.requestButton {
+  background: #25d366;
+  color: #0b2e17;
+}
+
+.requestButton:hover {
+  background: #1ebe57;
+}
+
+.requestHint {
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 11px;
+  color: #a8a090;
+  margin: 8px 0 0;
+  text-align: center;
+}
+
+.list {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+}
+
+.listHeader {
+  padding: 12px 20px 6px;
+  font-size: 10px;
+  color: #7a7a9a;
+}
+
+.row,
+.rowSelected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.rowSelected {
+  background: rgba(245, 208, 96, 0.15);
+  color: #f5d060;
+}
+
+.rowName {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowPrice {
+  flex-shrink: 0;
+  margin-left: 12px;
+  color: #a8a090;
+}
+
+.rowSelected .rowPrice {
+  color: #f5d060;
+}
+
+@media (max-width: 700px), (max-height: 500px) and (orientation: landscape) {
+  .body {
+    flex-direction: column;
+  }
+
+  .preview {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-right: none;
+    border-bottom: 3px solid #4a4a6a;
+  }
+
+  .previewImageWrapper {
+    width: 70px;
+    height: 70px;
+    flex-shrink: 0;
+    margin-bottom: 0;
+  }
+
+  .previewName {
+    font-size: 11px;
+    margin: 0 0 4px;
+  }
+
+  .previewDescription,
+  .previewSpecs {
+    display: none;
+  }
+
+  .previewFooter {
+    margin-top: 0;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .buyButton,
+  .requestButton {
+    padding: 8px 10px;
+    font-size: 9px;
+    white-space: nowrap;
+  }
+
+  .title {
+    font-size: 10px;
+  }
+
+  .cartButton,
+  .exitButton {
+    font-size: 9px;
+    padding: 6px 8px;
+  }
+}

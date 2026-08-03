@@ -114,7 +114,7 @@ export const rentalGames: RentalGame[] = [
     duration: "60 a 120 min",
     image: "/assets/boardgames/brass-lancashire.png",
   }),
-  rentalGame("Brawl", 440, {
+  rentalGame("Super Fantasy Brawl", 440, {
     description: "Duelo rapido de cartas: bloquea, esquiva y golpea a tu rival hasta dejarlo sin vida.",
     players: "2",
     age: "13+",

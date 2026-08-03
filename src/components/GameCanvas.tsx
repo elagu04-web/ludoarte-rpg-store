@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Phaser from "phaser";
 import { createGameConfig } from "@/game/config";
 import { eventBus } from "@/game/eventBus";
+import { useAuth } from "@/context/AuthContext";
+import { createClient } from "@/lib/supabase/client";
 import ShelfPrompt from "./ShelfPrompt";
 import ScreenPrompt from "./ScreenPrompt";
 import CounterPrompt from "./CounterPrompt";
@@ -24,6 +26,12 @@ export default function GameCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
   const [isBackgroundBlurred, setIsBackgroundBlurred] = useState(false);
+  const { user } = useAuth();
+  const userIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    userIdRef.current = user?.id ?? null;
+  }, [user]);
 
   useEffect(() => {
     if (!containerRef.current || gameRef.current) return;
@@ -41,6 +49,17 @@ export default function GameCanvas() {
     eventBus.on("background-blur", handleBlur);
     return () => {
       eventBus.off("background-blur", handleBlur);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleMonsterDefeated = () => {
+      if (!userIdRef.current) return;
+      createClient().rpc("increment_monsters_defeated");
+    };
+    eventBus.on("monster-defeated", handleMonsterDefeated);
+    return () => {
+      eventBus.off("monster-defeated", handleMonsterDefeated);
     };
   }, []);
 

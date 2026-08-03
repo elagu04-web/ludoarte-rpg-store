@@ -6,6 +6,7 @@ create table if not exists public.profiles (
   email text,
   display_name text,
   character_tint integer,
+  monsters_defeated integer not null default 0,
   created_at timestamptz not null default now()
 );
 
@@ -48,3 +49,21 @@ create trigger on_auth_user_created
 -- Migracion: si la tabla "profiles" ya existia de antes (sin la
 -- columna character_tint), correr esto para agregarla.
 alter table public.profiles add column if not exists character_tint integer;
+
+-- Migracion: agrega el contador de monstruos (cajas) vencidos.
+alter table public.profiles add column if not exists monsters_defeated integer not null default 0;
+
+-- Suma 1 al contador del usuario logueado. Usa security definer para
+-- poder sumar de forma atomica (sin leer y despues escribir, que podria
+-- perder conteos si matas varios monstruos muy rapido); usa auth.uid()
+-- adentro en vez de recibir el id como parametro, para que nadie pueda
+-- sumarle victorias al perfil de otra persona.
+create or replace function public.increment_monsters_defeated()
+returns void
+language sql
+security definer set search_path = public
+as $$
+  update public.profiles
+  set monsters_defeated = monsters_defeated + 1
+  where id = auth.uid();
+$$;

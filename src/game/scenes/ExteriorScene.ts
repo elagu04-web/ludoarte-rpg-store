@@ -503,6 +503,7 @@ export class ExteriorScene extends BasePlayerScene {
 
   private defeatMonster(monster: Monster) {
     this.monsters = this.monsters.filter((m) => m !== monster);
+    eventBus.emit("monster-defeated");
 
     this.tweens.add({
       targets: [monster.sprite, monster.leftLeg, monster.rightLeg],

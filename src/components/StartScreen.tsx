@@ -6,9 +6,11 @@ import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/lib/supabase/client";
 import { gameState } from "@/game/gameState";
 import CharacterSelectScreen from "./CharacterSelectScreen";
+import AdminScreen from "./AdminScreen";
 import styles from "./StartScreen.module.css";
 
 const CHARACTER_TINT_KEY = "ludoarte-character-tint";
+const ADMIN_EMAIL = "elagu04@gmail.com";
 
 // The menu doesn't wait for the whole rise animation to finish -- that
 // made it feel like a long dead wait before you could do anything, even
@@ -16,7 +18,7 @@ const CHARACTER_TINT_KEY = "ludoarte-character-tint";
 const MENU_REVEAL_MS = 1800;
 
 interface MenuItem {
-  id: "historia" | "tienda" | "personaje";
+  id: "historia" | "tienda" | "personaje" | "admin";
   label: string;
 }
 
@@ -25,6 +27,7 @@ const BASE_MENU_ITEMS: MenuItem[] = [
   { id: "tienda", label: "Modo Tienda" },
 ];
 const PERSONAJE_ITEM: MenuItem = { id: "personaje", label: "Elegir Personaje" };
+const ADMIN_ITEM: MenuItem = { id: "admin", label: "Panel Admin" };
 
 const TICKER_TEXT =
   "Tienda de Juegos de Mesa — Abierto de martes a domingo en Épico Atlántida, calle 20 entre 11 y 1 — ";
@@ -43,11 +46,15 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
   const [tintChecked, setTintChecked] = useState(false);
   const [hasChosenCharacter, setHasChosenCharacter] = useState(false);
   const [characterMenuOpen, setCharacterMenuOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
+  const isAdmin = user?.email === ADMIN_EMAIL;
 
-  const menuItems = useMemo(
-    () => (user ? [...BASE_MENU_ITEMS, PERSONAJE_ITEM] : BASE_MENU_ITEMS),
-    [user]
-  );
+  const menuItems = useMemo(() => {
+    if (!user) return BASE_MENU_ITEMS;
+    return isAdmin
+      ? [...BASE_MENU_ITEMS, PERSONAJE_ITEM, ADMIN_ITEM]
+      : [...BASE_MENU_ITEMS, PERSONAJE_ITEM];
+  }, [user, isAdmin]);
 
   useEffect(() => {
     if (selectedIndex >= menuItems.length) setSelectedIndex(0);
@@ -145,7 +152,7 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
   }, []);
 
   useEffect(() => {
-    if (!showMenu || showCharacterSelect) return;
+    if (!showMenu || showCharacterSelect || adminOpen) return;
 
     const runAction = (item: MenuItem) => {
       if (item.id === "historia") {
@@ -154,6 +161,8 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
         onTienda();
       } else if (item.id === "personaje") {
         setCharacterMenuOpen(true);
+      } else if (item.id === "admin") {
+        setAdminOpen(true);
       }
     };
 
@@ -178,7 +187,7 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showMenu, showCharacterSelect, onStart, onTienda, menuItems]);
+  }, [showMenu, showCharacterSelect, adminOpen, onStart, onTienda, menuItems]);
 
   const selectItem = (item: MenuItem, index: number) => {
     if (index !== selectedIndexRef.current) playMenuMoveSound();
@@ -193,6 +202,8 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
       onTienda();
     } else if (item.id === "personaje") {
       setCharacterMenuOpen(true);
+    } else if (item.id === "admin") {
+      setAdminOpen(true);
     }
   };
 
@@ -203,6 +214,10 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
         onCancel={forcedCharacterSelect ? undefined : () => setCharacterMenuOpen(false)}
       />
     );
+  }
+
+  if (adminOpen) {
+    return <AdminScreen onExit={() => setAdminOpen(false)} />;
   }
 
   return (

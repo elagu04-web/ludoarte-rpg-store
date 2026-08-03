@@ -15,7 +15,7 @@ alter table public.profiles enable row level security;
 drop policy if exists "Users can view own profile" on public.profiles;
 create policy "Users can view own profile"
   on public.profiles for select
-  using (auth.uid() = id);
+  using (auth.uid() = id or auth.jwt() ->> 'email' = 'elagu04@gmail.com');
 
 drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile"
@@ -67,3 +67,10 @@ as $$
   set monsters_defeated = monsters_defeated + 1
   where id = auth.uid();
 $$;
+
+-- Migracion: deja que la cuenta elagu04@gmail.com vea todos los
+-- perfiles (antes de esto, cada quien solo podia ver el propio).
+drop policy if exists "Users can view own profile" on public.profiles;
+create policy "Users can view own profile"
+  on public.profiles for select
+  using (auth.uid() = id or auth.jwt() ->> 'email' = 'elagu04@gmail.com');

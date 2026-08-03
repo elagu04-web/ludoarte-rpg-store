@@ -422,22 +422,19 @@
    specifically to stay above this box) has to shrink by the same
    amount, or the list gets squeezed down to a sliver. */
 @media (max-height: 500px) and (orientation: landscape) {
+  /* There's no room on a phone screen for both a menu panel and the
+     description box below it without one covering the other -- the box's
+     height depends on how long a given game's description is, which
+     varies too much per-game/per-phone to reserve a safe fixed gap for.
+     Simplest reliable fix: don't show it here at all. The menu panels
+     below reclaim the space it used to need. */
   .dialogueBox {
-    left: 8px;
-    right: 8px;
-    bottom: 6px;
-    min-height: 0;
-    padding: 6px 10px;
-  }
-
-  .dialogueText {
-    font-size: 13px;
-    line-height: 1.35;
+    display: none;
   }
 
   .rentalMenuPanel {
     top: 6px;
-    bottom: 110px;
+    bottom: 6px;
     font-size: 12px;
     padding: 6px 8px;
   }
@@ -481,10 +478,10 @@
   .shopMenu {
     top: 6px;
     right: 6px;
+    bottom: 6px;
     width: 220px;
     font-size: 13px;
     padding: 8px;
-    max-height: calc(100vh - 116px);
     overflow-y: auto;
   }
 
@@ -662,7 +659,8 @@
   font-size: 22px;
   font-weight: bold;
   pointer-events: auto;
-  touch-action: manipulation;
+  touch-action: none;
+  user-select: none;
 }
 
 /* Big, unmistakable way to back out of whatever menu is open on a phone --

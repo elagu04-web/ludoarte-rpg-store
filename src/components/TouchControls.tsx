@@ -23,9 +23,14 @@ function DirectionButton({
       className={`${styles.dpadButton} ${className}`}
       onPointerDown={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         emitDirection(direction, true);
       }}
-      onPointerUp={() => emitDirection(direction, false)}
+      onPointerUp={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        emitDirection(direction, false);
+      }}
       onPointerLeave={() => emitDirection(direction, false)}
       onPointerCancel={() => emitDirection(direction, false)}
     >
@@ -57,7 +62,11 @@ export default function TouchControls() {
       </div>
       <button
         className={styles.interactButton}
-        onClick={() => eventBus.emit("touch-interact")}
+        onPointerDown={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          eventBus.emit("touch-interact");
+        }}
       >
         E
       </button>

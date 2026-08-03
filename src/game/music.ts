@@ -5,15 +5,27 @@
  * track, then advances to the next when it ends, looping back to the
  * first after the last -- with a single song that's just "repeat it".
  *
- * Short sound effects (below) are separate: those stay fully synthesized
- * with the Web Audio API, no audio files, no licensing concerns.
+ * Played through the Web Audio API (fetch + decodeAudioData +
+ * AudioBufferSourceNode) rather than a plain <audio> element on purpose:
+ * a real <audio>/<video> element gets registered by mobile browsers as a
+ * background media session (like a music/podcast player), so it keeps
+ * playing after the tab is backgrounded or even closed -- there's no such
+ * special-cased persistence for AudioContext-driven playback, which is
+ * exactly why the old synthesized-oscillator version never had this
+ * problem. This keeps that same "stops when you leave" behavior while
+ * still playing a real audio file.
+ *
+ * Short sound effects (below) share the same AudioContext, fully
+ * synthesized, no audio files.
  */
 
 const MUSIC_VOLUME = 0.35;
 
 let audioContext: AudioContext | null = null;
 let gainNode: GainNode | null = null;
-let musicElement: HTMLAudioElement | null = null;
+let musicGainNode: GainNode | null = null;
+let musicSource: AudioBufferSourceNode | null = null;
+const musicBuffers = new Map<string, AudioBuffer>();
 let playlist: string[] = [];
 let playlistLoaded = false;
 let playlistIndex = 0;
@@ -42,30 +54,52 @@ async function loadPlaylist(): Promise<string[]> {
   return playlist;
 }
 
-function ensureMusicElement(): HTMLAudioElement {
-  if (!musicElement) {
-    musicElement = new Audio();
-    musicElement.volume = MUSIC_VOLUME;
-    musicElement.addEventListener("ended", () => {
-      if (playlist.length === 0) return;
-      playlistIndex = (playlistIndex + 1) % playlist.length;
-      playCurrentTrack();
-    });
-  }
-  return musicElement;
+async function getBuffer(ctx: AudioContext, url: string): Promise<AudioBuffer> {
+  const cached = musicBuffers.get(url);
+  if (cached) return cached;
+
+  const res = await fetch(url);
+  const arrayBuffer = await res.arrayBuffer();
+  const buffer = await ctx.decodeAudioData(arrayBuffer);
+  musicBuffers.set(url, buffer);
+  return buffer;
 }
 
-function playCurrentTrack() {
-  if (!musicElement || playlist.length === 0) return;
-  musicElement.src = playlist[playlistIndex];
-  musicElement.play().catch(() => {});
+async function playCurrentTrack() {
+  if (!isPlaying || playlist.length === 0) return;
+
+  const ctx = ensureContext();
+  const url = playlist[playlistIndex];
+  const buffer = await getBuffer(ctx, url);
+  if (!isPlaying) return; // toggled off while the file was loading/decoding
+
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(musicGainNode!);
+  source.onended = () => {
+    // Fires both when a track finishes naturally AND when stopMusic() calls
+    // .stop() on it -- only advance to the next track in the first case.
+    if (!isPlaying || musicSource !== source) return;
+    playlistIndex = (playlistIndex + 1) % playlist.length;
+    playCurrentTrack();
+  };
+
+  musicSource = source;
+  source.start();
 }
 
 export function startMusic() {
   if (isPlaying) return;
   isPlaying = true;
 
-  ensureMusicElement();
+  const ctx = ensureContext();
+  if (ctx.state === "suspended") ctx.resume();
+  if (!musicGainNode) {
+    musicGainNode = ctx.createGain();
+    musicGainNode.gain.value = MUSIC_VOLUME;
+    musicGainNode.connect(ctx.destination);
+  }
+
   loadPlaylist().then((list) => {
     if (!isPlaying || list.length === 0) return;
     playCurrentTrack();
@@ -74,7 +108,9 @@ export function startMusic() {
 
 export function stopMusic() {
   isPlaying = false;
-  musicElement?.pause();
+  const source = musicSource;
+  musicSource = null;
+  source?.stop();
 }
 
 export function toggleMusic(): boolean {
@@ -90,18 +126,17 @@ export function isMusicPlaying(): boolean {
   return isPlaying;
 }
 
-// A background <audio> element keeps playing even while the tab is
-// hidden/backgrounded (unlike the AudioContext-driven scheduler this
-// replaced) -- but on mobile in particular that's exactly when you don't
-// want it audibly running on. Pausing on hide and resuming on show keeps
-// the audible state tied to whether the player can actually see the game.
+// The AudioContext clock keeps running even while the tab is hidden --
+// suspending it on hide and resuming on show keeps the audible state tied
+// to whether the player can actually see the game (same pattern used for
+// every other sound in this file).
 if (typeof document !== "undefined") {
   document.addEventListener("visibilitychange", () => {
-    if (!musicElement) return;
+    if (!audioContext || audioContext.state === "closed") return;
     if (document.hidden) {
-      musicElement.pause();
+      audioContext.suspend();
     } else if (isPlaying) {
-      musicElement.play().catch(() => {});
+      audioContext.resume();
     }
   });
 }

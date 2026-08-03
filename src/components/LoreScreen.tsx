@@ -2,44 +2,38 @@
 
 import { useEffect, useRef, useState } from "react";
 import { eventBus } from "@/game/eventBus";
-import { playMenuOpenSound, playMenuCloseSound } from "@/game/music";
+import {
+  playMenuOpenSound,
+  playMenuCloseSound,
+  startLoreMusic,
+  stopLoreMusic,
+} from "@/game/music";
 import styles from "./LoreScreen.module.css";
 
-const LORE_TEXT = `AÑO 2077
+const LORE_TEXT = `AÑO 2026
 
 LOS CELULARES GANARON.
 
-La humanidad paso generaciones mirando pantallas de seis pulgadas...
-hasta que las pantallas empezaron a mirar de vuelta.
+La humanidad pasó generaciones mirando pantallas de seis
+pulgadas... hasta que las pantallas empezaron a mirar de vuelta.
 
-Las plazas quedaron vacias. Nadie recordaba como se jugaba
-a algo que no vibrara en el bolsillo.
+Pero en un rincón de Épico Atlántida, algo resistió: LUDOARTE.
 
-Pero en un rincon de Epico Atlantida, algo resistio.
+El último refugio donde la gente se sienta cara a cara
+y tira un dado de verdad.
 
-LUDOARTE.
+El mundo se salva conectando entre nosotros, con actividades
+sanas que sumen a nuestras vidas.
 
-El ultimo refugio donde la gente todavia se sienta cara a cara,
-tira un dado de verdad, y se rie sin usar un emoji.
+Pero la Tecnología no piensa dejarte ganar tan fácil: corrompió
+algunos juegos para que no llegues a la ludoteca.
 
-La resistencia dice que el mundo se salva conectando entre
-nosotros: con actividades sanas, que sumen de verdad a
-nuestras vidas.
-
-Pero la Tecnologia no piensa dejarte ganar tan facil.
-
-Poseyo algunos juegos. Los corrompio. Los mando afuera a
-impedir que llegues a la ludoteca.
-
-Cada caja que camina sola ahi afuera ya no es un juego:
+Cada caja que camina sola ahí afuera ya no es un juego:
 es un monstruo.
 
-Tu mision, mago sin señal: cruzar la plaza, esquivar las
-cajas poseidas, y llegar a Ludoarte.
+Tu misión, mago sin señal: cruza la plaza y llega a Ludoarte.
 
-El mundo no se salva solo.
-
-Se salva jugando.`;
+El mundo no se salva solo. Se salva jugando.`;
 
 export default function LoreScreen() {
   const [isOpen, setIsOpen] = useState(false);
@@ -60,11 +54,17 @@ export default function LoreScreen() {
   useEffect(() => {
     if (isOpen && !wasOpenRef.current) {
       playMenuOpenSound();
+      startLoreMusic();
     } else if (!isOpen && wasOpenRef.current) {
       playMenuCloseSound();
+      stopLoreMusic();
     }
     wasOpenRef.current = isOpen;
   }, [isOpen]);
+
+  useEffect(() => {
+    return () => stopLoreMusic();
+  }, []);
 
   const close = () => {
     playMenuCloseSound();

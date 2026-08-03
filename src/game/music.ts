@@ -243,3 +243,50 @@ export function playDialogueBlipSound() {
   if (ctx.state === "suspended") ctx.resume();
   playBeep(1100, 0, 0.02, 0.07);
 }
+
+// Eerie 8-bit arpeggio loop for the lore crawl -- a minor-key pattern,
+// fully synthesized like the SFX above (no audio file, so no copyright
+// question to even ask).
+const LORE_NOTES = [220, 196, 174.6, 196, 220, 261.6, 233.1, 196];
+const LORE_STEP_MS = 480;
+let loreInterval: ReturnType<typeof setInterval> | null = null;
+let loreStep = 0;
+
+function playLoreNote(freq: number) {
+  const ctx = ensureContext();
+  const now = ctx.currentTime;
+
+  const osc = ctx.createOscillator();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(freq, now);
+
+  const noteGain = ctx.createGain();
+  noteGain.gain.setValueAtTime(0.0001, now);
+  noteGain.gain.linearRampToValueAtTime(0.16, now + 0.02);
+  noteGain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+
+  osc.connect(noteGain);
+  noteGain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.45);
+}
+
+export function startLoreMusic() {
+  if (loreInterval) return;
+  const ctx = ensureContext();
+  if (ctx.state === "suspended") ctx.resume();
+
+  loreStep = 0;
+  playLoreNote(LORE_NOTES[0]);
+  loreInterval = setInterval(() => {
+    loreStep = (loreStep + 1) % LORE_NOTES.length;
+    playLoreNote(LORE_NOTES[loreStep]);
+  }, LORE_STEP_MS);
+}
+
+export function stopLoreMusic() {
+  if (loreInterval) {
+    clearInterval(loreInterval);
+    loreInterval = null;
+  }
+}

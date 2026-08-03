@@ -41,7 +41,7 @@
   text-align: center;
   white-space: pre-wrap;
   text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
-  animation: crawlUp 55s linear forwards;
+  animation: crawlUp 65s linear forwards;
 }
 
 @keyframes crawlUp {
@@ -49,7 +49,7 @@
     top: 100vh;
   }
   to {
-    top: -230vh;
+    top: -165vh;
   }
 }
 

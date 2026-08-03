@@ -59,6 +59,8 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
       return;
     }
 
+    const savedLocal = localStorage.getItem(CHARACTER_TINT_KEY);
+
     let cancelled = false;
     createClient()
       .from("profiles")
@@ -70,6 +72,16 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
         if (data?.character_tint != null) {
           gameState.playerTint = data.character_tint;
           setHasChosenCharacter(true);
+        } else if (savedLocal) {
+          // Chosen before this account had a profiles row (or while
+          // logged out) -- honor it instead of asking again, and copy
+          // it up to the account so it's there next time.
+          const tint = Number(savedLocal);
+          gameState.playerTint = tint;
+          setHasChosenCharacter(true);
+          createClient()
+            .from("profiles")
+            .upsert({ id: user.id, email: user.email, character_tint: tint });
         } else {
           setHasChosenCharacter(false);
         }
@@ -89,12 +101,11 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
     gameState.playerTint = tint;
     setHasChosenCharacter(true);
     setCharacterMenuOpen(false);
+    localStorage.setItem(CHARACTER_TINT_KEY, String(tint));
     if (user) {
       createClient()
         .from("profiles")
         .upsert({ id: user.id, email: user.email, character_tint: tint });
-    } else {
-      localStorage.setItem(CHARACTER_TINT_KEY, String(tint));
     }
   };
 

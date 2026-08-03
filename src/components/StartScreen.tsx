@@ -57,13 +57,11 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
     if (loading) return;
 
     if (!user) {
-      const saved = localStorage.getItem(CHARACTER_TINT_KEY);
-      if (saved) {
-        gameState.playerTint = Number(saved);
-        setHasChosenCharacter(true);
-      } else {
-        setHasChosenCharacter(false);
-      }
+      // Logged out always means the standard color -- the browser's
+      // cached tint (see below) is only ever a migration source for
+      // logging back in, never something a guest should see.
+      gameState.playerTint = 0xffffff;
+      setHasChosenCharacter(false);
       setTintChecked(true);
       return;
     }

@@ -409,7 +409,9 @@ export default function OrderTruckScreen() {
 
         <div className={styles.shopMenuFooter}>
           <div className={styles.shopMenuPrice}>
-            {selectedGame.isRentalOnly ? "Consultar por WhatsApp" : `$${selectedGame.price}`}
+            {selectedGame.price != null
+              ? `$${selectedGame.price}`
+              : "Consultar por WhatsApp"}
           </div>
           <div className={styles.shopMenuHint}>E: Agregar &middot; ESC: Volver</div>
         </div>

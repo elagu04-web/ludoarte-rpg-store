@@ -47,7 +47,7 @@ export const shelves: ShelfData[] = [
       {
         id: "papas-queman",
         name: "Papas queman",
-        price: 1250,
+        price: 1290,
         stock: 2,
         image: "/assets/boardgames/papas-queman.png",
         description: "Juego de cartas con papas de personalidad unica: ataca, defende y sabotea a tus rivales para juntar la mayor cantidad de papas doradas.",
@@ -58,7 +58,7 @@ export const shelves: ShelfData[] = [
       {
         id: "salem-1692",
         name: "Salem 1692",
-        price: 1790,
+        price: 1890,
         stock: 0,
         image: "/assets/boardgames/salem.png",
         description: "Deduccion social ambientada en la caza de brujas de Salem: descubri quienes son las brujas antes de que el pueblo se les entregue.",
@@ -80,7 +80,7 @@ export const shelves: ShelfData[] = [
       {
         id: "no-game-over",
         name: "No Game Over",
-        price: 1390,
+        price: 1590,
         stock: 1,
         image: "/assets/boardgames/no-game-over.png",
         description: "Juego de cartas inspirado en los videojuegos: equipate, lucha contra enemigos y llega al jefe final antes que los demas.",
@@ -102,7 +102,7 @@ export const shelves: ShelfData[] = [
       {
         id: "exploding-kittens",
         name: "Exploding Kittens",
-        price: 1890,
+        price: 1990,
         stock: 1,
         image: "/assets/boardgames/exploding-kittens.png",
         description: "Juego de cartas rapido y con humor negro: evita explotar.",
@@ -113,7 +113,7 @@ export const shelves: ShelfData[] = [
       {
         id: "niji",
         name: "Niji",
-        price: 1250,
+        price: 1350,
         stock: 1,
         image: "/assets/boardgames/niji.png",
         description: "Anticipate a los demas jugadores y maneja tus cartas para formar el arcoiris de colores.",
@@ -135,7 +135,7 @@ export const shelves: ShelfData[] = [
       {
         id: "terraforming-mars",
         name: "Terraforming Mars",
-        price: 5000,
+        price: 4800,
         stock: 1,
         image: "/assets/boardgames/terraforming-mars.png",
         description: "Competi contra otras corporaciones para hacer habitable el planeta Marte, subiendo la temperatura, el oxigeno y los oceanos.",
@@ -146,7 +146,7 @@ export const shelves: ShelfData[] = [
       {
         id: "pandemia",
         name: "Pandemia!",
-        price: 500,
+        price: 3590,
         stock: 1,
         image: "/assets/boardgames/pandemia.png",
         description: "Mantene tu cuerpo sano mientras infectas a tus rivales con virus: se el primero en juntar 4 organos sanos para ganar.",
@@ -157,7 +157,7 @@ export const shelves: ShelfData[] = [
       {
         id: "katamino",
         name: "Katamino",
-        price: 1500,
+        price: 2650,
         stock: 0,
         image: "/assets/boardgames/katamino.png",
         description: "Rompecabezas de encastrar piezas de distintas formas para llenar el tablero perfectamente.",
@@ -168,7 +168,7 @@ export const shelves: ShelfData[] = [
       {
         id: "domino-6",
         name: "Dominó 6",
-        price: 1500,
+        price: 590,
         stock: 0,
         image: "/assets/boardgames/domino-6.png",
         description: "El clasico juego de fichas: encadena numeros iguales y quedate sin fichas antes que nadie.",
@@ -179,7 +179,7 @@ export const shelves: ShelfData[] = [
       {
         id: "faraway",
         name: "Faraway",
-        price: 1500,
+        price: 1690,
         stock: 0,
         image: "/assets/boardgames/faraway.png",
         description: "Explora una tierra misteriosa y cumple objetivos en tu camino de regreso a casa.",
@@ -196,7 +196,7 @@ export const shelves: ShelfData[] = [
       {
         id: "rin-rin-raja",
         name: "Rin Rin Raja",
-        price: 1190,
+        price: 1290,
         stock: 1,
         image: "/assets/boardgames/rin-rin-raja.png",
         description: "Toca el timbre y escapa antes de que te descubran: un juego rapido y muy divertido para jugar en familia.",
@@ -218,7 +218,7 @@ export const shelves: ShelfData[] = [
       {
         id: "difference",
         name: "Difference",
-        price: 1490,
+        price: 1390,
         stock: 1,
         image: "/assets/boardgames/difference.png",
         description: "El clasico juego de encontrar las diferencias, pero contra otros jugadores: gana quien tenga el ojo mas rapido.",
@@ -240,7 +240,7 @@ export const shelves: ShelfData[] = [
       {
         id: "la-noche-de-gansferatu",
         name: "La Noche de Gansferatu",
-        price: 990,
+        price: 1100,
         stock: 1,
         image: "/assets/boardgames/la-noche-de-gansferatu.png",
         description: "Explora el castillo buscando aldeanos perdidos y tesoros, pero si te cruzas con Gansferatu perdes todo lo que juntaste. Memoria y riesgo en partidas cortas.",
@@ -251,7 +251,7 @@ export const shelves: ShelfData[] = [
       {
         id: "cubirds",
         name: "Cubirds",
-        price: 1350,
+        price: 1490,
         stock: 1,
         image: "/assets/boardgames/cubirds.png",
         description: "Juego de cartas de coleccionar parejas de pajaros.",
@@ -273,7 +273,7 @@ export const shelves: ShelfData[] = [
       {
         id: "palabras-basura",
         name: "Palabras Basura",
-        price: 1690,
+        price: 1890,
         stock: 0,
         image: "/assets/boardgames/palabras-basura.png",
         description: "Cooperativo: mapaches y gatos intentan comunicarse asociando palabras con objetos extraños encontrados en la basura.",
@@ -284,7 +284,7 @@ export const shelves: ShelfData[] = [
       {
         id: "hombres-lobo",
         name: "Hombres Lobo",
-        price: 990,
+        price: 1150,
         stock: 1,
         image: "/assets/boardgames/hombres-lobo.png",
         description: "De noche los hombres lobo eligen una victima; de dia el pueblo discute y vota a quien creen que es el lobo. Un clasico de la deduccion social.",
@@ -306,7 +306,7 @@ export const shelves: ShelfData[] = [
       {
         id: "taco-cat-goat-cheese-pizza",
         name: "Taco Cat Goat Cheese Pizza",
-        price: 1500,
+        price: 990,
         stock: 0,
         image: "/assets/boardgames/taco-cat-goat-cheese-pizza.png",
         description: "Juego de cartas de reflejos: cuando la carta coincide con lo que decis en voz alta, hay que golpear la pila lo mas rapido posible.",
@@ -317,7 +317,7 @@ export const shelves: ShelfData[] = [
       {
         id: "polilla-tramposa",
         name: "Polilla Tramposa",
-        price: 1500,
+        price: 1490,
         stock: 0,
         image: "/assets/boardgames/polilla-tramposa.png",
         description: "Juego de cartas donde hacer trampa esta permitido (y es casi obligatorio) para deshacerte de tu mano antes que los demas.",
@@ -328,7 +328,7 @@ export const shelves: ShelfData[] = [
       {
         id: "saboteur",
         name: "Saboteur",
-        price: 1500,
+        price: 1250,
         stock: 0,
         image: "/assets/boardgames/saboteur.png",
         description: "Los enanos cavan tuneles para llegar al oro, pero uno de los jugadores es el saboteador secreto.",
@@ -339,7 +339,7 @@ export const shelves: ShelfData[] = [
       {
         id: "el-rebano",
         name: "El Rebaño",
-        price: 1500,
+        price: 890,
         stock: 0,
         image: "/assets/boardgames/el-rebano.png",
         description: "Juego de cartas de reflejos con ovejas, lobos y pastores: hay que estar atento a quien le toca jugar.",
@@ -356,7 +356,7 @@ export const shelves: ShelfData[] = [
       {
         id: "patachof",
         name: "Patachof",
-        price: 1350,
+        price: 1490,
         stock: 1,
         image: "/assets/boardgames/patachof.png",
         description: "Juego de destreza con papas locas que saltan a la pileta: hace equilibrio y no te caigas antes que los demas.",
@@ -367,7 +367,7 @@ export const shelves: ShelfData[] = [
       {
         id: "vaalbara",
         name: "Vaalbara",
-        price: 1700,
+        price: 1780,
         stock: 1,
         image: "/assets/boardgames/vaalbara.png",
         description: "Lideres de clanes neoliticos compiten por dominar el territorio, mandando a su gente a reclamar tierras.",
@@ -378,7 +378,7 @@ export const shelves: ShelfData[] = [
       {
         id: "tummple",
         name: "Tummple",
-        price: 1900,
+        price: 1790,
         stock: 1,
         image: "/assets/boardgames/tummple.png",
         description: "Juego de apilar piezas de madera en 3D sin que se caigan.",
@@ -400,7 +400,7 @@ export const shelves: ShelfData[] = [
       {
         id: "barrio",
         name: "Barrio",
-        price: 1290,
+        price: 1350,
         stock: 0,
         image: "/assets/boardgames/barrio.png",
         description: "Construi las mejores casas para armar el panorama mas lindo del barrio.",
@@ -411,7 +411,7 @@ export const shelves: ShelfData[] = [
       {
         id: "catan",
         name: "Catan",
-        price: 3650,
+        price: 3890,
         stock: 1,
         image: "/assets/boardgames/catan-box.png",
         description: "Comercia y construye para colonizar una isla.",
@@ -423,7 +423,7 @@ export const shelves: ShelfData[] = [
       {
         id: "porto",
         name: "Porto",
-        price: 2250,
+        price: 2850,
         stock: 0,
         image: "/assets/boardgames/porto.png",
         description: "Construi el frente costero de la ciudad de Porto jugando cartas para levantar pisos y completar casas.",
@@ -434,7 +434,7 @@ export const shelves: ShelfData[] = [
       {
         id: "carcassonne",
         name: "Carcassonne",
-        price: 3550,
+        price: 3490,
         stock: 1,
         image: "/assets/boardgames/carcassonne.png",
         description: "Arma el mapa colocando losetas de ciudades, caminos y campos.",
@@ -445,7 +445,7 @@ export const shelves: ShelfData[] = [
       {
         id: "banana-azul",
         name: "Banana Azul",
-        price: 1450,
+        price: 1590,
         stock: 1,
         image: "/assets/boardgames/banana-azul.png",
         description: "Las cartas muestran los simbolos con el color equivocado: se rapido para encontrar el que combina con el color correcto.",
@@ -456,7 +456,7 @@ export const shelves: ShelfData[] = [
       {
         id: "azul",
         name: "Azul",
-        price: 4200,
+        price: 3700,
         stock: 1,
         image: "/assets/boardgames/azul.png",
         description: "Juego de estrategia con fichas de mosaico para decorar tu palacio.",

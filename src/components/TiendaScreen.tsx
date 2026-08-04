@@ -109,7 +109,7 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
       if (game) buyNow(game);
     } else if (tab === "pedido") {
       const game = orderableGames[selectedIndexRef.current];
-      if (game) requestByWhatsApp(game.name, game.isRentalOnly ? null : game.price);
+      if (game) requestByWhatsApp(game.name, game.price);
     }
   };
 
@@ -268,17 +268,14 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
                 </p>
                 <div className={styles.previewFooter}>
                   <span className={styles.previewPrice}>
-                    {selectedOrderable.isRentalOnly
-                      ? "Consultar"
-                      : `$${selectedOrderable.price}`}
+                    {selectedOrderable.price != null
+                      ? `$${selectedOrderable.price}`
+                      : "Consultar"}
                   </span>
                   <button
                     className={styles.requestButton}
                     onClick={() =>
-                      requestByWhatsApp(
-                        selectedOrderable.name,
-                        selectedOrderable.isRentalOnly ? null : selectedOrderable.price
-                      )
+                      requestByWhatsApp(selectedOrderable.name, selectedOrderable.price)
                     }
                   >
                     PEDIR (E)
@@ -320,16 +317,14 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
                     ref={index === selectedIndex ? selectedItemRef : undefined}
                     className={index === selectedIndex ? styles.rowSelected : styles.row}
                     onClick={() => selectRow(index)}
-                    onDoubleClick={() =>
-                      requestByWhatsApp(game.name, game.isRentalOnly ? null : game.price)
-                    }
+                    onDoubleClick={() => requestByWhatsApp(game.name, game.price)}
                   >
                     <span className={styles.rowName}>
                       {index === selectedIndex ? "▶ " : "  "}
                       {game.name}
                     </span>
                     <span className={styles.rowPrice}>
-                      {game.isRentalOnly ? "CONSULTAR" : `$${game.price}`}
+                      {game.price != null ? `$${game.price}` : "CONSULTAR"}
                     </span>
                   </div>
                 </li>

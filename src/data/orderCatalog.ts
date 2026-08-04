@@ -33,8 +33,25 @@ const saleOutOfStock = shelves
   .filter((game) => game.stock === 0);
 
 const rawOrderableGames = [
-  ...saleOutOfStock.map((game) => ({ ...game, isRentalOnly: false })),
-  ...rentalGames.map((game) => ({ ...game, isRentalOnly: true })),
+  ...saleOutOfStock.map((game) => ({
+    isRentalOnly: false,
+    id: game.id,
+    name: game.name,
+    price: game.price as number | null,
+    image: game.image,
+    spinSheet: game.spinSheet,
+  })),
+  // Rental-only games don't have a real purchase price unless we set one
+  // via salePrice -- game.price here is the RENTAL price, never a stand-in
+  // for what it costs to buy/order, so it's deliberately not used below.
+  ...rentalGames.map((game) => ({
+    isRentalOnly: true,
+    id: game.id,
+    name: game.name,
+    price: game.salePrice ?? null,
+    image: game.image,
+    spinSheet: game.spinSheet,
+  })),
 ];
 
 export const orderableGames: OrderableGame[] = rawOrderableGames.reduce<OrderableGame[]>(

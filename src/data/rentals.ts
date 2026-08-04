@@ -7,6 +7,11 @@ export interface RentalGame {
   name: string;
   /** Precio de alquiler en pesos uruguayos. null = todavia no cargado. */
   price: number | null;
+  /** Precio de referencia para comprarlo/traerlo por pedido (no es el
+   * precio de alquiler) -- solo presente en juegos que solo se alquilan,
+   * cuando tenemos un precio de referencia para ofrecerlo tambien por
+   * pedido. undefined = no se ofrece por pedido, solo por alquiler. */
+  salePrice?: number;
   image: string;
   spinSheet?: SpinSheet;
   description?: string;
@@ -48,6 +53,8 @@ interface RentalInfo {
   /** Caja real para juegos que solo se alquilan (no estan en el catalogo
    * de venta, asi que no hay de donde heredarla). */
   image?: string;
+  /** Ver RentalGame.salePrice. */
+  salePrice?: number;
 }
 
 // Los juegos que tambien estan a la venta heredan su ficha (descripcion,
@@ -64,6 +71,12 @@ function rentalGame(
     id: slugify(name),
     name,
     price,
+    // If this game is also in the sale catalog, its sale price IS the
+    // real answer to "how much to buy/order it" -- inherit it instead of
+    // duplicating the number here (which would go stale the next time
+    // the sale price changes). info.salePrice only matters for games
+    // that are rental-only and have no sale entry to inherit from.
+    salePrice: info.salePrice ?? match?.price,
     image: match?.image ?? info.image ?? PLACEHOLDER_IMAGE,
     spinSheet: match?.spinSheet,
     description: match?.description ?? info.description,
@@ -78,6 +91,7 @@ function rentalGame(
 // no tiene datos cargados).
 export const rentalGames: RentalGame[] = [
   rentalGame("Akropolis", 440, {
+    salePrice: 2990,
     description: "Construi tu ciudad griega en varios niveles, encastrando barrios para conseguir la mejor puntuacion.",
     players: "1 a 4",
     age: "8+",
@@ -85,6 +99,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/akropolis.png",
   }),
   rentalGame("Avalon", 110, {
+    salePrice: 1890,
     description: "Deduccion social en el reino del Rey Arturo: leales a Arturo contra secuaces de Mordred, sin saber quien es quien.",
     players: "5 a 10",
     age: "12+",
@@ -92,6 +107,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/avalon.png",
   }),
   rentalGame("Aventureros al Tren", 220, {
+    salePrice: 2200,
     description: "Junta cartas de vagones para construir tus rutas de tren por el mapa y cumplir tus billetes de destino.",
     players: "2 a 5",
     age: "8+",
@@ -101,6 +117,7 @@ export const rentalGames: RentalGame[] = [
   rentalGame("Barrio", 110),
   rentalGame("Batawaf", 100),
   rentalGame("Bohnanza", 110, {
+    salePrice: 1350,
     description: "Cultiva y comercia porotos con los demas jugadores para juntar la mayor fortuna posible.",
     players: "2 a 7",
     age: "12+",
@@ -108,6 +125,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/bohnanza.png",
   }),
   rentalGame("Brass: Lancashire", 440, {
+    salePrice: 4000,
     description: "Juego de estrategia economica: desarrolla industrias y redes de transporte en el Lancashire de la revolucion industrial.",
     players: "2 a 4",
     age: "14+",
@@ -115,6 +133,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/brass-lancashire.png",
   }),
   rentalGame("Super Fantasy Brawl", 440, {
+    salePrice: 3750,
     description: "Duelo rapido de cartas: bloquea, esquiva y golpea a tu rival hasta dejarlo sin vida.",
     players: "2",
     age: "13+",
@@ -138,6 +157,7 @@ export const rentalGames: RentalGame[] = [
   rentalGame("Carcassonne", 440),
   rentalGame("Catan", 440),
   rentalGame("Código Secreto", 220, {
+    salePrice: 2190,
     description: "Da pistas de una sola palabra para que tu equipo adivine cuales tarjetas son sus agentes secretos, sin tocar al asesino.",
     players: "2 a 8",
     age: "10+",
@@ -145,6 +165,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/codigo-secreto.png",
   }),
   rentalGame("Concordia", 440, {
+    salePrice: 4200,
     description: "Comercia y expande tus rutas por el Imperio Romano para conseguir el favor de los dioses.",
     players: "2 a 5",
     age: "13+",
@@ -152,6 +173,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/concordia.png",
   }),
   rentalGame("Coral", 220, {
+    salePrice: 2350,
     description: "Hagan crecer un arrecife de coral entre todos, pero reservate los mejores lugares para vos.",
     players: "1 a 4",
     age: "8+",
@@ -160,6 +182,7 @@ export const rentalGames: RentalGame[] = [
   }),
   rentalGame("CuBirds", 110),
   rentalGame("Detectives Paranormales", 440, {
+    salePrice: 2490,
     description: "Un jugador es el fantasma de una victima; los demas son detectives que le hacen preguntas para descubrir como murio.",
     players: "2 a 6",
     age: "12+",
@@ -167,6 +190,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/detectives-paranormales.png",
   }),
   rentalGame("Dragones del Mar", 440, {
+    salePrice: 2970,
     description: "Ubica a tus dragones para proteger los reinos submarinos del oro y los piratas, y consegui el mayor dominio de los mares.",
     players: "2 a 5",
     age: "8+",
@@ -174,6 +198,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/dragones-del-mar.png",
   }),
   rentalGame("Señor de los Anillos: Duelo", 220, {
+    salePrice: 2900,
     description: "Duelo a dos: uno juega como Sauron y el otro como la Comunidad, compitiendo por el dominio de la Tierra Media.",
     players: "2",
     age: "10+",
@@ -188,6 +213,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/el-arbol-de-aves.png",
   }),
   rentalGame("El Grande", 440, {
+    salePrice: 4890,
     description: "Usa tus caballeros para controlar regiones de la España medieval, sin acercarte demasiado al Rey.",
     players: "2 a 5",
     age: "12+",
@@ -212,6 +238,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/glc-el-destino-de-la-comunidad.png",
   }),
   rentalGame("Heat", 440, {
+    salePrice: 6200,
     description: "Carreras de autos: lleva tu auto al limite sin que el motor se sobrecaliente para cruzar primero la meta.",
     players: "1 a 6",
     age: "10+",
@@ -227,6 +254,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/kingdomino.png",
   }),
   rentalGame("Las Torres Errantes", 220, {
+    salePrice: 2990,
     description: "Los magos compiten por llegar a la torre del cuervo, mientras las torres se van moviendo por el tablero.",
     players: "2 a 6",
     age: "8+",
@@ -234,6 +262,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/las-torres-errantes.png",
   }),
   rentalGame("Listo Imprenta", 220, {
+    salePrice: 2950,
     description: "Junta y acomoda titulares de diario para armar la mejor primera plana y ser el mejor editor.",
     players: "1 a 6",
     age: "10+",
@@ -255,6 +284,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/ra.png",
   }),
   rentalGame("Números Drop", 110, {
+    salePrice: 1690,
     description: "Juego de dados con estilo retro: anota numeros y arma combinaciones antes que se acabe la partida.",
     players: "1 a 6",
     age: "10+",
@@ -262,6 +292,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/numeros-drop.png",
   }),
   rentalGame("Océanos de Papel", 110, {
+    salePrice: 1390,
     description: "Junta cartas con ilustraciones de origami marino para armar la mejor coleccion antes de cerrar la ronda.",
     players: "2 a 4",
     age: "8+",
@@ -269,6 +300,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/oceanos-de-papel.png",
   }),
   rentalGame("Paper Dungeons", 220, {
+    salePrice: 2890,
     description: "Roll and write de mazmorras: explora, lucha contra enemigos y consegui la mayor gloria posible.",
     players: "1 a 8",
     age: "10+",
@@ -276,6 +308,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/paper-dungeons.png",
   }),
   rentalGame("Pax Viking", 440, {
+    salePrice: 5990,
     description: "Lidera tu clan vikingo comerciando y expandiendo tus territorios para unir los reinos y convertirte en monarca.",
     players: "1 a 6",
     age: "12+",
@@ -283,6 +316,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/pax-viking.png",
   }),
   rentalGame("Piko Piko", 110, {
+    salePrice: 1490,
     description: "Tira los dados para juntar los gusanitos mas grandes de la parrilla, o robaselos a tus rivales.",
     players: "2 a 7",
     age: "8+",
@@ -292,6 +326,7 @@ export const rentalGames: RentalGame[] = [
   rentalGame("Polilla Tramposa", 110),
   rentalGame("Porto", 440),
   rentalGame("Proyecto Arrecife", 440, {
+    salePrice: 3950,
     description: "Se el heroe de la restauracion del arrecife: reconstruye el coral y salva los oceanos.",
     players: "1 a 4",
     age: "14+",
@@ -299,6 +334,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/proyecto-arrecife.png",
   }),
   rentalGame("Rhino Hero Super Battle", 220, {
+    salePrice: 1940,
     description: "Construi torres de carton bien altas y haz trepar a tu heroe para pelear en las alturas sin que se caiga todo.",
     players: "2 a 4",
     age: "5+",
@@ -308,6 +344,7 @@ export const rentalGames: RentalGame[] = [
   rentalGame("Saboteur", 110),
   rentalGame("Secret Hitler", 440),
   rentalGame("Señor de los Anillos: La Comunidad del Anillo", 440, {
+    salePrice: 4690,
     description: "Juego de bazas cooperativo: viajen desde la Comarca y superen cada obstaculo en equipo.",
     players: "1 a 4",
     age: "10+",
@@ -322,6 +359,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/sequence.png",
   }),
   rentalGame("Shiki", 110, {
+    salePrice: 690,
     description: "Juego de cartas y dados sobre las estaciones del año: descartate de toda tu mano para ganar.",
     players: "2 a 5",
     age: "4+",
@@ -329,6 +367,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/shiki.png",
   }),
   rentalGame("Splendor", 440, {
+    salePrice: 3390,
     description: "Sos un mercader del Renacimiento: junta piedras preciosas para comprar cartas y ganarte el favor de la nobleza.",
     players: "2 a 4",
     age: "8+",
@@ -336,6 +375,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/splendor.png",
   }),
   rentalGame("Sushi Go Party", 220, {
+    salePrice: 2250,
     description: "Elegi las mejores cartas de sushi a medida que pasan por la mesa, y dejale lugar al postre.",
     players: "2 a 8",
     age: "8+",
@@ -344,6 +384,7 @@ export const rentalGames: RentalGame[] = [
   }),
   rentalGame("Taco Cat Goat Cheese Pizza", 110),
   rentalGame("Terra Nova", 440, {
+    salePrice: 3550,
     description: "Version mas simple de Terra Mystica: elegi una facción y compite para explorar territorios y construir tu imperio.",
     players: "2 a 4",
     age: "12+",
@@ -359,6 +400,7 @@ export const rentalGames: RentalGame[] = [
     image: "/assets/boardgames/t-e-g.png",
   }),
   rentalGame("Trio", 110, {
+    salePrice: 1590,
     description: "Adivina si la carta de otro jugador es mas alta o mas baja, y juntá tres iguales antes que los demas.",
     players: "3 a 6",
     age: "6+",
@@ -375,6 +417,7 @@ export const rentalGames: RentalGame[] = [
   }),
   rentalGame("Yokai Pagoda", 110),
   rentalGame("Zero", 110, {
+    salePrice: 990,
     description: "Juego de cartas de manejo de mano: el objetivo es terminar la ronda con cero puntos, combinando numeros y colores.",
     players: "3 a 5",
     age: "8+",

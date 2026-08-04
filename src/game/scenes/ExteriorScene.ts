@@ -554,7 +554,9 @@ export class ExteriorScene extends BasePlayerScene {
 
     if (isLoss) {
       this.setDefeated();
-      eventBus.emit("game-over-open");
+      // Let the player actually see themselves knocked down for a beat
+      // before the Continuar/Terminar screen covers the scene.
+      this.time.delayedCall(1800, () => eventBus.emit("game-over-open"));
     }
 
     if (this.teleportTimer) {

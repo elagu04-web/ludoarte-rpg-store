@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { eventBus } from "@/game/eventBus";
 import styles from "./GameOverlay.module.css";
 
@@ -40,6 +41,21 @@ function DirectionButton({
 }
 
 export default function TouchControls() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleMenuOpen = (open: boolean) => setMenuOpen(open);
+    eventBus.on("menu-open", handleMenuOpen);
+    return () => {
+      eventBus.off("menu-open", handleMenuOpen);
+    };
+  }, []);
+
+  // A menu covers part of the screen but not necessarily the corners where
+  // the D-pad/interact button live -- leaving them tappable underneath let
+  // a touch meant for a menu button also queue up a move/interact.
+  if (menuOpen) return null;
+
   return (
     <div className={styles.touchControls}>
       <div className={styles.dpad}>

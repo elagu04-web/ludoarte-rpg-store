@@ -130,6 +130,14 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     this.inputPaused = false;
     const handleMenuOpen = (open: boolean) => {
       this.inputPaused = open;
+      // A touch that lands on the (still-tappable) D-pad/interact zone
+      // while a menu is open queues up as a pending move/interact --
+      // since onSceneUpdate() is skipped while paused, it never gets
+      // consumed, and used to fire the instant the menu closed (e.g.
+      // silently reopening the shelf you just closed). Dropping any
+      // in-flight touch state on every open/close transition kills that.
+      this.touchDirection = { up: false, down: false, left: false, right: false };
+      this.touchInteractRequested = false;
       if (open) {
         keyboard.removeCapture(CAPTURED_KEY_CODES);
       } else {

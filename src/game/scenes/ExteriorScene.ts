@@ -146,7 +146,17 @@ export class ExteriorScene extends BasePlayerScene {
     };
     eventBus.on("lore-ambush", handleLoreAmbush);
 
+    // "CONTINUAR" on the game-over screen: get back up and throw you
+    // straight into a fresh fight against another box.
+    const handleGameOverContinue = () => {
+      if (this.encounterActive) return;
+      this.revive();
+      this.startEnemyEncounter();
+    };
+    eventBus.on("game-over-continue", handleGameOverContinue);
+
     this.events.on("shutdown", () => {
+      eventBus.off("game-over-continue", handleGameOverContinue);
       eventBus.emit("screen-proximity", false);
       eventBus.off("lore-ambush", handleLoreAmbush);
     });
@@ -544,6 +554,7 @@ export class ExteriorScene extends BasePlayerScene {
 
     if (isLoss) {
       this.setDefeated();
+      eventBus.emit("game-over-open");
     }
 
     if (this.teleportTimer) {

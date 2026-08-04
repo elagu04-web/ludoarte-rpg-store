@@ -8,6 +8,8 @@ import CartViewLoader from "@/components/CartViewLoader";
 import SearchScreenLoader from "@/components/SearchScreenLoader";
 import OrderTruckScreenLoader from "@/components/OrderTruckScreenLoader";
 import LoreScreenLoader from "@/components/LoreScreenLoader";
+import GameOverScreenLoader from "@/components/GameOverScreenLoader";
+import GameOverExitListenerLoader from "@/components/GameOverExitListenerLoader";
 import MusicController from "@/components/MusicController";
 import FullscreenButton from "@/components/FullscreenButton";
 import StartScreen from "@/components/StartScreen";
@@ -60,6 +62,8 @@ export default function Home() {
         <SearchScreenLoader />
         <OrderTruckScreenLoader />
         <LoreScreenLoader />
+        <GameOverScreenLoader />
+        <GameOverExitListenerLoader onExit={() => setMode("start")} />
       </CartProvider>
     </AuthProvider>
   );

@@ -11,7 +11,9 @@ import {
 import { shelves } from "@/data/shelves";
 import { effectiveStock, isVisible } from "@/data/gameOverrides";
 import { useGameOverrides } from "@/data/useGameOverrides";
+import { useCustomGames } from "@/data/useCustomGames";
 import { extraSellableGames } from "@/data/sellableGames";
+import type { BoardGame } from "@/data/shelves";
 import { useCart } from "@/context/CartContext";
 import SpinningBox from "./SpinningBox";
 import styles from "./GameOverlay.module.css";
@@ -25,6 +27,7 @@ export default function SearchScreen() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const { addItem } = useCart();
   const overrides = useGameOverrides();
+  const customGames = useCustomGames();
 
   const inputRef = useRef<HTMLInputElement>(null);
   const selectedItemRef = useRef<HTMLLIElement | null>(null);
@@ -39,8 +42,17 @@ export default function SearchScreen() {
         ...game,
         stock: effectiveStock(game.id, game.stock, overrides),
       }));
-    return [...shelfGames, ...extraSellableGames(overrides)];
-  }, [overrides]);
+    const custom: BoardGame[] = (customGames ?? [])
+      .filter((game) => game.visible)
+      .map((game) => ({
+        id: game.id,
+        name: game.name,
+        price: game.price,
+        image: game.image,
+        stock: game.stock,
+      }));
+    return [...shelfGames, ...extraSellableGames(overrides), ...custom];
+  }, [overrides, customGames]);
 
   const results = useMemo(() => {
     const normalized = appliedQuery.trim().toLowerCase();

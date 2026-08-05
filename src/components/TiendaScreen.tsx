@@ -5,7 +5,12 @@ import { shelves, type BoardGame } from "@/data/shelves";
 import { orderableGames as rawOrderableGames, normalizeName } from "@/data/orderCatalog";
 import { effectiveStock, isVisible } from "@/data/gameOverrides";
 import { useGameOverrides } from "@/data/useGameOverrides";
-import { extraSellableGames } from "@/data/sellableGames";
+import { useCustomGames } from "@/data/useCustomGames";
+import {
+  extraSellableGames,
+  customSellableGames,
+  customOrderableGames,
+} from "@/data/sellableGames";
 import { useCart } from "@/context/CartContext";
 import {
   playMenuMoveSound,
@@ -44,6 +49,7 @@ function buildSingleItemWhatsAppUrl(name: string, price: number | null): string 
 export default function TiendaScreen({ onExit }: { onExit: () => void }) {
   const { addItem, totalItems, openCart } = useCart();
   const overrides = useGameOverrides();
+  const customGames = useCustomGames();
   const [tab, setTab] = useState<Tab>("disponible");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [searchText, setSearchText] = useState("");
@@ -69,23 +75,28 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
         }))
     );
     // Juegos que antes solo se alquilaban y el admin decidio vender
-    // tambien (les subio el stock y les puso precio desde Inventario) --
-    // no tienen estanteria fisica, van en su propio grupo al final.
-    const extra = extraSellableGames(overrides).map((game, i) => ({
+    // tambien (les subio el stock y les puso precio desde Inventario), mas
+    // los juegos agregados a mano que ya tienen stock -- ninguno tiene
+    // estanteria fisica, van en su propio grupo al final.
+    const extra = [
+      ...extraSellableGames(overrides),
+      ...customSellableGames(customGames ?? []),
+    ].map((game, i) => ({
       game,
       shelfTitle: "Recien agregados",
       isFirstInShelf: i === 0,
     }));
     return [...shelfEntries, ...extra];
-  }, [overrides]);
+  }, [overrides, customGames]);
 
   const orderableGames = useMemo(() => {
     if (!overrides) return [];
     const nowSellableIds = new Set(extraSellableGames(overrides).map((g) => g.id));
-    return rawOrderableGames.filter(
+    const fromCode = rawOrderableGames.filter(
       (game) => isVisible(game.id, overrides) && !nowSellableIds.has(game.id)
     );
-  }, [overrides]);
+    return [...fromCode, ...customOrderableGames(customGames ?? [])];
+  }, [overrides, customGames]);
 
   const availableGamesRef = useRef(availableGames);
   const orderableGamesRef = useRef(orderableGames);

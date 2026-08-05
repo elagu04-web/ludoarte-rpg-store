@@ -8,6 +8,9 @@ export interface CatalogGame {
   /** Stock as written in the code -- the admin override (if any)
    * replaces this at render time, this is just the fallback. */
   baseStock: number;
+  /** Precio como esta en el codigo -- null para juegos que solo se
+   * alquilan y todavia no tienen un precio de referencia (salePrice). */
+  basePrice: number | null;
   forSale: boolean;
   forRental: boolean;
 }
@@ -24,6 +27,7 @@ export const allGames: CatalogGame[] = [
     name: g.name,
     image: g.image,
     baseStock: g.stock,
+    basePrice: g.price,
     forSale: true,
     forRental: rentalGames.some((r) => r.id === g.id),
   })),
@@ -34,6 +38,7 @@ export const allGames: CatalogGame[] = [
       name: r.name,
       image: r.image,
       baseStock: 0,
+      basePrice: r.salePrice ?? null,
       forSale: false,
       forRental: true,
     })),

@@ -5,6 +5,7 @@ import { shelves, type BoardGame } from "@/data/shelves";
 import { orderableGames as rawOrderableGames, normalizeName } from "@/data/orderCatalog";
 import { effectiveStock, isVisible } from "@/data/gameOverrides";
 import { useGameOverrides } from "@/data/useGameOverrides";
+import { extraSellableGames } from "@/data/sellableGames";
 import { useCart } from "@/context/CartContext";
 import {
   playMenuMoveSound,
@@ -54,7 +55,7 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
 
   const availableGames = useMemo<FlatEntry[]>(() => {
     if (!overrides) return [];
-    return shelves.flatMap((shelf) =>
+    const shelfEntries = shelves.flatMap((shelf) =>
       shelf.games
         .filter(
           (game) =>
@@ -67,11 +68,23 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
           isFirstInShelf: i === 0,
         }))
     );
+    // Juegos que antes solo se alquilaban y el admin decidio vender
+    // tambien (les subio el stock y les puso precio desde Inventario) --
+    // no tienen estanteria fisica, van en su propio grupo al final.
+    const extra = extraSellableGames(overrides).map((game, i) => ({
+      game,
+      shelfTitle: "Recien agregados",
+      isFirstInShelf: i === 0,
+    }));
+    return [...shelfEntries, ...extra];
   }, [overrides]);
 
   const orderableGames = useMemo(() => {
     if (!overrides) return [];
-    return rawOrderableGames.filter((game) => isVisible(game.id, overrides));
+    const nowSellableIds = new Set(extraSellableGames(overrides).map((g) => g.id));
+    return rawOrderableGames.filter(
+      (game) => isVisible(game.id, overrides) && !nowSellableIds.has(game.id)
+    );
   }, [overrides]);
 
   const availableGamesRef = useRef(availableGames);

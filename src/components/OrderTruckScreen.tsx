@@ -11,6 +11,7 @@ import {
 import { orderableGames, normalizeName, type OrderableGame } from "@/data/orderCatalog";
 import { isVisible } from "@/data/gameOverrides";
 import { useGameOverrides } from "@/data/useGameOverrides";
+import { extraSellableGames } from "@/data/sellableGames";
 import SpinningBox from "./SpinningBox";
 import styles from "./GameOverlay.module.css";
 
@@ -58,10 +59,13 @@ export default function OrderTruckScreen() {
 
   // Same combined "not on a shelf" list used by the Tienda mode's "Por
   // pedido" tab (data/orderCatalog.ts), minus whatever the admin hid.
-  const truckGames: TruckGame[] = useMemo(
-    () => (overrides ? orderableGames.filter((g) => isVisible(g.id, overrides)) : []),
-    [overrides]
-  );
+  const truckGames: TruckGame[] = useMemo(() => {
+    if (!overrides) return [];
+    const nowSellableIds = new Set(extraSellableGames(overrides).map((g) => g.id));
+    return orderableGames.filter(
+      (g) => isVisible(g.id, overrides) && !nowSellableIds.has(g.id)
+    );
+  }, [overrides]);
   const truckGamesRef = useRef(truckGames);
   useEffect(() => {
     truckGamesRef.current = truckGames;

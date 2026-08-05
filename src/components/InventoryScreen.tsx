@@ -9,12 +9,15 @@ import styles from "./InventoryScreen.module.css";
 
 interface Row {
   stock: number;
+  price: number;
   visible: boolean;
 }
 
 // Typing D ten times shouldn't fire ten separate saves -- wait for a
 // short pause after the last tap before actually writing to Supabase.
 const STOCK_SAVE_DEBOUNCE_MS = 500;
+const PRICE_STEP = 50;
+const PRICE_STEP_FAST = 500;
 
 export default function InventoryScreen({ onExit }: { onExit: () => void }) {
   const overrides = useGameOverrides();
@@ -26,6 +29,7 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
   const selectedIndexRef = useRef(0);
   const selectedItemRef = useRef<HTMLTableRowElement | null>(null);
   const stockSaveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const priceSaveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   // Seed local rows once, the moment overrides finishes its first load --
   // from then on this screen's own state is the source of truth (every
@@ -37,6 +41,7 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
       const override = overrides.get(game.id);
       seeded[game.id] = {
         stock: override?.stock ?? game.baseStock,
+        price: override?.price ?? game.basePrice ?? 0,
         visible: override?.visible ?? true,
       };
     }
@@ -85,6 +90,27 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
     playMenuMoveSound();
   };
 
+  const savePrice = (id: string, price: number) => {
+    if (priceSaveTimers.current[id]) clearTimeout(priceSaveTimers.current[id]);
+    priceSaveTimers.current[id] = setTimeout(async () => {
+      const { error } = await updateGameOverride(id, { price });
+      markError(id, !!error);
+    }, STOCK_SAVE_DEBOUNCE_MS);
+  };
+
+  const adjustPrice = (id: string, delta: number) => {
+    const current = rowsRef.current[id];
+    if (!current) return;
+    const next = Math.max(0, current.price + delta);
+    if (next === current.price) return;
+    const updated = { ...rowsRef.current, [id]: { ...current, price: next } };
+    rowsRef.current = updated;
+    setRows(updated);
+    markError(id, false);
+    savePrice(id, next);
+    playMenuMoveSound();
+  };
+
   const toggleVisible = async (id: string) => {
     const current = rowsRef.current[id];
     if (!current) return;
@@ -113,9 +139,13 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
         setSelectedIndex((prev) => (prev + 1) % allGames.length);
         playMenuMoveSound();
       } else if (event.key === "a" || event.key === "A" || event.key === "ArrowLeft") {
-        if (game?.forSale) adjustStock(game.id, -1);
+        if (!game) return;
+        if (event.shiftKey) adjustPrice(game.id, -PRICE_STEP_FAST);
+        else adjustStock(game.id, -1);
       } else if (event.key === "d" || event.key === "D" || event.key === "ArrowRight") {
-        if (game?.forSale) adjustStock(game.id, 1);
+        if (!game) return;
+        if (event.shiftKey) adjustPrice(game.id, PRICE_STEP_FAST);
+        else adjustStock(game.id, 1);
       } else if (event.key === "e" || event.key === "E" || event.key === "Enter") {
         if (game) toggleVisible(game.id);
       }
@@ -151,6 +181,7 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
               <th>Juego</th>
               <th>Donde aparece</th>
               <th>Stock</th>
+              <th>Precio</th>
               <th>Visible</th>
             </tr>
           </thead>
@@ -183,29 +214,44 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
                     )}
                   </td>
                   <td className={styles.tagsCell}>
-                    {game.forSale && <span className={styles.tag}>Venta</span>}
+                    {(game.forSale || row.stock > 0) && (
+                      <span className={styles.tag}>Venta</span>
+                    )}
                     {game.forRental && <span className={styles.tag}>Alquiler</span>}
                   </td>
                   <td>
-                    {game.forSale ? (
-                      <div className={styles.stockRow}>
-                        <button
-                          className={styles.stockButton}
-                          onClick={() => adjustStock(game.id, -1)}
-                        >
-                          &#9664;
-                        </button>
-                        <span className={styles.stockValue}>{row.stock}</span>
-                        <button
-                          className={styles.stockButton}
-                          onClick={() => adjustStock(game.id, 1)}
-                        >
-                          &#9654;
-                        </button>
-                      </div>
-                    ) : (
-                      <span className={styles.dash}>&mdash;</span>
-                    )}
+                    <div className={styles.stockRow}>
+                      <button
+                        className={styles.stockButton}
+                        onClick={() => adjustStock(game.id, -1)}
+                      >
+                        &#9664;
+                      </button>
+                      <span className={styles.stockValue}>{row.stock}</span>
+                      <button
+                        className={styles.stockButton}
+                        onClick={() => adjustStock(game.id, 1)}
+                      >
+                        &#9654;
+                      </button>
+                    </div>
+                  </td>
+                  <td>
+                    <div className={styles.stockRow}>
+                      <button
+                        className={styles.stockButton}
+                        onClick={() => adjustPrice(game.id, -PRICE_STEP)}
+                      >
+                        &#9664;
+                      </button>
+                      <span className={styles.stockValue}>${row.price}</span>
+                      <button
+                        className={styles.stockButton}
+                        onClick={() => adjustPrice(game.id, PRICE_STEP)}
+                      >
+                        &#9654;
+                      </button>
+                    </div>
                   </td>
                   <td>
                     <button
@@ -223,7 +269,8 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
       </div>
 
       <p className={styles.hint}>
-        W/S: ELEGIR &middot; A/D: STOCK &middot; E: VISIBLE/OCULTO &middot; ESC: SALIR
+        W/S: ELEGIR &middot; A/D: STOCK &middot; SHIFT+A/D: PRECIO &middot; E:
+        VISIBLE/OCULTO &middot; ESC: SALIR
       </p>
     </div>
   );

@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/client";
 export interface GameOverride {
   stock: number | null;
   visible: boolean;
+  /** null = usar el precio del codigo (BoardGame.price o RentalGame.salePrice). */
+  price: number | null;
 }
 
 export type GameOverrides = Map<string, GameOverride>;
@@ -19,11 +21,11 @@ const subscribers = new Set<(overrides: GameOverrides) => void>();
 async function load(): Promise<GameOverrides> {
   const { data } = await createClient()
     .from("game_overrides")
-    .select("id, stock, visible");
+    .select("id, stock, visible, price");
 
   const map: GameOverrides = new Map();
   for (const row of data ?? []) {
-    map.set(row.id, { stock: row.stock, visible: row.visible });
+    map.set(row.id, { stock: row.stock, visible: row.visible, price: row.price });
   }
   return map;
 }
@@ -64,18 +66,30 @@ export function isVisible(id: string, overrides: GameOverrides): boolean {
   return overrides.get(id)?.visible ?? true;
 }
 
+/** Effective sale price for a game whose base (code) price is `basePrice`
+ * (null if the code doesn't have one, e.g. a rental-only game with no
+ * salePrice set) -- an admin override replaces it when present. */
+export function effectivePrice(
+  id: string,
+  basePrice: number | null,
+  overrides: GameOverrides
+): number | null {
+  const override = overrides.get(id);
+  return override?.price ?? basePrice;
+}
+
 /** Admin-only: called from the inventory screen. RLS on the table
  * rejects this for anyone but elagu04@gmail.com regardless. */
 export async function updateGameOverride(
   id: string,
   patch: Partial<GameOverride>
 ): Promise<{ error: string | null }> {
-  const current = cache?.get(id) ?? { stock: null, visible: true };
+  const current = cache?.get(id) ?? { stock: null, visible: true, price: null };
   const next = { ...current, ...patch };
 
   const { error } = await createClient()
     .from("game_overrides")
-    .upsert({ id, stock: next.stock, visible: next.visible });
+    .upsert({ id, stock: next.stock, visible: next.visible, price: next.price });
 
   if (error) return { error: error.message };
 

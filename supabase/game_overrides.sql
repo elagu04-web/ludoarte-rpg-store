@@ -7,11 +7,22 @@
 
 create table if not exists public.game_overrides (
   id text primary key,
-  -- null = no aplica (juegos que solo se alquilan no tienen stock de venta).
   stock integer,
   visible boolean not null default true,
+  -- null = usar el precio del codigo (shelves.ts / rentals.ts). Los
+  -- juegos que solo se alquilan no tienen precio de venta en el codigo,
+  -- asi que para venderlos hace falta cargar uno aca.
+  price integer,
   updated_at timestamptz not null default now()
 );
+
+-- Si la tabla ya existia de una corrida anterior de este script, esto la
+-- pone al dia sin pisar nada: agrega la columna de precio si todavia no
+-- esta, y pasa de "stock null" (no aplica) a "stock 0" (aplica, todavia
+-- no hay unidades) en los juegos que solo se alquilan -- asi el panel de
+-- inventario ya deja subirles el stock si se compra uno para vender.
+alter table public.game_overrides add column if not exists price integer;
+update public.game_overrides set stock = 0 where stock is null;
 
 alter table public.game_overrides enable row level security;
 
@@ -77,45 +88,45 @@ insert into public.game_overrides (id, stock, visible) values
   ('ajedrez', 1, true),
   ('burako', 1, true),
   ('flip-7', 1, true),
-  ('akropolis', null, true),
-  ('avalon', null, true),
-  ('aventureros-al-tren', null, true),
-  ('bohnanza', null, true),
-  ('brass-lancashire', null, true),
-  ('camarero', null, true),
-  ('can-t-stop', null, true),
-  ('codigo-secreto', null, true),
-  ('concordia', null, true),
-  ('coral', null, true),
-  ('detectives-paranormales', null, true),
-  ('dragones-del-mar', null, true),
-  ('el-arbol-de-aves', null, true),
-  ('el-grande', null, true),
-  ('escape', null, true),
-  ('el-senor-de-los-anillos-el-destino-de-la-comunidad', null, true),
-  ('heat', null, true),
-  ('kingdomino', null, true),
-  ('las-torres-errantes', null, true),
-  ('listo-imprenta', null, true),
-  ('mi-city', null, true),
-  ('numeros-drop', null, true),
-  ('oceanos-de-papel', null, true),
-  ('paper-dungeons', null, true),
-  ('pax-viking', null, true),
-  ('piko-piko', null, true),
-  ('proyecto-arrecife', null, true),
-  ('ra', null, true),
-  ('rhino-hero-super-battle', null, true),
-  ('senor-de-los-anillos-duelo', null, true),
-  ('senor-de-los-anillos-la-comunidad-del-anillo', null, true),
-  ('sequence', null, true),
-  ('shiki', null, true),
-  ('splendor', null, true),
-  ('super-fantasy-brawl', null, true),
-  ('sushi-go-party', null, true),
-  ('t-e-g', null, true),
-  ('terra-nova', null, true),
-  ('trio', null, true),
-  ('valdes', null, true),
-  ('zero', null, true)
+  ('akropolis', 0, true),
+  ('avalon', 0, true),
+  ('aventureros-al-tren', 0, true),
+  ('bohnanza', 0, true),
+  ('brass-lancashire', 0, true),
+  ('camarero', 0, true),
+  ('can-t-stop', 0, true),
+  ('codigo-secreto', 0, true),
+  ('concordia', 0, true),
+  ('coral', 0, true),
+  ('detectives-paranormales', 0, true),
+  ('dragones-del-mar', 0, true),
+  ('el-arbol-de-aves', 0, true),
+  ('el-grande', 0, true),
+  ('escape', 0, true),
+  ('el-senor-de-los-anillos-el-destino-de-la-comunidad', 0, true),
+  ('heat', 0, true),
+  ('kingdomino', 0, true),
+  ('las-torres-errantes', 0, true),
+  ('listo-imprenta', 0, true),
+  ('mi-city', 0, true),
+  ('numeros-drop', 0, true),
+  ('oceanos-de-papel', 0, true),
+  ('paper-dungeons', 0, true),
+  ('pax-viking', 0, true),
+  ('piko-piko', 0, true),
+  ('proyecto-arrecife', 0, true),
+  ('ra', 0, true),
+  ('rhino-hero-super-battle', 0, true),
+  ('senor-de-los-anillos-duelo', 0, true),
+  ('senor-de-los-anillos-la-comunidad-del-anillo', 0, true),
+  ('sequence', 0, true),
+  ('shiki', 0, true),
+  ('splendor', 0, true),
+  ('super-fantasy-brawl', 0, true),
+  ('sushi-go-party', 0, true),
+  ('t-e-g', 0, true),
+  ('terra-nova', 0, true),
+  ('trio', 0, true),
+  ('valdes', 0, true),
+  ('zero', 0, true)
 on conflict (id) do nothing;

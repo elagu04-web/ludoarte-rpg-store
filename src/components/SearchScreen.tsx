@@ -11,6 +11,7 @@ import {
 import { shelves } from "@/data/shelves";
 import { effectiveStock, isVisible } from "@/data/gameOverrides";
 import { useGameOverrides } from "@/data/useGameOverrides";
+import { extraSellableGames } from "@/data/sellableGames";
 import { useCart } from "@/context/CartContext";
 import SpinningBox from "./SpinningBox";
 import styles from "./GameOverlay.module.css";
@@ -32,12 +33,13 @@ export default function SearchScreen() {
 
   const searchableGames = useMemo(() => {
     if (!overrides) return [];
-    return allGames
+    const shelfGames = allGames
       .filter((game) => isVisible(game.id, overrides))
       .map((game) => ({
         ...game,
         stock: effectiveStock(game.id, game.stock, overrides),
       }));
+    return [...shelfGames, ...extraSellableGames(overrides)];
   }, [overrides]);
 
   const results = useMemo(() => {

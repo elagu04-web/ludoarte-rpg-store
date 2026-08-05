@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { eventBus } from "@/game/eventBus";
 import {
   playMenuMoveSound,
@@ -9,17 +9,14 @@ import {
   playMenuCloseSound,
 } from "@/game/music";
 import { orderableGames, normalizeName, type OrderableGame } from "@/data/orderCatalog";
+import { isVisible } from "@/data/gameOverrides";
+import { useGameOverrides } from "@/data/useGameOverrides";
 import SpinningBox from "./SpinningBox";
 import styles from "./GameOverlay.module.css";
 
 const STORE_WHATSAPP_NUMBER = "59899861116";
 
 type TruckGame = OrderableGame;
-
-// Same combined "not on a shelf" list used by the Tienda mode's "Por
-// pedido" tab -- kept in one place (data/orderCatalog.ts) so both stay in
-// sync automatically.
-const truckGames: TruckGame[] = orderableGames;
 
 interface OrderItem {
   id: string;
@@ -57,6 +54,18 @@ export default function OrderTruckScreen() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [searchText, setSearchText] = useState("");
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const overrides = useGameOverrides();
+
+  // Same combined "not on a shelf" list used by the Tienda mode's "Por
+  // pedido" tab (data/orderCatalog.ts), minus whatever the admin hid.
+  const truckGames: TruckGame[] = useMemo(
+    () => (overrides ? orderableGames.filter((g) => isVisible(g.id, overrides)) : []),
+    [overrides]
+  );
+  const truckGamesRef = useRef(truckGames);
+  useEffect(() => {
+    truckGamesRef.current = truckGames;
+  }, [truckGames]);
 
   const viewRef = useRef<View>("menu");
   const topMenuIndexRef = useRef(0);
@@ -127,7 +136,7 @@ export default function OrderTruckScreen() {
   };
 
   const addSelectionToOrder = () => {
-    const game = truckGames[selectedIndexRef.current];
+    const game = truckGamesRef.current[selectedIndexRef.current];
     if (!game) return;
     addGameToOrder(game.id, game.name);
   };
@@ -139,7 +148,7 @@ export default function OrderTruckScreen() {
     // Si escribiste el nombre de un juego que ya conocemos, lo fusionamos
     // con esa entrada (mismo id); si no, es un pedido de algo puntual que
     // no esta en ningun catalogo todavia.
-    const known = truckGames.find(
+    const known = truckGamesRef.current.find(
       (game) => normalizeName(game.name) === normalizeName(name)
     );
     addGameToOrder(known?.id ?? normalizeName(name), known?.name ?? name);
@@ -172,7 +181,8 @@ export default function OrderTruckScreen() {
 
     const moveSelection = (delta: number) => {
       setSelectedIndex((prev) => {
-        const count = truckGames.length;
+        const count = truckGamesRef.current.length;
+        if (count === 0) return 0;
         return (prev + delta + count) % count;
       });
       playMenuMoveSound();

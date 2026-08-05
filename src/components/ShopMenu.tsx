@@ -9,6 +9,8 @@ import {
   playMenuCloseSound,
 } from "@/game/music";
 import { shelves } from "@/data/shelves";
+import { effectiveStock, isVisible } from "@/data/gameOverrides";
+import { useGameOverrides } from "@/data/useGameOverrides";
 import { useCart } from "@/context/CartContext";
 import { buildGameDialogue } from "@/game/gameDialogue";
 import SpinningBox from "./SpinningBox";
@@ -18,12 +20,21 @@ export default function ShopMenu() {
   const [openShelfId, setOpenShelfId] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const { addItem } = useCart();
+  const overrides = useGameOverrides();
 
   const shelf = shelves.find((item) => item.id === openShelfId) ?? null;
-  // Order-only games (stock 0) don't belong on the shelf you're physically
-  // standing in front of -- they show up in the order kiosk's search
-  // instead, where "solo por pedido" actually makes sense.
-  const availableGames = shelf?.games.filter((game) => game.stock > 0) ?? [];
+  // Order-only games (out of stock, or hidden by the admin) don't belong
+  // on the shelf you're physically standing in front of -- they show up
+  // in the order kiosk's search instead, where "solo por pedido" (or
+  // simply not existing) actually makes sense.
+  const availableGames =
+    shelf && overrides
+      ? shelf.games.filter(
+          (game) =>
+            isVisible(game.id, overrides) &&
+            effectiveStock(game.id, game.stock, overrides) > 0
+        )
+      : [];
   const selectedGame = availableGames[selectedIndex];
   const selectedIndexRef = useRef(0);
   const gamesRef = useRef(availableGames);
@@ -34,7 +45,7 @@ export default function ShopMenu() {
 
   useEffect(() => {
     gamesRef.current = availableGames;
-  }, [shelf]);
+  }, [availableGames]);
 
   useEffect(() => {
     const handleOpen = (shelfId: string) => {

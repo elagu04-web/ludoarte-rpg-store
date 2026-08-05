@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { eventBus } from "@/game/eventBus";
 import {
   playMenuMoveSound,
@@ -8,6 +8,8 @@ import {
   playMenuCloseSound,
 } from "@/game/music";
 import { rentalGames } from "@/data/rentals";
+import { isVisible } from "@/data/gameOverrides";
+import { useGameOverrides } from "@/data/useGameOverrides";
 import { buildGameDialogue } from "@/game/gameDialogue";
 import SpinningBox from "./SpinningBox";
 import styles from "./GameOverlay.module.css";
@@ -17,8 +19,18 @@ export default function RentalMenu() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const selectedIndexRef = useRef(0);
   const selectedItemRef = useRef<HTMLLIElement | null>(null);
+  const overrides = useGameOverrides();
 
-  const selectedGame = rentalGames[selectedIndex];
+  const visibleRentalGames = useMemo(
+    () => (overrides ? rentalGames.filter((g) => isVisible(g.id, overrides)) : []),
+    [overrides]
+  );
+  const visibleRentalGamesRef = useRef(visibleRentalGames);
+  useEffect(() => {
+    visibleRentalGamesRef.current = visibleRentalGames;
+  }, [visibleRentalGames]);
+
+  const selectedGame = visibleRentalGames[selectedIndex];
 
   useEffect(() => {
     selectedIndexRef.current = selectedIndex;
@@ -61,7 +73,8 @@ export default function RentalMenu() {
 
     const moveSelection = (delta: number) => {
       setSelectedIndex((prev) => {
-        const count = rentalGames.length;
+        const count = visibleRentalGamesRef.current.length;
+        if (count === 0) return 0;
         return (prev + delta + count) % count;
       });
       playMenuMoveSound();
@@ -114,7 +127,7 @@ export default function RentalMenu() {
           </button>
         </div>
         <ul className={`${styles.shopMenuList} ${styles.rentalMenuList}`}>
-          {rentalGames.map((game, index) => (
+          {visibleRentalGames.map((game, index) => (
             <li
               key={game.id}
               ref={index === selectedIndex ? selectedItemRef : undefined}

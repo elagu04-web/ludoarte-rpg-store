@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { shelves, type BoardGame } from "@/data/shelves";
-import { orderableGames, normalizeName, type OrderableGame } from "@/data/orderCatalog";
+import { orderableGames as rawOrderableGames, normalizeName } from "@/data/orderCatalog";
+import { effectiveStock, isVisible } from "@/data/gameOverrides";
+import { useGameOverrides } from "@/data/useGameOverrides";
 import { useCart } from "@/context/CartContext";
 import {
   playMenuMoveSound,
@@ -28,16 +30,6 @@ interface FlatEntry {
   isFirstInShelf: boolean;
 }
 
-const AVAILABLE_GAMES: FlatEntry[] = shelves.flatMap((shelf) =>
-  shelf.games
-    .filter((game) => game.stock > 0)
-    .map((game, i) => ({
-      game,
-      shelfTitle: shelf.title,
-      isFirstInShelf: i === 0,
-    }))
-);
-
 function buildSingleItemWhatsAppUrl(name: string, price: number | null): string {
   const priceText = price !== null ? ` ($${price})` : "";
   const message = [
@@ -50,6 +42,7 @@ function buildSingleItemWhatsAppUrl(name: string, price: number | null): string 
 
 export default function TiendaScreen({ onExit }: { onExit: () => void }) {
   const { addItem, totalItems, openCart } = useCart();
+  const overrides = useGameOverrides();
   const [tab, setTab] = useState<Tab>("disponible");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [searchText, setSearchText] = useState("");
@@ -58,6 +51,37 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
   const selectedIndexRef = useRef(0);
   const selectedItemRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const availableGames = useMemo<FlatEntry[]>(() => {
+    if (!overrides) return [];
+    return shelves.flatMap((shelf) =>
+      shelf.games
+        .filter(
+          (game) =>
+            isVisible(game.id, overrides) &&
+            effectiveStock(game.id, game.stock, overrides) > 0
+        )
+        .map((game, i) => ({
+          game,
+          shelfTitle: shelf.title,
+          isFirstInShelf: i === 0,
+        }))
+    );
+  }, [overrides]);
+
+  const orderableGames = useMemo(() => {
+    if (!overrides) return [];
+    return rawOrderableGames.filter((game) => isVisible(game.id, overrides));
+  }, [overrides]);
+
+  const availableGamesRef = useRef(availableGames);
+  const orderableGamesRef = useRef(orderableGames);
+  useEffect(() => {
+    availableGamesRef.current = availableGames;
+  }, [availableGames]);
+  useEffect(() => {
+    orderableGamesRef.current = orderableGames;
+  }, [orderableGames]);
 
   useEffect(() => {
     tabRef.current = tab;
@@ -78,7 +102,7 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
     playMenuOpenSound();
   }, []);
 
-  const list = tab === "disponible" ? AVAILABLE_GAMES : null;
+  const list = tab === "disponible" ? availableGames : null;
   const orderList = tab === "pedido" ? orderableGames : null;
   const selectedAvailable = list?.[selectedIndex]?.game;
   const selectedOrderable = orderList?.[selectedIndex];
@@ -105,10 +129,10 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
 
   const confirmSelection = () => {
     if (tab === "disponible") {
-      const game = AVAILABLE_GAMES[selectedIndexRef.current]?.game;
+      const game = availableGamesRef.current[selectedIndexRef.current]?.game;
       if (game) buyNow(game);
     } else if (tab === "pedido") {
-      const game = orderableGames[selectedIndexRef.current];
+      const game = orderableGamesRef.current[selectedIndexRef.current];
       if (game) requestByWhatsApp(game.name, game.price);
     }
   };
@@ -120,7 +144,10 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
 
   useEffect(() => {
     const moveSelection = (delta: number) => {
-      const count = tabRef.current === "disponible" ? AVAILABLE_GAMES.length : orderableGames.length;
+      const count =
+        tabRef.current === "disponible"
+          ? availableGamesRef.current.length
+          : orderableGamesRef.current.length;
       if (count === 0) return;
       setSelectedIndex((prev) => (prev + delta + count) % count);
       playMenuMoveSound();
@@ -287,7 +314,7 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
 
           {tab === "disponible" && (
             <ul className={styles.list}>
-              {AVAILABLE_GAMES.map(({ game, shelfTitle, isFirstInShelf }, index) => (
+              {availableGames.map(({ game, shelfTitle, isFirstInShelf }, index) => (
                 <li key={game.id}>
                   {isFirstInShelf && (
                     <div className={styles.listHeader}>{shelfTitle.toUpperCase()}</div>

@@ -9,6 +9,8 @@ import {
   playMenuCloseSound,
 } from "@/game/music";
 import { shelves } from "@/data/shelves";
+import { effectiveStock, isVisible } from "@/data/gameOverrides";
+import { useGameOverrides } from "@/data/useGameOverrides";
 import { useCart } from "@/context/CartContext";
 import SpinningBox from "./SpinningBox";
 import styles from "./GameOverlay.module.css";
@@ -21,19 +23,30 @@ export default function SearchScreen() {
   const [appliedQuery, setAppliedQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const { addItem } = useCart();
+  const overrides = useGameOverrides();
 
   const inputRef = useRef<HTMLInputElement>(null);
   const selectedItemRef = useRef<HTMLLIElement | null>(null);
   const selectedIndexRef = useRef(0);
   const queryRef = useRef(query);
 
+  const searchableGames = useMemo(() => {
+    if (!overrides) return [];
+    return allGames
+      .filter((game) => isVisible(game.id, overrides))
+      .map((game) => ({
+        ...game,
+        stock: effectiveStock(game.id, game.stock, overrides),
+      }));
+  }, [overrides]);
+
   const results = useMemo(() => {
     const normalized = appliedQuery.trim().toLowerCase();
-    if (!normalized) return allGames;
-    return allGames.filter((game) =>
+    if (!normalized) return searchableGames;
+    return searchableGames.filter((game) =>
       game.name.toLowerCase().includes(normalized)
     );
-  }, [appliedQuery]);
+  }, [appliedQuery, searchableGames]);
 
   const resultsRef = useRef(results);
   const selectedGame = results[selectedIndex];

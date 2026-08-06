@@ -33,8 +33,8 @@ interface DisplayGame {
 // Typing D ten times shouldn't fire ten separate saves -- wait for a
 // short pause after the last tap before actually writing to Supabase.
 const STOCK_SAVE_DEBOUNCE_MS = 500;
-const PRICE_STEP = 50;
-const PRICE_STEP_FAST = 500;
+const PRICE_STEP = 10;
+const PRICE_STEP_FAST = 100;
 
 export default function InventoryScreen({ onExit }: { onExit: () => void }) {
   const overrides = useGameOverrides();

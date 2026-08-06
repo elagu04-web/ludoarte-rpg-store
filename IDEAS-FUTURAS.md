@@ -24,16 +24,6 @@ alguna, avisame.
   true, forRental: false, ver data/customGames.ts). Agregar la
   posibilidad de marcarlo tambien (o solo) para alquiler.
 
-- **Precio en pasos de 10 en vez de 50/500**: en InventoryScreen.tsx,
-  PRICE_STEP (50, boton con el mouse) y PRICE_STEP_FAST (500,
-  SHIFT+A/D) -- cambiar el paso normal a 10 para ajustar mas fino.
-
-- **Poder entrar a cada mesa a ver que hay**: de las 8 mesas del piso
-  de abajo (GroundFloorScene.ts) solo la de Alquiler es interactiva
-  hoy. Falta definir que muestra cada una (Ajedrez, Arte, Arcilla,
-  Eventos, Club del Puzzle, y las 2 sin cartel todavia) -- capaz un
-  cartel con info, capaz un catalogo como el de alquiler.
-
 - **Mejorar las entradas y salidas a los lugares**: revisar la
   transicion entre escenas (puertas, escalera, zonas de entrada/
   salida) para que se sientan mejor. Falta que el usuario aclare

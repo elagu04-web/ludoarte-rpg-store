@@ -91,7 +91,7 @@ export class GroundFloorScene extends BasePlayerScene {
       { x: 355, y: 735, label: "ARTE" },
       { x: 560, y: 735, label: "ARCILLA" },
       { x: 355, y: 935, label: "EVENTOS" },
-      { x: 560, y: 935 },
+      { x: 560, y: 935, label: "CLUB DEL PUZZLE" },
       { x: 355, y: 1145 },
       { x: 560, y: 1145 },
     ];

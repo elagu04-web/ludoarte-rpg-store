@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { eventBus } from "@/game/eventBus";
+import { findActivity } from "@/data/activities";
 import { BasePlayerScene } from "./BasePlayerScene";
 
 export class GroundFloorScene extends BasePlayerScene {
@@ -10,6 +11,8 @@ export class GroundFloorScene extends BasePlayerScene {
   private nearTv = false;
   private rentalZone!: Phaser.Geom.Rectangle;
   private nearRental = false;
+  private activityZones: { id: string; zone: Phaser.Geom.Rectangle }[] = [];
+  private nearActivityId: string | null = null;
 
   constructor() {
     super("GroundFloorScene");
@@ -75,26 +78,28 @@ export class GroundFloorScene extends BasePlayerScene {
     this.addObstacle(102, 840, 165, 1280, { visible: false });
     this.addObstacle(813, 840, 166, 1280, { visible: false });
 
-    // Mesas centrales (2 columnas x 4 filas). Cada una tiene su cartel de
-    // que actividad se hace ahi -- de momento solo el texto (como el de
-    // Alquiler), hasta que haya carteles de verdad. Solo la de Alquiler
-    // es interactiva por ahora.
+    // Mesas centrales (2 columnas x 4 filas). Cada una tiene su cartel y,
+    // menos la de Alquiler (que ya tiene su propio menu de siempre), abre
+    // el panel de info generico (ActivityInfoScreen) con horarios/precio y
+    // un boton de WhatsApp -- ver data/activities.ts por el contenido de
+    // cada una.
     // Un poco mas chica que el dibujo de la mesa (que incluye las patas,
     // mas anchas que el tablero) para dejar un pasillo comodo entre
     // columnas -- con el tamaño real completo el hueco quedaba demasiado
     // justo para cruzar en diagonal.
     const TABLE_SIZE = 125;
     const RENTAL_TABLE = { x: 560, y: 535, width: TABLE_SIZE, height: TABLE_SIZE };
-    const tables: { x: number; y: number; label?: string }[] = [
-      { x: 355, y: 535, label: "AJEDREZ" },
+    const tables: { x: number; y: number; label?: string; activityId?: string }[] = [
+      { x: 355, y: 535, label: "AJEDREZ", activityId: "ajedrez" },
       { x: 560, y: 535, label: "ALQUILER" },
-      { x: 355, y: 735, label: "ARTE" },
-      { x: 560, y: 735, label: "ARCILLA" },
-      { x: 355, y: 935, label: "EVENTOS" },
-      { x: 560, y: 935, label: "CLUB DEL PUZZLE" },
-      { x: 355, y: 1145 },
+      { x: 355, y: 735, label: "ARTE", activityId: "arte" },
+      { x: 560, y: 735, label: "ARCILLA", activityId: "arcilla" },
+      { x: 355, y: 935, label: "EVENTOS", activityId: "eventos" },
+      { x: 560, y: 935, label: "CLUB DEL PUZZLE", activityId: "club-del-puzzle" },
+      { x: 355, y: 1145, label: "MEMBRESIA", activityId: "membresia" },
       { x: 560, y: 1145 },
     ];
+    const tablePadding = 30;
     for (const table of tables) {
       this.addObstacle(table.x, table.y, TABLE_SIZE, TABLE_SIZE, { visible: false });
       if (table.label) {
@@ -107,6 +112,26 @@ export class GroundFloorScene extends BasePlayerScene {
             wordWrap: { width: TABLE_SIZE - 20 },
           })
           .setOrigin(0.5);
+      }
+      if (table.activityId) {
+        const activityId = table.activityId;
+        this.addTapHotspot(
+          table.x,
+          table.y,
+          TABLE_SIZE,
+          TABLE_SIZE,
+          () => this.nearActivityId === activityId,
+          () => eventBus.emit("activity-open", activityId)
+        );
+        this.activityZones.push({
+          id: activityId,
+          zone: new Phaser.Geom.Rectangle(
+            table.x - TABLE_SIZE / 2 - tablePadding,
+            table.y - TABLE_SIZE / 2 - tablePadding,
+            TABLE_SIZE + tablePadding * 2,
+            TABLE_SIZE + tablePadding * 2
+          ),
+        });
       }
     }
     this.addTapHotspot(
@@ -136,6 +161,7 @@ export class GroundFloorScene extends BasePlayerScene {
     this.events.on("shutdown", () => {
       eventBus.emit("tv-proximity", false);
       eventBus.emit("rental-proximity", false);
+      eventBus.emit("activity-proximity", null);
     });
   }
 
@@ -163,9 +189,26 @@ export class GroundFloorScene extends BasePlayerScene {
     }
   }
 
+  private updateActivityProximity() {
+    const bounds = this.player.getBounds();
+    const match = this.activityZones.find(({ zone }) =>
+      Phaser.Geom.Rectangle.Overlaps(bounds, zone)
+    );
+    const matchedId = match?.id ?? null;
+
+    if (matchedId !== this.nearActivityId) {
+      this.nearActivityId = matchedId;
+      eventBus.emit(
+        "activity-proximity",
+        matchedId ? findActivity(matchedId)?.title ?? null : null
+      );
+    }
+  }
+
   protected onSceneUpdate() {
     this.updateTvProximity();
     this.updateRentalProximity();
+    this.updateActivityProximity();
 
     if (this.nearTv && this.isEKeyJustDown()) {
       eventBus.emit("tv-menu-open", true);
@@ -173,6 +216,10 @@ export class GroundFloorScene extends BasePlayerScene {
 
     if (this.nearRental && this.isEKeyJustDown()) {
       eventBus.emit("rental-open", true);
+    }
+
+    if (this.nearActivityId && this.isEKeyJustDown()) {
+      eventBus.emit("activity-open", this.nearActivityId);
     }
 
     if (this.isPlayerInZone(this.stairsZone)) {

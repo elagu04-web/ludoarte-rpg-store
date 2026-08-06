@@ -13,11 +13,13 @@ import OrderPrompt from "./OrderPrompt";
 import OrderTruckPrompt from "./OrderTruckPrompt";
 import TvPrompt from "./TvPrompt";
 import RentalPrompt from "./RentalPrompt";
+import ActivityPrompt from "./ActivityPrompt";
 import ShopMenu from "./ShopMenu";
 import GameDialogueBox from "./GameDialogueBox";
 import GameVideoPopup from "./GameVideoPopup";
 import TvMenu from "./TvMenu";
 import RentalMenu from "./RentalMenu";
+import ActivityInfoScreen from "./ActivityInfoScreen";
 import TouchControls from "./TouchControls";
 import MobileCloseButton from "./MobileCloseButton";
 import styles from "./GameOverlay.module.css";
@@ -84,11 +86,13 @@ export default function GameCanvas() {
       <OrderTruckPrompt />
       <TvPrompt />
       <RentalPrompt />
+      <ActivityPrompt />
       <ShopMenu />
       <GameDialogueBox />
       <GameVideoPopup />
       <TvMenu />
       <RentalMenu />
+      <ActivityInfoScreen />
       <TouchControls />
       <MobileCloseButton />
     </div>

@@ -199,6 +199,56 @@
   font-size: 14px;
 }
 
+.activityMenuPanel {
+  display: flex;
+  flex-direction: column;
+}
+
+.activityBody {
+  margin-bottom: 12px;
+}
+
+.activityGroup {
+  margin-bottom: 10px;
+}
+
+.activityGroupLabel {
+  margin: 0;
+  font-weight: bold;
+}
+
+.activityGroupSchedule {
+  margin: 2px 0 0;
+  color: #333333;
+}
+
+.activityNote {
+  margin: 0 0 10px;
+  font-style: italic;
+  color: #555555;
+}
+
+.activityPriceLine {
+  margin: 0;
+  font-weight: bold;
+}
+
+.activityCtaButton {
+  display: inline-block;
+  padding: 8px 14px;
+  background: #25d366;
+  color: #ffffff;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.activityCtaButton:hover {
+  background: #1ebe57;
+}
+
 /* Buscador de juegos -- same panel/list/footer language as the shop and
    rental menus (navigable list, ▶ selection, E/ESC footer hint) plus a
    text input up top. No dialogue box competes for space here, so it can

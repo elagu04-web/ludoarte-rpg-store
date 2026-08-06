@@ -43,7 +43,7 @@ export default function SearchScreen() {
         stock: effectiveStock(game.id, game.stock, overrides),
       }));
     const custom: BoardGame[] = (customGames ?? [])
-      .filter((game) => game.visible)
+      .filter((game) => game.forSale && game.visible)
       .map((game) => ({
         id: game.id,
         name: game.name,

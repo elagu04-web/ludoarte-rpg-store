@@ -19,11 +19,6 @@ alguna, avisame.
   contenido de la carpeta (fs.readdir) y lo compare contra los ids
   conocidos.
 
-- **Al agregar un juego nuevo desde Inventario, elegir venta/alquiler**:
-  hoy "+ Agregar juego" siempre lo crea como solo-venta (forSale:
-  true, forRental: false, ver data/customGames.ts). Agregar la
-  posibilidad de marcarlo tambien (o solo) para alquiler.
-
 - **Mejorar las entradas y salidas a los lugares**: revisar la
   transicion entre escenas (puertas, escalera, zonas de entrada/
   salida) para que se sientan mejor. Falta que el usuario aclare

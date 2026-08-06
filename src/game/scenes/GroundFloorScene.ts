@@ -78,11 +78,12 @@ export class GroundFloorScene extends BasePlayerScene {
     this.addObstacle(102, 840, 165, 1280, { visible: false });
     this.addObstacle(813, 840, 166, 1280, { visible: false });
 
-    // Mesas centrales (2 columnas x 4 filas). Cada una tiene su cartel y,
-    // menos la de Alquiler (que ya tiene su propio menu de siempre), abre
-    // el panel de info generico (ActivityInfoScreen) con horarios/precio y
-    // un boton de WhatsApp -- ver data/activities.ts por el contenido de
-    // cada una.
+    // Mesas centrales (2 columnas x 4 filas) -- el cartel de cada una ya
+    // esta dibujado en el fondo (bg-planta-baja), aca solo hace falta la
+    // colision y, menos para Alquiler (que ya tiene su propio menu de
+    // siempre), el panel de info generico (ActivityInfoScreen) con
+    // horarios/precio y un boton de WhatsApp -- ver data/activities.ts
+    // por el contenido de cada una.
     // Un poco mas chica que el dibujo de la mesa (que incluye las patas,
     // mas anchas que el tablero) para dejar un pasillo comodo entre
     // columnas -- con el tamaño real completo el hueco quedaba demasiado
@@ -97,29 +98,18 @@ export class GroundFloorScene extends BasePlayerScene {
     // Ajedrez/Alquiler: el halo de Alquiler llegaba hasta Ajedrez).
     const TABLE_PROXIMITY_PADDING = 6;
     const RENTAL_TABLE = { x: 560, y: 535, width: TABLE_SIZE, height: TABLE_SIZE };
-    const tables: { x: number; y: number; label?: string; activityId?: string }[] = [
-      { x: 355, y: 535, label: "AJEDREZ", activityId: "ajedrez" },
-      { x: 560, y: 535, label: "ALQUILER" },
-      { x: 355, y: 735, label: "ARTE", activityId: "arte" },
-      { x: 560, y: 735, label: "ARCILLA", activityId: "arcilla" },
-      { x: 355, y: 935, label: "EVENTOS", activityId: "eventos" },
-      { x: 560, y: 935, label: "CLUB DEL PUZZLE", activityId: "club-del-puzzle" },
-      { x: 355, y: 1145, label: "MEMBRESIA", activityId: "membresia" },
+    const tables: { x: number; y: number; activityId?: string }[] = [
+      { x: 355, y: 535, activityId: "ajedrez" }, // AJEDREZ
+      { x: 560, y: 535 }, // ALQUILER
+      { x: 355, y: 735, activityId: "arte" }, // ARTE
+      { x: 560, y: 735, activityId: "arcilla" }, // ARCILLA
+      { x: 355, y: 935, activityId: "eventos" }, // EVENTOS
+      { x: 560, y: 935, activityId: "club-del-puzzle" }, // CLUB DEL PUZZLE
+      { x: 355, y: 1145, activityId: "membresia" }, // MEMBRESIA
       { x: 560, y: 1145 },
     ];
     for (const table of tables) {
       this.addObstacle(table.x, table.y, TABLE_SIZE, TABLE_SIZE, { visible: false });
-      if (table.label) {
-        this.add
-          .text(table.x, table.y, table.label, {
-            fontSize: "20px",
-            color: "#ffffff",
-            fontStyle: "bold",
-            align: "center",
-            wordWrap: { width: TABLE_SIZE - 20 },
-          })
-          .setOrigin(0.5);
-      }
       if (table.activityId) {
         const activityId = table.activityId;
         this.addTapHotspot(

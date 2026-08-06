@@ -41,7 +41,7 @@ export function extraSellableGames(overrides: GameOverrides): BoardGame[] {
  * customOrderableGames), asi el admin puede cargarlos de a poco. */
 export function customSellableGames(customGames: CustomGame[]): BoardGame[] {
   return customGames
-    .filter((game) => game.visible && game.stock > 0)
+    .filter((game) => game.forSale && game.visible && game.stock > 0)
     .map((game) => ({
       id: game.id,
       name: game.name,
@@ -53,7 +53,7 @@ export function customSellableGames(customGames: CustomGame[]): BoardGame[] {
 
 export function customOrderableGames(customGames: CustomGame[]): OrderableGame[] {
   return customGames
-    .filter((game) => game.visible && game.stock <= 0)
+    .filter((game) => game.forSale && game.visible && game.stock <= 0)
     .map((game) => ({
       id: game.id,
       name: game.name,

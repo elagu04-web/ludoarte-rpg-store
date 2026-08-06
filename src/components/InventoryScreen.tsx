@@ -44,6 +44,8 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
   const [errorIds, setErrorIds] = useState<Set<string>>(new Set());
   const [isAdding, setIsAdding] = useState(false);
   const [newGameName, setNewGameName] = useState("");
+  const [newGameForSale, setNewGameForSale] = useState(true);
+  const [newGameForRental, setNewGameForRental] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
   const rowsRef = useRef<Record<string, Row>>({});
@@ -70,8 +72,8 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
       id: g.id,
       name: g.name,
       image: g.image,
-      forSale: true,
-      forRental: false,
+      forSale: g.forSale,
+      forRental: g.forRental,
       isCustom: true,
     }));
     return [...fromCode, ...custom];
@@ -216,12 +218,21 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
   const submitAddGame = async () => {
     const name = newGameName.trim();
     if (!name) return;
-    const { error } = await addCustomGame(name);
+    if (!newGameForSale && !newGameForRental) {
+      setAddError("Elegi venta y/o alquiler");
+      return;
+    }
+    const { error } = await addCustomGame(name, {
+      forSale: newGameForSale,
+      forRental: newGameForRental,
+    });
     if (error) {
       setAddError(error);
       return;
     }
     setNewGameName("");
+    setNewGameForSale(true);
+    setNewGameForRental(false);
     setAddError(null);
     setIsAdding(false);
     playMenuConfirmSound();
@@ -230,6 +241,8 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
   const cancelAddGame = () => {
     setIsAdding(false);
     setNewGameName("");
+    setNewGameForSale(true);
+    setNewGameForRental(false);
     setAddError(null);
   };
 
@@ -330,6 +343,18 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
               if (e.key === "Enter") submitAddGame();
             }}
           />
+          <button
+            className={newGameForSale ? styles.toggleOn : styles.toggleOff}
+            onClick={() => setNewGameForSale((prev) => !prev)}
+          >
+            VENTA: {newGameForSale ? "SI" : "NO"}
+          </button>
+          <button
+            className={newGameForRental ? styles.toggleOn : styles.toggleOff}
+            onClick={() => setNewGameForRental((prev) => !prev)}
+          >
+            ALQUILER: {newGameForRental ? "SI" : "NO"}
+          </button>
           <button className={styles.addButton} onClick={submitAddGame}>
             CREAR (ENTER)
           </button>

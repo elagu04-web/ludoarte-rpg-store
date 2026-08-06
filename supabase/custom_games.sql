@@ -19,8 +19,16 @@ create table if not exists public.custom_games (
   -- apuntando al dibujo de relleno hasta que se suba la foto de verdad
   -- con ese nombre exacto.
   image text not null,
+  for_sale boolean not null default true,
+  for_rental boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+-- Si la tabla ya existia de una corrida anterior de este script, agrega
+-- las columnas nuevas sin pisar nada (todo lo ya cargado queda como
+-- "solo venta", que era el unico comportamiento posible hasta ahora).
+alter table public.custom_games add column if not exists for_sale boolean not null default true;
+alter table public.custom_games add column if not exists for_rental boolean not null default false;
 
 alter table public.custom_games enable row level security;
 

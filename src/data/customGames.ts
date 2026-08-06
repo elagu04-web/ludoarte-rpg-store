@@ -11,6 +11,8 @@ export interface CustomGame {
   stock: number;
   visible: boolean;
   image: string;
+  forSale: boolean;
+  forRental: boolean;
 }
 
 // Same cache/subscribe shape as data/gameOverrides.ts -- fetched once and
@@ -26,7 +28,7 @@ function notify() {
 async function load(): Promise<CustomGame[]> {
   const { data } = await createClient()
     .from("custom_games")
-    .select("id, name, price, stock, visible, image")
+    .select("id, name, price, stock, visible, image, forSale:for_sale, forRental:for_rental")
     .order("created_at", { ascending: true });
   return data ?? [];
 }
@@ -79,10 +81,14 @@ export function expectedImagePath(slug: string): string {
  * at stock 0 / price 0 -- the admin fills those in from the same +/-
  * controls every other game uses, right after creating it. */
 export async function addCustomGame(
-  name: string
+  name: string,
+  options: { forSale: boolean; forRental: boolean }
 ): Promise<{ error: string | null; game: CustomGame | null }> {
   const trimmed = name.trim();
   if (!trimmed) return { error: "El nombre no puede estar vacio", game: null };
+  if (!options.forSale && !options.forRental) {
+    return { error: "Elegi venta y/o alquiler", game: null };
+  }
 
   const slug = slugify(trimmed);
   if (!slug) return { error: "Nombre invalido", game: null };
@@ -97,9 +103,13 @@ export async function addCustomGame(
     stock: 0,
     visible: true,
     image: PLACEHOLDER_IMAGE,
+    forSale: options.forSale,
+    forRental: options.forRental,
   };
 
-  const { error } = await createClient().from("custom_games").insert(game);
+  const { error } = await createClient()
+    .from("custom_games")
+    .insert({ ...game, for_sale: game.forSale, for_rental: game.forRental });
   if (error) return { error: error.message, game: null };
 
   cache = [...(cache ?? []), game];
@@ -109,11 +119,16 @@ export async function addCustomGame(
 
 export async function updateCustomGame(
   id: string,
-  patch: Partial<Pick<CustomGame, "price" | "stock" | "visible" | "image">>
+  patch: Partial<Pick<CustomGame, "price" | "stock" | "visible" | "image" | "forSale" | "forRental">>
 ): Promise<{ error: string | null }> {
+  const { forSale, forRental, ...rest } = patch;
+  const dbPatch: Record<string, unknown> = { ...rest };
+  if (forSale !== undefined) dbPatch.for_sale = forSale;
+  if (forRental !== undefined) dbPatch.for_rental = forRental;
+
   const { error } = await createClient()
     .from("custom_games")
-    .update(patch)
+    .update(dbPatch)
     .eq("id", id);
   if (error) return { error: error.message };
 

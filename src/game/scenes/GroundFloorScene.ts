@@ -88,6 +88,14 @@ export class GroundFloorScene extends BasePlayerScene {
     // columnas -- con el tamaño real completo el hueco quedaba demasiado
     // justo para cruzar en diagonal.
     const TABLE_SIZE = 125;
+    // Las mesas estan a 200px (filas) / 205px (columnas) de centro a
+    // centro, asi que el hueco libre entre bordes es de 75-80px. El
+    // personaje mide 40x50 (ver createPlayer) -- este padding tiene que
+    // ser chico para que el halo de una mesa nunca llegue a tocar el de
+    // la vecina ni siquiera con el cuerpo del personaje metido en el
+    // medio, o parado ahi dispara la mesa equivocada (le paso con
+    // Ajedrez/Alquiler: el halo de Alquiler llegaba hasta Ajedrez).
+    const TABLE_PROXIMITY_PADDING = 6;
     const RENTAL_TABLE = { x: 560, y: 535, width: TABLE_SIZE, height: TABLE_SIZE };
     const tables: { x: number; y: number; label?: string; activityId?: string }[] = [
       { x: 355, y: 535, label: "AJEDREZ", activityId: "ajedrez" },
@@ -99,7 +107,6 @@ export class GroundFloorScene extends BasePlayerScene {
       { x: 355, y: 1145, label: "MEMBRESIA", activityId: "membresia" },
       { x: 560, y: 1145 },
     ];
-    const tablePadding = 30;
     for (const table of tables) {
       this.addObstacle(table.x, table.y, TABLE_SIZE, TABLE_SIZE, { visible: false });
       if (table.label) {
@@ -126,10 +133,10 @@ export class GroundFloorScene extends BasePlayerScene {
         this.activityZones.push({
           id: activityId,
           zone: new Phaser.Geom.Rectangle(
-            table.x - TABLE_SIZE / 2 - tablePadding,
-            table.y - TABLE_SIZE / 2 - tablePadding,
-            TABLE_SIZE + tablePadding * 2,
-            TABLE_SIZE + tablePadding * 2
+            table.x - TABLE_SIZE / 2 - TABLE_PROXIMITY_PADDING,
+            table.y - TABLE_SIZE / 2 - TABLE_PROXIMITY_PADDING,
+            TABLE_SIZE + TABLE_PROXIMITY_PADDING * 2,
+            TABLE_SIZE + TABLE_PROXIMITY_PADDING * 2
           ),
         });
       }
@@ -143,12 +150,11 @@ export class GroundFloorScene extends BasePlayerScene {
       () => eventBus.emit("rental-open", true)
     );
 
-    const rentalPadding = 30;
     this.rentalZone = new Phaser.Geom.Rectangle(
-      RENTAL_TABLE.x - RENTAL_TABLE.width / 2 - rentalPadding,
-      RENTAL_TABLE.y - RENTAL_TABLE.height / 2 - rentalPadding,
-      RENTAL_TABLE.width + rentalPadding * 2,
-      RENTAL_TABLE.height + rentalPadding * 2
+      RENTAL_TABLE.x - RENTAL_TABLE.width / 2 - TABLE_PROXIMITY_PADDING,
+      RENTAL_TABLE.y - RENTAL_TABLE.height / 2 - TABLE_PROXIMITY_PADDING,
+      RENTAL_TABLE.width + TABLE_PROXIMITY_PADDING * 2,
+      RENTAL_TABLE.height + TABLE_PROXIMITY_PADDING * 2
     );
 
     // Pared inferior, con hueco para la puerta de salida

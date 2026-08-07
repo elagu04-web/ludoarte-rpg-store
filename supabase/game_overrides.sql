@@ -21,6 +21,11 @@ create table if not exists public.game_overrides (
   -- como informacion (no cambia que se ve en Tienda/Alquiler).
   for_sale boolean,
   for_rental boolean,
+  -- null = no es de segunda mano. Mismo stock que la version nueva --
+  -- ver la nota igual en custom_games.sql.
+  second_hand boolean,
+  -- null = todavia no se cargo un precio de segunda mano.
+  used_price integer,
   updated_at timestamptz not null default now()
 );
 
@@ -33,6 +38,8 @@ alter table public.game_overrides add column if not exists price integer;
 alter table public.game_overrides add column if not exists rental_price integer;
 alter table public.game_overrides add column if not exists for_sale boolean;
 alter table public.game_overrides add column if not exists for_rental boolean;
+alter table public.game_overrides add column if not exists second_hand boolean;
+alter table public.game_overrides add column if not exists used_price integer;
 update public.game_overrides set stock = 0 where stock is null;
 
 alter table public.game_overrides enable row level security;

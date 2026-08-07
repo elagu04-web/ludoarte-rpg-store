@@ -10,6 +10,10 @@ export interface GameOverride {
   /** null = usar lo que dice el codigo (en que archivo esta el juego). */
   forSale: boolean | null;
   forRental: boolean | null;
+  /** null = no es de segunda mano (no hay version "usada" en el codigo). */
+  secondHand: boolean | null;
+  /** null = todavia no se cargo un precio de segunda mano. */
+  usedPrice: number | null;
 }
 
 export type GameOverrides = Map<string, GameOverride>;
@@ -27,7 +31,7 @@ async function load(): Promise<GameOverrides> {
   const { data } = await createClient()
     .from("game_overrides")
     .select(
-      "id, stock, visible, price, rentalPrice:rental_price, forSale:for_sale, forRental:for_rental"
+      "id, stock, visible, price, rentalPrice:rental_price, forSale:for_sale, forRental:for_rental, secondHand:second_hand, usedPrice:used_price"
     );
 
   const map: GameOverrides = new Map();
@@ -39,6 +43,8 @@ async function load(): Promise<GameOverrides> {
       rentalPrice: row.rentalPrice,
       forSale: row.forSale,
       forRental: row.forRental,
+      secondHand: row.secondHand,
+      usedPrice: row.usedPrice,
     });
   }
   return map;
@@ -104,6 +110,20 @@ export function effectiveRentalPrice(
   return override?.rentalPrice ?? baseRentalPrice;
 }
 
+export function effectiveSecondHand(
+  id: string,
+  overrides: GameOverrides
+): boolean {
+  return overrides.get(id)?.secondHand ?? false;
+}
+
+export function effectiveUsedPrice(
+  id: string,
+  overrides: GameOverrides
+): number | null {
+  return overrides.get(id)?.usedPrice ?? null;
+}
+
 export function effectiveForSale(
   id: string,
   baseForSale: boolean,
@@ -133,6 +153,8 @@ export async function updateGameOverride(
     rentalPrice: null,
     forSale: null,
     forRental: null,
+    secondHand: null,
+    usedPrice: null,
   };
   const next = { ...current, ...patch };
 
@@ -144,6 +166,8 @@ export async function updateGameOverride(
     rental_price: next.rentalPrice,
     for_sale: next.forSale,
     for_rental: next.forRental,
+    second_hand: next.secondHand,
+    used_price: next.usedPrice,
   });
 
   if (error) return { error: error.message };

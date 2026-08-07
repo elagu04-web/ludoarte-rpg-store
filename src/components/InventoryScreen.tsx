@@ -19,9 +19,11 @@ interface Row {
   stock: number;
   price: number;
   rentalPrice: number;
+  usedPrice: number;
   visible: boolean;
   forSale: boolean;
   forRental: boolean;
+  secondHand: boolean;
 }
 
 interface DisplayGame {
@@ -33,12 +35,13 @@ interface DisplayGame {
   isCustom: boolean;
 }
 
-type Tab = "todos" | "venta" | "alquiler";
+type Tab = "todos" | "venta" | "alquiler" | "usado";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "todos", label: "TODOS" },
   { id: "venta", label: "VENTA" },
   { id: "alquiler", label: "ALQUILER" },
+  { id: "usado", label: "SEGUNDA MANO" },
 ];
 
 // Typing D ten times shouldn't fire ten separate saves -- wait for a
@@ -66,6 +69,7 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
   const stockSaveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const priceSaveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const rentalPriceSaveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const usedPriceSaveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const isAddingRef = useRef(false);
   const addInputRef = useRef<HTMLInputElement>(null);
 
@@ -103,7 +107,9 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
     return displayGames.filter((game) => {
       const row = rows[game.id];
       if (!row) return false;
-      return tab === "venta" ? row.forSale || row.stock > 0 : row.forRental;
+      if (tab === "venta") return row.forSale || row.stock > 0;
+      if (tab === "alquiler") return row.forRental;
+      return row.secondHand;
     });
   }, [displayGames, rows, tab]);
   const visibleGamesRef = useRef(visibleGames);
@@ -152,9 +158,11 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
           stock: override?.stock ?? game.baseStock,
           price: override?.price ?? game.basePrice ?? 0,
           rentalPrice: override?.rentalPrice ?? game.baseRentalPrice ?? 0,
+          usedPrice: override?.usedPrice ?? 0,
           visible: override?.visible ?? true,
           forSale: override?.forSale ?? game.forSale,
           forRental: override?.forRental ?? game.forRental,
+          secondHand: override?.secondHand ?? false,
         };
         changed = true;
       }
@@ -164,9 +172,11 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
           stock: game.stock,
           price: game.price,
           rentalPrice: game.rentalPrice,
+          usedPrice: game.usedPrice,
           visible: game.visible,
           forSale: game.forSale,
           forRental: game.forRental,
+          secondHand: game.secondHand,
         };
         changed = true;
       }
@@ -271,6 +281,43 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
     markError(id, false);
     saveRentalPrice(id, next);
     playMenuMoveSound();
+  };
+
+  const saveUsedPrice = (id: string, usedPrice: number) => {
+    if (usedPriceSaveTimers.current[id]) clearTimeout(usedPriceSaveTimers.current[id]);
+    usedPriceSaveTimers.current[id] = setTimeout(async () => {
+      const { error } = customIdsRef.current.has(id)
+        ? await updateCustomGame(id, { usedPrice })
+        : await updateGameOverride(id, { usedPrice });
+      markError(id, !!error);
+    }, STOCK_SAVE_DEBOUNCE_MS);
+  };
+
+  const adjustUsedPrice = (id: string, delta: number) => {
+    const current = rowsRef.current[id];
+    if (!current) return;
+    const next = Math.max(0, current.usedPrice + delta);
+    if (next === current.usedPrice) return;
+    const updated = { ...rowsRef.current, [id]: { ...current, usedPrice: next } };
+    rowsRef.current = updated;
+    setRows(updated);
+    markError(id, false);
+    saveUsedPrice(id, next);
+    playMenuMoveSound();
+  };
+
+  const toggleSecondHand = async (id: string) => {
+    const current = rowsRef.current[id];
+    if (!current) return;
+    const nextSecondHand = !current.secondHand;
+    const updated = { ...rowsRef.current, [id]: { ...current, secondHand: nextSecondHand } };
+    rowsRef.current = updated;
+    setRows(updated);
+    playMenuConfirmSound();
+    const { error } = customIdsRef.current.has(id)
+      ? await updateCustomGame(id, { secondHand: nextSecondHand })
+      : await updateGameOverride(id, { secondHand: nextSecondHand });
+    markError(id, !!error);
   };
 
   const toggleVisible = async (id: string) => {
@@ -396,12 +443,14 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
         if (!game) return;
         if (event.shiftKey) {
           if (tabRef.current === "alquiler") adjustRentalPrice(game.id, -PRICE_STEP_FAST);
+          else if (tabRef.current === "usado") adjustUsedPrice(game.id, -PRICE_STEP_FAST);
           else adjustPrice(game.id, -PRICE_STEP_FAST);
         } else adjustStock(game.id, -1);
       } else if (event.key === "d" || event.key === "D" || event.key === "ArrowRight") {
         if (!game) return;
         if (event.shiftKey) {
           if (tabRef.current === "alquiler") adjustRentalPrice(game.id, PRICE_STEP_FAST);
+          else if (tabRef.current === "usado") adjustUsedPrice(game.id, PRICE_STEP_FAST);
           else adjustPrice(game.id, PRICE_STEP_FAST);
         } else adjustStock(game.id, 1);
       } else if (event.key === "e" || event.key === "E" || event.key === "Enter") {
@@ -410,6 +459,8 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
         if (game) toggleForSale(game.id);
       } else if (event.key === "l" || event.key === "L") {
         if (game) toggleForRental(game.id);
+      } else if (event.key === "u" || event.key === "U") {
+        if (game) toggleSecondHand(game.id);
       }
     };
 
@@ -538,6 +589,7 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
                         <span className={styles.tag}>Venta</span>
                       )}
                       {row.forRental && <span className={styles.tag}>Alquiler</span>}
+                      {row.secondHand && <span className={styles.tag}>Usado</span>}
                       {!row.visible && <span className={styles.tag}>Oculto</span>}
                     </td>
                   </tr>
@@ -582,7 +634,11 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
 
             <div className={styles.detailField}>
               <span className={styles.detailLabel}>
-                {tab === "alquiler" ? "Precio de alquiler (SHIFT+A/D)" : "Precio (SHIFT+A/D)"}
+                {tab === "alquiler"
+                  ? "Precio de alquiler (SHIFT+A/D)"
+                  : tab === "usado"
+                    ? "Precio de segunda mano (SHIFT+A/D)"
+                    : "Precio (SHIFT+A/D)"}
               </span>
               <div className={styles.stockRow}>
                 <button
@@ -590,20 +646,29 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
                   onClick={() =>
                     tab === "alquiler"
                       ? adjustRentalPrice(selectedGame.id, -PRICE_STEP)
-                      : adjustPrice(selectedGame.id, -PRICE_STEP)
+                      : tab === "usado"
+                        ? adjustUsedPrice(selectedGame.id, -PRICE_STEP)
+                        : adjustPrice(selectedGame.id, -PRICE_STEP)
                   }
                 >
                   &#9664;
                 </button>
                 <span className={styles.stockValue}>
-                  ${tab === "alquiler" ? selectedRow.rentalPrice : selectedRow.price}
+                  $
+                  {tab === "alquiler"
+                    ? selectedRow.rentalPrice
+                    : tab === "usado"
+                      ? selectedRow.usedPrice
+                      : selectedRow.price}
                 </span>
                 <button
                   className={styles.stockButton}
                   onClick={() =>
                     tab === "alquiler"
                       ? adjustRentalPrice(selectedGame.id, PRICE_STEP)
-                      : adjustPrice(selectedGame.id, PRICE_STEP)
+                      : tab === "usado"
+                        ? adjustUsedPrice(selectedGame.id, PRICE_STEP)
+                        : adjustPrice(selectedGame.id, PRICE_STEP)
                   }
                 >
                   &#9654;
@@ -641,6 +706,16 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
               </button>
             </div>
 
+            <div className={styles.detailField}>
+              <span className={styles.detailLabel}>Segunda mano (U)</span>
+              <button
+                className={selectedRow.secondHand ? styles.toggleOn : styles.toggleOff}
+                onClick={() => toggleSecondHand(selectedGame.id)}
+              >
+                {selectedRow.secondHand ? "SI" : "NO"}
+              </button>
+            </div>
+
             {selectedGame.isCustom && (
               <button
                 className={styles.deleteButton}
@@ -655,7 +730,8 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
 
       <p className={styles.hint}>
         W/S: ELEGIR &middot; A/D: STOCK &middot; SHIFT+A/D: PRECIO &middot; E:
-        VISIBLE &middot; V: VENTA &middot; L: ALQUILER &middot; ESC: SALIR
+        VISIBLE &middot; V: VENTA &middot; L: ALQUILER &middot; U: SEGUNDA MANO
+        &middot; ESC: SALIR
       </p>
     </div>
   );

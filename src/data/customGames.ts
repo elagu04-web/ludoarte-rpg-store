@@ -14,6 +14,8 @@ export interface CustomGame {
   image: string;
   forSale: boolean;
   forRental: boolean;
+  secondHand: boolean;
+  usedPrice: number;
 }
 
 // Same cache/subscribe shape as data/gameOverrides.ts -- fetched once and
@@ -30,7 +32,7 @@ async function load(): Promise<CustomGame[]> {
   const { data } = await createClient()
     .from("custom_games")
     .select(
-      "id, name, price, rentalPrice:rental_price, stock, visible, image, forSale:for_sale, forRental:for_rental"
+      "id, name, price, rentalPrice:rental_price, stock, visible, image, forSale:for_sale, forRental:for_rental, secondHand:second_hand, usedPrice:used_price"
     )
     .order("created_at", { ascending: true });
   return data ?? [];
@@ -109,6 +111,8 @@ export async function addCustomGame(
     image: PLACEHOLDER_IMAGE,
     forSale: options.forSale,
     forRental: options.forRental,
+    secondHand: false,
+    usedPrice: 0,
   };
 
   const { error } = await createClient().from("custom_games").insert({
@@ -121,6 +125,8 @@ export async function addCustomGame(
     image: game.image,
     for_sale: game.forSale,
     for_rental: game.forRental,
+    second_hand: game.secondHand,
+    used_price: game.usedPrice,
   });
   if (error) return { error: error.message, game: null };
 
@@ -164,15 +170,25 @@ export async function updateCustomGame(
   patch: Partial<
     Pick<
       CustomGame,
-      "price" | "rentalPrice" | "stock" | "visible" | "image" | "forSale" | "forRental"
+      | "price"
+      | "rentalPrice"
+      | "stock"
+      | "visible"
+      | "image"
+      | "forSale"
+      | "forRental"
+      | "secondHand"
+      | "usedPrice"
     >
   >
 ): Promise<{ error: string | null }> {
-  const { forSale, forRental, rentalPrice, ...rest } = patch;
+  const { forSale, forRental, rentalPrice, secondHand, usedPrice, ...rest } = patch;
   const dbPatch: Record<string, unknown> = { ...rest };
   if (forSale !== undefined) dbPatch.for_sale = forSale;
   if (forRental !== undefined) dbPatch.for_rental = forRental;
   if (rentalPrice !== undefined) dbPatch.rental_price = rentalPrice;
+  if (secondHand !== undefined) dbPatch.second_hand = secondHand;
+  if (usedPrice !== undefined) dbPatch.used_price = usedPrice;
 
   const { error } = await createClient()
     .from("custom_games")

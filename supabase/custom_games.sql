@@ -22,6 +22,8 @@ create table if not exists public.custom_games (
   image text not null,
   for_sale boolean not null default true,
   for_rental boolean not null default false,
+  second_hand boolean not null default false,
+  used_price integer not null default 0,
   created_at timestamptz not null default now()
 );
 
@@ -31,6 +33,8 @@ create table if not exists public.custom_games (
 alter table public.custom_games add column if not exists for_sale boolean not null default true;
 alter table public.custom_games add column if not exists for_rental boolean not null default false;
 alter table public.custom_games add column if not exists rental_price integer not null default 0;
+alter table public.custom_games add column if not exists second_hand boolean not null default false;
+alter table public.custom_games add column if not exists used_price integer not null default 0;
 
 alter table public.custom_games enable row level security;
 

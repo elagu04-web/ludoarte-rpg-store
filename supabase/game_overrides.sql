@@ -13,15 +13,23 @@ create table if not exists public.game_overrides (
   -- juegos que solo se alquilan no tienen precio de venta en el codigo,
   -- asi que para venderlos hace falta cargar uno aca.
   price integer,
+  -- null = usar lo que dice el codigo (segun en que archivo esta el
+  -- juego, shelves.ts y/o rentals.ts). El panel de inventario deja
+  -- cambiar esto para cualquier juego, aunque por ahora solo lo usa
+  -- como informacion (no cambia que se ve en Tienda/Alquiler).
+  for_sale boolean,
+  for_rental boolean,
   updated_at timestamptz not null default now()
 );
 
 -- Si la tabla ya existia de una corrida anterior de este script, esto la
--- pone al dia sin pisar nada: agrega la columna de precio si todavia no
--- esta, y pasa de "stock null" (no aplica) a "stock 0" (aplica, todavia
+-- pone al dia sin pisar nada: agrega las columnas nuevas si todavia no
+-- estan, y pasa de "stock null" (no aplica) a "stock 0" (aplica, todavia
 -- no hay unidades) en los juegos que solo se alquilan -- asi el panel de
 -- inventario ya deja subirles el stock si se compra uno para vender.
 alter table public.game_overrides add column if not exists price integer;
+alter table public.game_overrides add column if not exists for_sale boolean;
+alter table public.game_overrides add column if not exists for_rental boolean;
 update public.game_overrides set stock = 0 where stock is null;
 
 alter table public.game_overrides enable row level security;

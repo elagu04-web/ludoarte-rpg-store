@@ -19,6 +19,8 @@ interface Row {
   stock: number;
   price: number;
   visible: boolean;
+  forSale: boolean;
+  forRental: boolean;
 }
 
 interface DisplayGame {
@@ -116,12 +118,20 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
           stock: override?.stock ?? game.baseStock,
           price: override?.price ?? game.basePrice ?? 0,
           visible: override?.visible ?? true,
+          forSale: override?.forSale ?? game.forSale,
+          forRental: override?.forRental ?? game.forRental,
         };
         changed = true;
       }
       for (const game of customGames) {
         if (next[game.id]) continue;
-        next[game.id] = { stock: game.stock, price: game.price, visible: game.visible };
+        next[game.id] = {
+          stock: game.stock,
+          price: game.price,
+          visible: game.visible,
+          forSale: game.forSale,
+          forRental: game.forRental,
+        };
         changed = true;
       }
       return changed ? next : prev;
@@ -218,25 +228,35 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
     markError(id, !!error);
   };
 
-  // Venta/Alquiler are only editable for games created from here -- a
-  // catalog game's forSale/forRental comes from which array it's defined
-  // in (shelves.ts/rentals.ts) in the code, there's no override for that
-  // yet. customGames already updates live via useCustomGames, so there's
-  // no local optimistic copy to keep in sync here like stock/price/
-  // visible need.
-  const toggleCustomForSale = async (id: string) => {
-    const current = (customGames ?? []).find((g) => g.id === id);
+  // Venta/Alquiler: para un juego del catalogo esto solo cambia lo que
+  // muestra este panel (todavia no hay nada leyendo forSale/forRental de
+  // game_overrides para decidir que aparece en Tienda/Alquiler); para un
+  // juego agregado a mano SI cambia si se muestra (ver sellableGames.ts).
+  const toggleForSale = async (id: string) => {
+    const current = rowsRef.current[id];
     if (!current) return;
+    const nextForSale = !current.forSale;
+    const updated = { ...rowsRef.current, [id]: { ...current, forSale: nextForSale } };
+    rowsRef.current = updated;
+    setRows(updated);
     playMenuConfirmSound();
-    const { error } = await updateCustomGame(id, { forSale: !current.forSale });
+    const { error } = customIdsRef.current.has(id)
+      ? await updateCustomGame(id, { forSale: nextForSale })
+      : await updateGameOverride(id, { forSale: nextForSale });
     markError(id, !!error);
   };
 
-  const toggleCustomForRental = async (id: string) => {
-    const current = (customGames ?? []).find((g) => g.id === id);
+  const toggleForRental = async (id: string) => {
+    const current = rowsRef.current[id];
     if (!current) return;
+    const nextForRental = !current.forRental;
+    const updated = { ...rowsRef.current, [id]: { ...current, forRental: nextForRental } };
+    rowsRef.current = updated;
+    setRows(updated);
     playMenuConfirmSound();
-    const { error } = await updateCustomGame(id, { forRental: !current.forRental });
+    const { error } = customIdsRef.current.has(id)
+      ? await updateCustomGame(id, { forRental: nextForRental })
+      : await updateGameOverride(id, { forRental: nextForRental });
     markError(id, !!error);
   };
 
@@ -323,6 +343,10 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
         else adjustStock(game.id, 1);
       } else if (event.key === "e" || event.key === "E" || event.key === "Enter") {
         if (game) toggleVisible(game.id);
+      } else if (event.key === "v" || event.key === "V") {
+        if (game) toggleForSale(game.id);
+      } else if (event.key === "l" || event.key === "L") {
+        if (game) toggleForRental(game.id);
       }
     };
 
@@ -338,6 +362,11 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
       </div>
     );
   }
+
+  const selectedGame = displayGames[selectedIndex];
+  const selectedRow = selectedGame ? rows[selectedGame.id] : undefined;
+  const needsRealPhoto =
+    !!selectedGame && selectedGame.isCustom && selectedGame.image === PLACEHOLDER_IMAGE;
 
   return (
     <div className={styles.screen}>
@@ -390,147 +419,156 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
         </div>
       )}
 
-      <div className={styles.tableWrapper}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th></th>
-              <th>Juego</th>
-              <th>Donde aparece</th>
-              <th>Stock</th>
-              <th>Precio</th>
-              <th>Visible</th>
-            </tr>
-          </thead>
-          <tbody>
-            {displayGames.map((game, index) => {
-              const row = rows[game.id];
-              if (!row) return null;
-              const isSelected = index === selectedIndex;
-              const needsRealPhoto = game.isCustom && game.image === PLACEHOLDER_IMAGE;
+      <div className={styles.body}>
+        <div className={styles.tableWrapper}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Juego</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {displayGames.map((game, index) => {
+                const row = rows[game.id];
+                if (!row) return null;
+                const isSelected = index === selectedIndex;
 
-              return (
-                <tr
-                  key={game.id}
-                  ref={isSelected ? selectedItemRef : undefined}
-                  className={[
-                    isSelected ? styles.rowSelected : "",
-                    row.visible ? "" : styles.rowHidden,
-                  ].join(" ")}
-                  onClick={() => setSelectedIndex(index)}
-                >
-                  <td>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={game.image} alt="" className={styles.thumb} />
-                  </td>
-                  <td className={styles.nameCell}>
-                    <span className={styles.nameRow}>
-                      {isSelected ? "▶ " : "  "}
-                      {game.name}
-                    </span>
-                    {errorIds.has(game.id) && (
-                      <span className={styles.error}>Error al guardar</span>
-                    )}
-                    {needsRealPhoto && (
-                      <span className={styles.imageHint}>
-                        Falta foto: {expectedImagePath(game.id)}
+                return (
+                  <tr
+                    key={game.id}
+                    ref={isSelected ? selectedItemRef : undefined}
+                    className={[
+                      isSelected ? styles.rowSelected : "",
+                      row.visible ? "" : styles.rowHidden,
+                    ].join(" ")}
+                    onClick={() => setSelectedIndex(index)}
+                  >
+                    <td>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={game.image} alt="" className={styles.thumb} />
+                    </td>
+                    <td className={styles.nameCell}>
+                      <span className={styles.nameRow}>
+                        {isSelected ? "▶ " : "  "}
+                        {game.name}
                       </span>
-                    )}
-                    {game.isCustom && (
-                      <button
-                        className={styles.deleteButton}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeCustomGame(game.id);
-                        }}
-                      >
-                        Eliminar
-                      </button>
-                    )}
-                  </td>
-                  <td className={styles.tagsCell}>
-                    {game.isCustom ? (
-                      <>
-                        <button
-                          className={game.forSale ? styles.toggleOn : styles.toggleOff}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleCustomForSale(game.id);
-                          }}
-                        >
-                          VENTA: {game.forSale ? "SI" : "NO"}
-                        </button>
-                        <button
-                          className={game.forRental ? styles.toggleOn : styles.toggleOff}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleCustomForRental(game.id);
-                          }}
-                        >
-                          ALQUILER: {game.forRental ? "SI" : "NO"}
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        {(game.forSale || row.stock > 0) && (
-                          <span className={styles.tag}>Venta</span>
-                        )}
-                        {game.forRental && <span className={styles.tag}>Alquiler</span>}
-                      </>
-                    )}
-                  </td>
-                  <td>
-                    <div className={styles.stockRow}>
-                      <button
-                        className={styles.stockButton}
-                        onClick={() => adjustStock(game.id, -1)}
-                      >
-                        &#9664;
-                      </button>
-                      <span className={styles.stockValue}>{row.stock}</span>
-                      <button
-                        className={styles.stockButton}
-                        onClick={() => adjustStock(game.id, 1)}
-                      >
-                        &#9654;
-                      </button>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.stockRow}>
-                      <button
-                        className={styles.stockButton}
-                        onClick={() => adjustPrice(game.id, -PRICE_STEP)}
-                      >
-                        &#9664;
-                      </button>
-                      <span className={styles.stockValue}>${row.price}</span>
-                      <button
-                        className={styles.stockButton}
-                        onClick={() => adjustPrice(game.id, PRICE_STEP)}
-                      >
-                        &#9654;
-                      </button>
-                    </div>
-                  </td>
-                  <td>
-                    <button
-                      className={row.visible ? styles.toggleOn : styles.toggleOff}
-                      onClick={() => toggleVisible(game.id)}
-                    >
-                      {row.visible ? "VISIBLE" : "OCULTO"}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                      {errorIds.has(game.id) && (
+                        <span className={styles.error}>Error al guardar</span>
+                      )}
+                    </td>
+                    <td className={styles.tagsCell}>
+                      {(row.forSale || row.stock > 0) && (
+                        <span className={styles.tag}>Venta</span>
+                      )}
+                      {row.forRental && <span className={styles.tag}>Alquiler</span>}
+                      {!row.visible && <span className={styles.tag}>Oculto</span>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {selectedGame && selectedRow && (
+          <div className={styles.detailPanel}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={selectedGame.image} alt="" className={styles.detailThumb} />
+            <p className={styles.detailName}>{selectedGame.name}</p>
+            {errorIds.has(selectedGame.id) && (
+              <p className={styles.error}>Error al guardar</p>
+            )}
+            {needsRealPhoto && (
+              <p className={styles.imageHint}>
+                Falta foto: {expectedImagePath(selectedGame.id)}
+              </p>
+            )}
+
+            <div className={styles.detailField}>
+              <span className={styles.detailLabel}>Stock (A/D)</span>
+              <div className={styles.stockRow}>
+                <button
+                  className={styles.stockButton}
+                  onClick={() => adjustStock(selectedGame.id, -1)}
+                >
+                  &#9664;
+                </button>
+                <span className={styles.stockValue}>{selectedRow.stock}</span>
+                <button
+                  className={styles.stockButton}
+                  onClick={() => adjustStock(selectedGame.id, 1)}
+                >
+                  &#9654;
+                </button>
+              </div>
+            </div>
+
+            <div className={styles.detailField}>
+              <span className={styles.detailLabel}>Precio (SHIFT+A/D)</span>
+              <div className={styles.stockRow}>
+                <button
+                  className={styles.stockButton}
+                  onClick={() => adjustPrice(selectedGame.id, -PRICE_STEP)}
+                >
+                  &#9664;
+                </button>
+                <span className={styles.stockValue}>${selectedRow.price}</span>
+                <button
+                  className={styles.stockButton}
+                  onClick={() => adjustPrice(selectedGame.id, PRICE_STEP)}
+                >
+                  &#9654;
+                </button>
+              </div>
+            </div>
+
+            <div className={styles.detailField}>
+              <span className={styles.detailLabel}>Visible (E)</span>
+              <button
+                className={selectedRow.visible ? styles.toggleOn : styles.toggleOff}
+                onClick={() => toggleVisible(selectedGame.id)}
+              >
+                {selectedRow.visible ? "VISIBLE" : "OCULTO"}
+              </button>
+            </div>
+
+            <div className={styles.detailField}>
+              <span className={styles.detailLabel}>Venta (V)</span>
+              <button
+                className={selectedRow.forSale ? styles.toggleOn : styles.toggleOff}
+                onClick={() => toggleForSale(selectedGame.id)}
+              >
+                {selectedRow.forSale ? "SI" : "NO"}
+              </button>
+            </div>
+
+            <div className={styles.detailField}>
+              <span className={styles.detailLabel}>Alquiler (L)</span>
+              <button
+                className={selectedRow.forRental ? styles.toggleOn : styles.toggleOff}
+                onClick={() => toggleForRental(selectedGame.id)}
+              >
+                {selectedRow.forRental ? "SI" : "NO"}
+              </button>
+            </div>
+
+            {selectedGame.isCustom && (
+              <button
+                className={styles.deleteButton}
+                onClick={() => removeCustomGame(selectedGame.id)}
+              >
+                Eliminar juego
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <p className={styles.hint}>
         W/S: ELEGIR &middot; A/D: STOCK &middot; SHIFT+A/D: PRECIO &middot; E:
-        VISIBLE/OCULTO &middot; + AGREGAR JUEGO &middot; ESC: SALIR
+        VISIBLE &middot; V: VENTA &middot; L: ALQUILER &middot; ESC: SALIR
       </p>
     </div>
   );

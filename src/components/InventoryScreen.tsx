@@ -57,8 +57,9 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
   const addInputRef = useRef<HTMLInputElement>(null);
 
   // Every game the panel lists: the 81 from the code (allGames) plus
-  // whatever the admin created from here (customGames). Appended at the
-  // end in creation order -- easy to spot the ones just added.
+  // whatever the admin created from here (customGames), all mixed
+  // together in alphabetical order (same convention as allGames.ts)
+  // instead of dumping new ones at the end.
   const displayGames: DisplayGame[] = useMemo(() => {
     const fromCode: DisplayGame[] = allGames.map((g) => ({
       id: g.id,
@@ -76,7 +77,9 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
       forRental: g.forRental,
       isCustom: true,
     }));
-    return [...fromCode, ...custom];
+    return [...fromCode, ...custom].sort((a, b) =>
+      a.name.localeCompare(b.name, "es")
+    );
   }, [customGames]);
   const displayGamesRef = useRef(displayGames);
   useEffect(() => {
@@ -212,6 +215,28 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
     const { error } = customIdsRef.current.has(id)
       ? await updateCustomGame(id, { visible: nextVisible })
       : await updateGameOverride(id, { visible: nextVisible });
+    markError(id, !!error);
+  };
+
+  // Venta/Alquiler are only editable for games created from here -- a
+  // catalog game's forSale/forRental comes from which array it's defined
+  // in (shelves.ts/rentals.ts) in the code, there's no override for that
+  // yet. customGames already updates live via useCustomGames, so there's
+  // no local optimistic copy to keep in sync here like stock/price/
+  // visible need.
+  const toggleCustomForSale = async (id: string) => {
+    const current = (customGames ?? []).find((g) => g.id === id);
+    if (!current) return;
+    playMenuConfirmSound();
+    const { error } = await updateCustomGame(id, { forSale: !current.forSale });
+    markError(id, !!error);
+  };
+
+  const toggleCustomForRental = async (id: string) => {
+    const current = (customGames ?? []).find((g) => g.id === id);
+    if (!current) return;
+    playMenuConfirmSound();
+    const { error } = await updateCustomGame(id, { forRental: !current.forRental });
     markError(id, !!error);
   };
 
@@ -424,10 +449,35 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
                     )}
                   </td>
                   <td className={styles.tagsCell}>
-                    {(game.forSale || row.stock > 0) && (
-                      <span className={styles.tag}>Venta</span>
+                    {game.isCustom ? (
+                      <>
+                        <button
+                          className={game.forSale ? styles.toggleOn : styles.toggleOff}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleCustomForSale(game.id);
+                          }}
+                        >
+                          VENTA: {game.forSale ? "SI" : "NO"}
+                        </button>
+                        <button
+                          className={game.forRental ? styles.toggleOn : styles.toggleOff}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleCustomForRental(game.id);
+                          }}
+                        >
+                          ALQUILER: {game.forRental ? "SI" : "NO"}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        {(game.forSale || row.stock > 0) && (
+                          <span className={styles.tag}>Venta</span>
+                        )}
+                        {game.forRental && <span className={styles.tag}>Alquiler</span>}
+                      </>
                     )}
-                    {game.forRental && <span className={styles.tag}>Alquiler</span>}
                   </td>
                   <td>
                     <div className={styles.stockRow}>

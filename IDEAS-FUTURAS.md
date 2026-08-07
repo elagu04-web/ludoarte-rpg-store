@@ -23,3 +23,10 @@ alguna, avisame.
   transicion entre escenas (puertas, escalera, zonas de entrada/
   salida) para que se sientan mejor. Falta que el usuario aclare
   puntualmente que no le gusta de como esta ahora.
+
+- **Cruzarse con otros usuarios / jugar online**: poder jugar Ajedrez
+  (y tal vez otros juegos) contra gente de verdad dentro del juego,
+  por ejemplo integrando Lichess en modo anonimo. Es una idea grande
+  -- multiplayer real, cuentas o sesiones anonimas, embeber un
+  tablero de otro servicio -- falta definir alcance antes de
+  arrancar.

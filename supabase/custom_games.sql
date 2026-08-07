@@ -13,6 +13,7 @@ create table if not exists public.custom_games (
   id text primary key,
   name text not null,
   price integer not null default 0,
+  rental_price integer not null default 0,
   stock integer not null default 0,
   visible boolean not null default true,
   -- Ruta esperada de la foto real: /assets/boardgames/{id}.png. Arranca
@@ -29,6 +30,7 @@ create table if not exists public.custom_games (
 -- "solo venta", que era el unico comportamiento posible hasta ahora).
 alter table public.custom_games add column if not exists for_sale boolean not null default true;
 alter table public.custom_games add column if not exists for_rental boolean not null default false;
+alter table public.custom_games add column if not exists rental_price integer not null default 0;
 
 alter table public.custom_games enable row level security;
 

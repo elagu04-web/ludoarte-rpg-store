@@ -18,6 +18,7 @@ import styles from "./InventoryScreen.module.css";
 interface Row {
   stock: number;
   price: number;
+  rentalPrice: number;
   visible: boolean;
   forSale: boolean;
   forRental: boolean;
@@ -64,6 +65,7 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
   const selectedItemRef = useRef<HTMLTableRowElement | null>(null);
   const stockSaveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const priceSaveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const rentalPriceSaveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const isAddingRef = useRef(false);
   const addInputRef = useRef<HTMLInputElement>(null);
 
@@ -109,6 +111,13 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
     visibleGamesRef.current = visibleGames;
   }, [visibleGames]);
 
+  // Read by the keydown effect below (narrow deps, [onExit]) to decide
+  // whether SHIFT+A/D should move the sale price or the rental price.
+  const tabRef = useRef(tab);
+  useEffect(() => {
+    tabRef.current = tab;
+  }, [tab]);
+
   useEffect(() => {
     setSelectedIndex(0);
   }, [tab]);
@@ -142,6 +151,7 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
         next[game.id] = {
           stock: override?.stock ?? game.baseStock,
           price: override?.price ?? game.basePrice ?? 0,
+          rentalPrice: override?.rentalPrice ?? game.baseRentalPrice ?? 0,
           visible: override?.visible ?? true,
           forSale: override?.forSale ?? game.forSale,
           forRental: override?.forRental ?? game.forRental,
@@ -153,6 +163,7 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
         next[game.id] = {
           stock: game.stock,
           price: game.price,
+          rentalPrice: game.rentalPrice,
           visible: game.visible,
           forSale: game.forSale,
           forRental: game.forRental,
@@ -236,6 +247,29 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
     setRows(updated);
     markError(id, false);
     savePrice(id, next);
+    playMenuMoveSound();
+  };
+
+  const saveRentalPrice = (id: string, rentalPrice: number) => {
+    if (rentalPriceSaveTimers.current[id]) clearTimeout(rentalPriceSaveTimers.current[id]);
+    rentalPriceSaveTimers.current[id] = setTimeout(async () => {
+      const { error } = customIdsRef.current.has(id)
+        ? await updateCustomGame(id, { rentalPrice })
+        : await updateGameOverride(id, { rentalPrice });
+      markError(id, !!error);
+    }, STOCK_SAVE_DEBOUNCE_MS);
+  };
+
+  const adjustRentalPrice = (id: string, delta: number) => {
+    const current = rowsRef.current[id];
+    if (!current) return;
+    const next = Math.max(0, current.rentalPrice + delta);
+    if (next === current.rentalPrice) return;
+    const updated = { ...rowsRef.current, [id]: { ...current, rentalPrice: next } };
+    rowsRef.current = updated;
+    setRows(updated);
+    markError(id, false);
+    saveRentalPrice(id, next);
     playMenuMoveSound();
   };
 
@@ -360,12 +394,16 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
         playMenuMoveSound();
       } else if (event.key === "a" || event.key === "A" || event.key === "ArrowLeft") {
         if (!game) return;
-        if (event.shiftKey) adjustPrice(game.id, -PRICE_STEP_FAST);
-        else adjustStock(game.id, -1);
+        if (event.shiftKey) {
+          if (tabRef.current === "alquiler") adjustRentalPrice(game.id, -PRICE_STEP_FAST);
+          else adjustPrice(game.id, -PRICE_STEP_FAST);
+        } else adjustStock(game.id, -1);
       } else if (event.key === "d" || event.key === "D" || event.key === "ArrowRight") {
         if (!game) return;
-        if (event.shiftKey) adjustPrice(game.id, PRICE_STEP_FAST);
-        else adjustStock(game.id, 1);
+        if (event.shiftKey) {
+          if (tabRef.current === "alquiler") adjustRentalPrice(game.id, PRICE_STEP_FAST);
+          else adjustPrice(game.id, PRICE_STEP_FAST);
+        } else adjustStock(game.id, 1);
       } else if (event.key === "e" || event.key === "E" || event.key === "Enter") {
         if (game) toggleVisible(game.id);
       } else if (event.key === "v" || event.key === "V") {
@@ -543,18 +581,30 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
             </div>
 
             <div className={styles.detailField}>
-              <span className={styles.detailLabel}>Precio (SHIFT+A/D)</span>
+              <span className={styles.detailLabel}>
+                {tab === "alquiler" ? "Precio de alquiler (SHIFT+A/D)" : "Precio (SHIFT+A/D)"}
+              </span>
               <div className={styles.stockRow}>
                 <button
                   className={styles.stockButton}
-                  onClick={() => adjustPrice(selectedGame.id, -PRICE_STEP)}
+                  onClick={() =>
+                    tab === "alquiler"
+                      ? adjustRentalPrice(selectedGame.id, -PRICE_STEP)
+                      : adjustPrice(selectedGame.id, -PRICE_STEP)
+                  }
                 >
                   &#9664;
                 </button>
-                <span className={styles.stockValue}>${selectedRow.price}</span>
+                <span className={styles.stockValue}>
+                  ${tab === "alquiler" ? selectedRow.rentalPrice : selectedRow.price}
+                </span>
                 <button
                   className={styles.stockButton}
-                  onClick={() => adjustPrice(selectedGame.id, PRICE_STEP)}
+                  onClick={() =>
+                    tab === "alquiler"
+                      ? adjustRentalPrice(selectedGame.id, PRICE_STEP)
+                      : adjustPrice(selectedGame.id, PRICE_STEP)
+                  }
                 >
                   &#9654;
                 </button>

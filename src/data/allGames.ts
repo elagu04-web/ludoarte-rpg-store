@@ -11,6 +11,9 @@ export interface CatalogGame {
   /** Precio como esta en el codigo -- null para juegos que solo se
    * alquilan y todavia no tienen un precio de referencia (salePrice). */
   basePrice: number | null;
+  /** Precio de alquiler como esta en el codigo (RentalGame.price) --
+   * null si el juego no se alquila o todavia no se cargo el precio. */
+  baseRentalPrice: number | null;
   forSale: boolean;
   forRental: boolean;
 }
@@ -21,6 +24,10 @@ export interface CatalogGame {
 const saleGames = shelves.flatMap((shelf) => shelf.games);
 const saleIds = new Set(saleGames.map((g) => g.id));
 
+function findRentalPrice(id: string): number | null {
+  return rentalGames.find((r) => r.id === id)?.price ?? null;
+}
+
 export const allGames: CatalogGame[] = [
   ...saleGames.map((g) => ({
     id: g.id,
@@ -28,6 +35,7 @@ export const allGames: CatalogGame[] = [
     image: g.image,
     baseStock: g.stock,
     basePrice: g.price,
+    baseRentalPrice: findRentalPrice(g.id),
     forSale: true,
     forRental: rentalGames.some((r) => r.id === g.id),
   })),
@@ -39,6 +47,7 @@ export const allGames: CatalogGame[] = [
       image: r.image,
       baseStock: 0,
       basePrice: r.salePrice ?? null,
+      baseRentalPrice: r.price,
       forSale: false,
       forRental: true,
     })),

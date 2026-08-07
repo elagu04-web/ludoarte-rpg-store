@@ -5,6 +5,8 @@ export interface GameOverride {
   visible: boolean;
   /** null = usar el precio del codigo (BoardGame.price o RentalGame.salePrice). */
   price: number | null;
+  /** null = usar el precio de alquiler del codigo (RentalGame.price). */
+  rentalPrice: number | null;
   /** null = usar lo que dice el codigo (en que archivo esta el juego). */
   forSale: boolean | null;
   forRental: boolean | null;
@@ -24,7 +26,9 @@ const subscribers = new Set<(overrides: GameOverrides) => void>();
 async function load(): Promise<GameOverrides> {
   const { data } = await createClient()
     .from("game_overrides")
-    .select("id, stock, visible, price, forSale:for_sale, forRental:for_rental");
+    .select(
+      "id, stock, visible, price, rentalPrice:rental_price, forSale:for_sale, forRental:for_rental"
+    );
 
   const map: GameOverrides = new Map();
   for (const row of data ?? []) {
@@ -32,6 +36,7 @@ async function load(): Promise<GameOverrides> {
       stock: row.stock,
       visible: row.visible,
       price: row.price,
+      rentalPrice: row.rentalPrice,
       forSale: row.forSale,
       forRental: row.forRental,
     });
@@ -87,6 +92,18 @@ export function effectivePrice(
   return override?.price ?? basePrice;
 }
 
+/** Effective rental price for a game whose base (code) rental price is
+ * `baseRentalPrice` (null if it isn't a rental at all, or the price
+ * isn't loaded yet) -- an admin override replaces it when present. */
+export function effectiveRentalPrice(
+  id: string,
+  baseRentalPrice: number | null,
+  overrides: GameOverrides
+): number | null {
+  const override = overrides.get(id);
+  return override?.rentalPrice ?? baseRentalPrice;
+}
+
 export function effectiveForSale(
   id: string,
   baseForSale: boolean,
@@ -113,6 +130,7 @@ export async function updateGameOverride(
     stock: null,
     visible: true,
     price: null,
+    rentalPrice: null,
     forSale: null,
     forRental: null,
   };
@@ -123,6 +141,7 @@ export async function updateGameOverride(
     stock: next.stock,
     visible: next.visible,
     price: next.price,
+    rental_price: next.rentalPrice,
     for_sale: next.forSale,
     for_rental: next.forRental,
   });

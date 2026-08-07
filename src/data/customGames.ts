@@ -8,6 +8,7 @@ export interface CustomGame {
   id: string;
   name: string;
   price: number;
+  rentalPrice: number;
   stock: number;
   visible: boolean;
   image: string;
@@ -28,7 +29,9 @@ function notify() {
 async function load(): Promise<CustomGame[]> {
   const { data } = await createClient()
     .from("custom_games")
-    .select("id, name, price, stock, visible, image, forSale:for_sale, forRental:for_rental")
+    .select(
+      "id, name, price, rentalPrice:rental_price, stock, visible, image, forSale:for_sale, forRental:for_rental"
+    )
     .order("created_at", { ascending: true });
   return data ?? [];
 }
@@ -100,6 +103,7 @@ export async function addCustomGame(
     id: slug,
     name: trimmed,
     price: 0,
+    rentalPrice: 0,
     stock: 0,
     visible: true,
     image: PLACEHOLDER_IMAGE,
@@ -111,6 +115,7 @@ export async function addCustomGame(
     id: game.id,
     name: game.name,
     price: game.price,
+    rental_price: game.rentalPrice,
     stock: game.stock,
     visible: game.visible,
     image: game.image,
@@ -156,12 +161,18 @@ async function createPlaceholderImageFile(slug: string): Promise<void> {
 
 export async function updateCustomGame(
   id: string,
-  patch: Partial<Pick<CustomGame, "price" | "stock" | "visible" | "image" | "forSale" | "forRental">>
+  patch: Partial<
+    Pick<
+      CustomGame,
+      "price" | "rentalPrice" | "stock" | "visible" | "image" | "forSale" | "forRental"
+    >
+  >
 ): Promise<{ error: string | null }> {
-  const { forSale, forRental, ...rest } = patch;
+  const { forSale, forRental, rentalPrice, ...rest } = patch;
   const dbPatch: Record<string, unknown> = { ...rest };
   if (forSale !== undefined) dbPatch.for_sale = forSale;
   if (forRental !== undefined) dbPatch.for_rental = forRental;
+  if (rentalPrice !== undefined) dbPatch.rental_price = rentalPrice;
 
   const { error } = await createClient()
     .from("custom_games")

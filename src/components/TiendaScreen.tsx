@@ -10,6 +10,7 @@ import {
   extraSellableGames,
   customSellableGames,
   customOrderableGames,
+  secondHandGames,
 } from "@/data/sellableGames";
 import { useCart } from "@/context/CartContext";
 import {
@@ -22,11 +23,12 @@ import styles from "./TiendaScreen.module.css";
 
 const STORE_WHATSAPP_NUMBER = "59899861116";
 
-type Tab = "disponible" | "pedido" | "buscador";
+type Tab = "disponible" | "pedido" | "usado" | "buscador";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "disponible", label: "DISPONIBLE" },
   { id: "pedido", label: "POR PEDIDO" },
+  { id: "usado", label: "SEGUNDA MANO" },
   { id: "buscador", label: "BUSCADOR" },
 ];
 
@@ -98,14 +100,23 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
     return [...fromCode, ...customOrderableGames(customGames ?? [])];
   }, [overrides, customGames]);
 
+  const usedGames = useMemo(() => {
+    if (!overrides) return [];
+    return secondHandGames(overrides, customGames ?? []);
+  }, [overrides, customGames]);
+
   const availableGamesRef = useRef(availableGames);
   const orderableGamesRef = useRef(orderableGames);
+  const usedGamesRef = useRef(usedGames);
   useEffect(() => {
     availableGamesRef.current = availableGames;
   }, [availableGames]);
   useEffect(() => {
     orderableGamesRef.current = orderableGames;
   }, [orderableGames]);
+  useEffect(() => {
+    usedGamesRef.current = usedGames;
+  }, [usedGames]);
 
   useEffect(() => {
     tabRef.current = tab;
@@ -130,6 +141,7 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
   const orderList = tab === "pedido" ? orderableGames : null;
   const selectedAvailable = list?.[selectedIndex]?.game;
   const selectedOrderable = orderList?.[selectedIndex];
+  const selectedUsed = tab === "usado" ? usedGames[selectedIndex] : undefined;
 
   const buyNow = (game: BoardGame) => {
     addItem(game);
@@ -158,6 +170,9 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
     } else if (tab === "pedido") {
       const game = orderableGamesRef.current[selectedIndexRef.current];
       if (game) requestByWhatsApp(game.name, game.price);
+    } else if (tab === "usado") {
+      const game = usedGamesRef.current[selectedIndexRef.current];
+      if (game) buyNow(game);
     }
   };
 
@@ -171,7 +186,9 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
       const count =
         tabRef.current === "disponible"
           ? availableGamesRef.current.length
-          : orderableGamesRef.current.length;
+          : tabRef.current === "usado"
+            ? usedGamesRef.current.length
+            : orderableGamesRef.current.length;
       if (count === 0) return;
       setSelectedIndex((prev) => (prev + delta + count) % count);
       playMenuMoveSound();
@@ -303,6 +320,26 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
               </>
             )}
 
+            {tab === "usado" && selectedUsed && (
+              <>
+                <div className={styles.previewImageWrapper}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={selectedUsed.image}
+                    alt={selectedUsed.name}
+                    className={styles.previewImage}
+                  />
+                </div>
+                <p className={styles.previewName}>{selectedUsed.name}</p>
+                <div className={styles.previewFooter}>
+                  <span className={styles.previewPrice}>${selectedUsed.price}</span>
+                  <button className={styles.buyButton} onClick={() => buyNow(selectedUsed)}>
+                    COMPRAR (E)
+                  </button>
+                </div>
+              </>
+            )}
+
             {tab === "pedido" && selectedOrderable && (
               <>
                 <div className={styles.previewImageWrapper}>
@@ -360,6 +397,32 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
             </ul>
           )}
 
+          {tab === "usado" && (
+            <ul className={styles.list}>
+              {usedGames.length === 0 && (
+                <p className={styles.requestHint}>
+                  Todavia no hay ningun juego de segunda mano cargado.
+                </p>
+              )}
+              {usedGames.map((game, index) => (
+                <li key={game.id}>
+                  <div
+                    ref={index === selectedIndex ? selectedItemRef : undefined}
+                    className={index === selectedIndex ? styles.rowSelected : styles.row}
+                    onClick={() => selectRow(index)}
+                    onDoubleClick={() => buyNow(game)}
+                  >
+                    <span className={styles.rowName}>
+                      {index === selectedIndex ? "▶ " : "  "}
+                      {game.name}
+                    </span>
+                    <span className={styles.rowPrice}>${game.price}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
           {tab === "pedido" && (
             <ul className={styles.list}>
               {orderableGames.map((game, index) => (
@@ -386,7 +449,7 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
       )}
 
       <p className={styles.hint}>
-        FLECHAS: ELEGIR &middot; A/D: PESTAÑA &middot; E: {tab === "disponible" ? "COMPRAR" : "PEDIR"}
+        FLECHAS: ELEGIR &middot; A/D: PESTAÑA &middot; E: {tab === "pedido" ? "PEDIR" : "COMPRAR"}
       </p>
     </div>
   );

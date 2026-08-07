@@ -550,6 +550,7 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
           <table className={styles.table}>
             <thead>
               <tr>
+                <th className={styles.numberHeader}>#</th>
                 <th></th>
                 <th>Juego</th>
                 <th>Estado</th>
@@ -571,6 +572,7 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
                     ].join(" ")}
                     onClick={() => setSelectedIndex(index)}
                   >
+                    <td className={styles.numberCell}>{index + 1}</td>
                     <td>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={game.image} alt="" className={styles.thumb} />
@@ -603,7 +605,9 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
           <div className={styles.detailPanel}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={selectedGame.image} alt="" className={styles.detailThumb} />
-            <p className={styles.detailName}>{selectedGame.name}</p>
+            <p className={styles.detailName}>
+              #{selectedIndex + 1} {selectedGame.name}
+            </p>
             {errorIds.has(selectedGame.id) && (
               <p className={styles.error}>Error al guardar</p>
             )}

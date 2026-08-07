@@ -240,6 +240,16 @@
   opacity: 0.4;
 }
 
+.numberHeader {
+  text-align: right !important;
+}
+
+.numberCell {
+  color: #7a7a9a;
+  text-align: right;
+  white-space: nowrap;
+}
+
 .thumb {
   width: 52px;
   height: 52px;

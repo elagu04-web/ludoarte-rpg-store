@@ -14,4 +14,5 @@ export const SCENE_DIMENSIONS: Record<string, SceneDimensions> = {
   GroundFloorScene: { width: 916, height: 1717, zoom: 1.5 },
   StoreScene: { width: 1024, height: 1536, zoom: 1.5 },
   EstacionamientoScene: { width: 1536, height: 1024, zoom: 1 },
+  BathroomScene: { width: 1254, height: 1254, zoom: 1.4 },
 };

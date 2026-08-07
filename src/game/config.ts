@@ -3,6 +3,7 @@ import { ExteriorScene } from "./scenes/ExteriorScene";
 import { GroundFloorScene } from "./scenes/GroundFloorScene";
 import { StoreScene } from "./scenes/StoreScene";
 import { EstacionamientoScene } from "./scenes/EstacionamientoScene";
+import { BathroomScene } from "./scenes/BathroomScene";
 
 export function createGameConfig(
   parent: HTMLDivElement
@@ -21,6 +22,6 @@ export function createGameConfig(
         debug: false,
       },
     },
-    scene: [ExteriorScene, GroundFloorScene, StoreScene, EstacionamientoScene],
+    scene: [ExteriorScene, GroundFloorScene, StoreScene, EstacionamientoScene, BathroomScene],
   };
 }

@@ -7,6 +7,7 @@ export class GroundFloorScene extends BasePlayerScene {
   private stairsZone!: Phaser.Geom.Rectangle;
   private exitZone!: Phaser.Geom.Rectangle;
   private leftDoorZone!: Phaser.Geom.Rectangle;
+  private bathroomZone!: Phaser.Geom.Rectangle;
   private tvZone!: Phaser.Geom.Rectangle;
   private nearTv = false;
   private rentalZone!: Phaser.Geom.Rectangle;
@@ -36,6 +37,8 @@ export class GroundFloorScene extends BasePlayerScene {
         return { x: 585, y: 230 }; // below the stairs (top-right gap)
       case "EstacionamientoScene":
         return { x: 207, y: 230 }; // below the left door
+      case "BathroomScene":
+        return { x: 230, y: 985 }; // just right of the bathroom door
       case "ExteriorScene":
       default:
         return { x: 455, y: 1450 }; // above the street-side door
@@ -70,13 +73,18 @@ export class GroundFloorScene extends BasePlayerScene {
       () => eventBus.emit("tv-menu-open", true)
     );
 
-    // Barras/estanterias decorativas a los lados (colisionables). Se
-    // extienden hasta encontrarse con la pared de abajo (wallB1/wallB2) --
-    // antes terminaban en y=1310 y la pared empezaba en y=1480, dejando
-    // una franja de pared sin colision de 170px donde se podia caminar
+    // Barra/estanteria decorativa de la derecha (colisionable). Se
+    // extiende hasta encontrarse con la pared de abajo (wallB2) -- antes
+    // terminaba en y=1310 y la pared empezaba en y=1480, dejando una
+    // franja de pared sin colision de 170px donde se podia caminar
     // "sobre lo negro" del fondo.
-    this.addObstacle(102, 840, 165, 1280, { visible: false });
     this.addObstacle(813, 840, 166, 1280, { visible: false });
+
+    // La de la izquierda es igual, pero partida en dos: en el medio (ya
+    // dibujada en el fondo) esta la puerta que lleva al baño.
+    this.addObstacle(102, 560, 165, 720, { visible: false }); // arriba de la puerta
+    this.addObstacle(102, 1265, 165, 430, { visible: false }); // abajo de la puerta
+    this.bathroomZone = new Phaser.Geom.Rectangle(20, 920, 170, 130);
 
     // Mesas centrales (2 columnas x 4 filas) -- el cartel de cada una ya
     // esta dibujado en el fondo (bg-planta-baja), aca solo hace falta la
@@ -228,6 +236,10 @@ export class GroundFloorScene extends BasePlayerScene {
 
     if (this.isPlayerInZone(this.leftDoorZone)) {
       this.transitionTo("EstacionamientoScene");
+    }
+
+    if (this.isPlayerInZone(this.bathroomZone)) {
+      this.transitionTo("BathroomScene");
     }
   }
 }

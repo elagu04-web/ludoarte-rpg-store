@@ -107,9 +107,16 @@ export async function addCustomGame(
     forRental: options.forRental,
   };
 
-  const { error } = await createClient()
-    .from("custom_games")
-    .insert({ ...game, for_sale: game.forSale, for_rental: game.forRental });
+  const { error } = await createClient().from("custom_games").insert({
+    id: game.id,
+    name: game.name,
+    price: game.price,
+    stock: game.stock,
+    visible: game.visible,
+    image: game.image,
+    for_sale: game.forSale,
+    for_rental: game.forRental,
+  });
   if (error) return { error: error.message, game: null };
 
   cache = [...(cache ?? []), game];

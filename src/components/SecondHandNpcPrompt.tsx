@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { eventBus } from "@/game/eventBus";
 import {
   playMenuMoveSound,
@@ -8,6 +8,9 @@ import {
   playMenuOpenSound,
   playMenuCloseSound,
 } from "@/game/music";
+import { secondHandGames } from "@/data/sellableGames";
+import { useGameOverrides } from "@/data/useGameOverrides";
+import { useCustomGames } from "@/data/useCustomGames";
 import styles from "./SecondHandNpcPrompt.module.css";
 
 type Choice = "yes" | "no";
@@ -27,6 +30,17 @@ export default function SecondHandNpcPrompt() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const selectedIndexRef = useRef(0);
+  const overrides = useGameOverrides();
+  const customGames = useCustomGames();
+
+  const games = useMemo(
+    () => (overrides ? secondHandGames(overrides, customGames ?? []) : []),
+    [overrides, customGames]
+  );
+  const gamesRef = useRef(games);
+  useEffect(() => {
+    gamesRef.current = games;
+  }, [games]);
 
   useEffect(() => {
     selectedIndexRef.current = selectedIndex;
@@ -55,6 +69,7 @@ export default function SecondHandNpcPrompt() {
       eventBus.emit("second-hand-open", true);
     } else {
       playMenuCloseSound();
+      eventBus.emit("second-hand-declined", gamesRef.current);
     }
   };
 

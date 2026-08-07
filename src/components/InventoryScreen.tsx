@@ -32,6 +32,14 @@ interface DisplayGame {
   isCustom: boolean;
 }
 
+type Tab = "todos" | "venta" | "alquiler";
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: "todos", label: "TODOS" },
+  { id: "venta", label: "VENTA" },
+  { id: "alquiler", label: "ALQUILER" },
+];
+
 // Typing D ten times shouldn't fire ten separate saves -- wait for a
 // short pause after the last tap before actually writing to Supabase.
 const STOCK_SAVE_DEBOUNCE_MS = 500;
@@ -42,6 +50,7 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
   const overrides = useGameOverrides();
   const customGames = useCustomGames();
   const [rows, setRows] = useState<Record<string, Row> | null>(null);
+  const [tab, setTab] = useState<Tab>("todos");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [errorIds, setErrorIds] = useState<Set<string>>(new Set());
   const [isAdding, setIsAdding] = useState(false);
@@ -83,10 +92,26 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
       a.name.localeCompare(b.name, "es")
     );
   }, [customGames]);
-  const displayGamesRef = useRef(displayGames);
+  // The active tab filters displayGames down to just what's for sale /
+  // for rental -- "Venta" also counts a game with leftover stock even if
+  // forSale is off, same criteria the tags column already used.
+  const visibleGames = useMemo(() => {
+    if (!rows) return [];
+    if (tab === "todos") return displayGames;
+    return displayGames.filter((game) => {
+      const row = rows[game.id];
+      if (!row) return false;
+      return tab === "venta" ? row.forSale || row.stock > 0 : row.forRental;
+    });
+  }, [displayGames, rows, tab]);
+  const visibleGamesRef = useRef(visibleGames);
   useEffect(() => {
-    displayGamesRef.current = displayGames;
-  }, [displayGames]);
+    visibleGamesRef.current = visibleGames;
+  }, [visibleGames]);
+
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [tab]);
 
   const customIds = useMemo(
     () => new Set((customGames ?? []).map((g) => g.id)),
@@ -147,8 +172,8 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
   }, [selectedIndex]);
 
   useEffect(() => {
-    setSelectedIndex((prev) => Math.min(prev, Math.max(0, displayGames.length - 1)));
-  }, [displayGames.length]);
+    setSelectedIndex((prev) => Math.min(prev, Math.max(0, visibleGames.length - 1)));
+  }, [visibleGames.length]);
 
   useEffect(() => {
     selectedItemRef.current?.scrollIntoView({ block: "nearest" });
@@ -324,7 +349,7 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
         return;
       }
 
-      const games = displayGamesRef.current;
+      const games = visibleGamesRef.current;
       const game = games[selectedIndexRef.current];
 
       if (event.key === "w" || event.key === "W" || event.key === "ArrowUp") {
@@ -363,7 +388,7 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
     );
   }
 
-  const selectedGame = displayGames[selectedIndex];
+  const selectedGame = visibleGames[selectedIndex];
   const selectedRow = selectedGame ? rows[selectedGame.id] : undefined;
   const needsRealPhoto =
     !!selectedGame && selectedGame.isCustom && selectedGame.image === PLACEHOLDER_IMAGE;
@@ -382,6 +407,18 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
             SALIR (ESC)
           </button>
         </div>
+      </div>
+
+      <div className={styles.tabs}>
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            className={t.id === tab ? styles.tabSelected : styles.tab}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {isAdding && (
@@ -430,7 +467,7 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
               </tr>
             </thead>
             <tbody>
-              {displayGames.map((game, index) => {
+              {visibleGames.map((game, index) => {
                 const row = rows[game.id];
                 if (!row) return null;
                 const isSelected = index === selectedIndex;

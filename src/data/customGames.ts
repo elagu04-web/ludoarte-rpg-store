@@ -121,7 +121,37 @@ export async function addCustomGame(
 
   cache = [...(cache ?? []), game];
   notify();
+
+  // Best-effort: reserve the real image filename in the repo right away
+  // so the admin has an exact spot to drop the real photo into later.
+  // Failure here doesn't fail game creation -- worst case the "Falta
+  // foto" hint (image still pointing at the generic placeholder) stays
+  // up and they use the filename shown there instead.
+  void createPlaceholderImageFile(slug);
+
   return { error: null, game };
+}
+
+async function createPlaceholderImageFile(slug: string): Promise<void> {
+  const { data } = await createClient().auth.getSession();
+  const accessToken = data.session?.access_token;
+  if (!accessToken) return;
+
+  try {
+    const res = await fetch("/api/create-game-image", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ slug }),
+    });
+    if (!res.ok) return;
+    await updateCustomGame(slug, { image: expectedImagePath(slug) });
+  } catch {
+    // Ignora -- el admin puede seguir usando el hint "Falta foto" con el
+    // nombre de archivo de siempre si esto no llego a andar.
+  }
 }
 
 export async function updateCustomGame(

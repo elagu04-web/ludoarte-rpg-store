@@ -1,6 +1,13 @@
 import { shelves, type BoardGame } from "./shelves";
 import { rentalGames } from "./rentals";
-import { effectiveStock, isVisible, type GameOverrides } from "./gameOverrides";
+import {
+  effectiveStock,
+  effectiveSecondHand,
+  effectiveUsedPrice,
+  isVisible,
+  type GameOverrides,
+} from "./gameOverrides";
+import { allGames } from "./allGames";
 import type { CustomGame } from "./customGames";
 import type { OrderableGame } from "./orderCatalog";
 
@@ -61,4 +68,35 @@ export function customOrderableGames(customGames: CustomGame[]): OrderableGame[]
       isRentalOnly: false,
       image: game.image,
     }));
+}
+
+/** Juegos marcados "Segunda mano" desde el panel de Inventario (cualquier
+ * juego, del catalogo o agregado a mano) -- usa el precio de segunda
+ * mano, no el de venta normal. El stock que se muestra es el mismo que
+ * ya tiene el juego (no hay un stock aparte para la version usada). */
+export function secondHandGames(
+  overrides: GameOverrides,
+  customGames: CustomGame[]
+): BoardGame[] {
+  const fromCatalog: BoardGame[] = allGames
+    .filter((game) => effectiveSecondHand(game.id, overrides))
+    .map((game) => ({
+      id: game.id,
+      name: game.name,
+      price: effectiveUsedPrice(game.id, overrides) ?? 0,
+      image: game.image,
+      stock: effectiveStock(game.id, game.baseStock, overrides),
+    }));
+
+  const fromCustom: BoardGame[] = customGames
+    .filter((game) => game.secondHand)
+    .map((game) => ({
+      id: game.id,
+      name: game.name,
+      price: game.usedPrice,
+      image: game.image,
+      stock: game.stock,
+    }));
+
+  return [...fromCatalog, ...fromCustom];
 }

@@ -20,6 +20,8 @@ import GameVideoPopup from "./GameVideoPopup";
 import TvMenu from "./TvMenu";
 import RentalMenu from "./RentalMenu";
 import ActivityInfoScreen from "./ActivityInfoScreen";
+import SecondHandNpcPrompt from "./SecondHandNpcPrompt";
+import SecondHandMenu from "./SecondHandMenu";
 import TouchControls from "./TouchControls";
 import MobileCloseButton from "./MobileCloseButton";
 import styles from "./GameOverlay.module.css";
@@ -93,6 +95,8 @@ export default function GameCanvas() {
       <TvMenu />
       <RentalMenu />
       <ActivityInfoScreen />
+      <SecondHandNpcPrompt />
+      <SecondHandMenu />
       <TouchControls />
       <MobileCloseButton />
     </div>

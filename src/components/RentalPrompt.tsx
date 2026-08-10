@@ -20,5 +20,7 @@ export default function RentalPrompt() {
 
   if (!visible) return null;
 
-  return <div className={styles.prompt}>Presiona E para ver el alquiler</div>;
+  return (
+    <div className={styles.prompt}>Presiona E para ver el alquiler en el local</div>
+  );
 }

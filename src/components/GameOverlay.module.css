@@ -154,6 +154,21 @@
   color: #555555;
 }
 
+.requestButton {
+  font-family: var(--font-pixel), monospace;
+  font-size: 11px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #25d366;
+  color: #0b2e17;
+}
+
+.requestButton:hover {
+  background: #1ebe57;
+}
+
 .rentalMenuPanel {
   /* top+bottom (instead of a vh-based max-height) so the panel's height is
      always derived from its actual container -- vh is relative to the

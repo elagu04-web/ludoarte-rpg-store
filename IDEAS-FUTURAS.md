@@ -28,9 +28,15 @@ alguna, avisame.
   (y tal vez otros juegos) contra gente de verdad dentro del juego. Es
   posible, pero es el item mas grande de toda esta lista -- bastante
   mas trabajo que cualquier cosa hecha hasta ahora. Dos caminos:
-  - **Embeber Lichess** (tablero anonimo de otro sitio): rapido de
-    sumar, pero se sale del estilo pixel-art del resto del juego --
-    Lichess se ve y se siente como Lichess, no como Ludoarte.
+  - **Lichess**: confirmado (probando los headers reales del sitio)
+    que Lichess NO se puede mostrar incrustado adentro de la pantalla
+    del juego -- el sitio se protege explicitamente contra eso
+    (`X-Frame-Options: DENY`). Lo que si funciona, y es practicamente
+    gratis de implementar, es abrir Lichess en una **pestaña nueva del
+    navegador** desde la mesa de ajedrez (un link comun) -- se sale
+    del pixel-art un momento, pero es real, anonimo, y no requiere
+    nada de backend propio. Idea no descartada, solo pausada por
+    ahora.
   - **Tablero propio + Supabase Realtime** (ya usamos Supabase para
     todo lo demas): mantiene el estilo visual, pero hay que construir
     reglas de ajedrez (libreria tipo chess.js), sincronizar turnos en

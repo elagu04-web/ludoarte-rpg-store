@@ -49,3 +49,31 @@ alguna, avisame.
   "retar a un amigo por link" -- se genera un codigo/link de partida,
   el amigo lo abre y juegan los dos ahi. Mismo tablero y reglas, pero
   sin necesitar resolver el problema de "encontrar rival" todavia.
+
+- **Separar alquiler en el local de alquiler a domicilio**: hoy el
+  menu de Alquiler (RentalMenu.tsx) es solo informativo -- no tiene
+  ni siquiera un boton para pedirlo todavia, a diferencia de Comprar y
+  Segunda Mano que ya abren WhatsApp. Ese es el primer paso pendiente
+  antes de esto. La idea, ya charlada:
+  - Dos modalidades separadas: **alquiler en el local** (retiro en
+    persona) y **alquiler a domicilio** (entrega). No todos los
+    titulos van a estar disponibles en las dos modalidades -- hace
+    falta poder marcar, por juego, si aplica a local, a domicilio, o a
+    ambos (probablemente dos columnas mas en game_overrides/
+    custom_games, similar a como ya existen for_sale/for_rental).
+  - Ademas de alquilar titulos sueltos, va a haber **paquetes**, de
+    dos tipos:
+    - **"Packs Ludoarte"**: combos fijos armados por el admin (ej:
+      "Pack Familiar: 3 juegos por $500"), el cliente elige entre los
+      combos ya armados.
+    - **"Armá tu Pack"**: el cliente elige el mismo cualquier N
+      juegos de la lista de alquiler a domicilio y el sistema calcula
+      el precio del paquete. Mas complejo de programar y mantener que
+      los packs fijos.
+  - Para el pedido en si (una vez elegido local/domicilio y title(s)
+    o pack), seguir el mismo patron que ya usa todo el resto del
+    sitio: armar el mensaje de WhatsApp con el detalle (modalidad,
+    juegos, direccion si es domicilio) en vez de programar un sistema
+    de pedidos propio -- no hace falta manejar zonas de entrega ni
+    precios de envio en el sistema todavia, eso lo cotiza el local por
+    WhatsApp.

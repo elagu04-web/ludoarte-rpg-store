@@ -79,3 +79,13 @@ alguna, avisame.
       juegos de la lista de alquiler a domicilio y el sistema calcula
       el precio del paquete. Mas complejo de programar y mantener que
       los packs fijos.
+    - Variante de "Armá tu Pack": en vez de (o ademas de) elegir
+      juegos puntuales, el cliente ingresa un **presupuesto** y el
+      sistema arma/sugiere una combinacion de juegos de la lista de
+      alquiler a domicilio que entre en ese monto.
+
+- **Agregar personajes**: hoy "Elegir Personaje" (CharacterSelectScreen)
+  solo aplica un tinte de color sobre el mismo sprite
+  (player-walk-sheet.png) -- no son personajes distintos, son
+  variantes de color del mismo muñeco. La idea es sumar personajes de
+  verdad, con arte/sprites propios para elegir, no solo mas colores.

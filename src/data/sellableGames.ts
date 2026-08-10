@@ -1,9 +1,11 @@
 import { shelves, type BoardGame } from "./shelves";
-import { rentalGames } from "./rentals";
+import { rentalGames, type RentalGame } from "./rentals";
 import {
   effectiveStock,
   effectiveSecondHand,
   effectiveUsedPrice,
+  effectiveForRental,
+  effectiveRentalPrice,
   isVisible,
   type GameOverrides,
 } from "./gameOverrides";
@@ -99,4 +101,41 @@ export function secondHandGames(
     }));
 
   return [...fromCatalog, ...fromCustom];
+}
+
+const staticRentalIds = new Set(rentalGames.map((g) => g.id));
+
+/** Catalogo completo de alquiler que ven los clientes (RentalMenu /
+ * DeliveryRentalMenu): la lista fija de rentals.ts, mas cualquier juego
+ * (del catalogo o agregado a mano) que el admin haya marcado "para
+ * alquiler" desde el panel de Inventario -- ese switch de Inventario
+ * antes no llegaba a mostrarse en ningun lado para juegos que no
+ * estuvieran ya en rentals.ts. */
+export function allRentalGames(
+  overrides: GameOverrides,
+  customGames: CustomGame[]
+): RentalGame[] {
+  const fromStatic = rentalGames.filter((game) => isVisible(game.id, overrides));
+
+  const fromCatalog: RentalGame[] = allGames
+    .filter((game) => !staticRentalIds.has(game.id))
+    .filter((game) => effectiveForRental(game.id, game.forRental, overrides))
+    .filter((game) => isVisible(game.id, overrides))
+    .map((game) => ({
+      id: game.id,
+      name: game.name,
+      price: effectiveRentalPrice(game.id, game.baseRentalPrice, overrides),
+      image: game.image,
+    }));
+
+  const fromCustom: RentalGame[] = customGames
+    .filter((game) => game.forRental && game.visible)
+    .map((game) => ({
+      id: game.id,
+      name: game.name,
+      price: game.rentalPrice,
+      image: game.image,
+    }));
+
+  return [...fromStatic, ...fromCatalog, ...fromCustom];
 }

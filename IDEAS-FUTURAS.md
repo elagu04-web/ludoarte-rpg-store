@@ -57,20 +57,29 @@ alguna, avisame.
   - [x] Mesa nueva "Alquiler a Domicilio" en GroundFloorScene.ts,
     (560, 1145) (antes vacia, en espejo con la de Alquiler en 560,535)
     -- DeliveryRentalMenu.tsx + DeliveryRentalPrompt.tsx, mismo
-    catalogo de rentalGames por ahora, mensaje de WhatsApp pidiendo
-    direccion en vez de "retiro en el local".
+    catalogo por ahora, mensaje de WhatsApp pidiendo direccion en vez
+    de "retiro en el local".
+  - [x] **Bug real que encontramos al usarlo**: los juegos marcados
+    "para alquiler" desde el panel de Inventario (catalogo o
+    agregados a mano) no aparecian en ninguno de los dos menus -- ese
+    switch de Inventario nunca estuvo conectado a lo que ve el
+    cliente, solo afectaba la lista interna del panel admin. Arreglado
+    con `allRentalGames()` en sellableGames.ts, que combina la lista
+    fija de rentals.ts + los juegos del catalogo marcados por
+    override + los agregados a mano marcados forRental -- mismo
+    patron que ya usa secondHandGames(). Ahora ambos menus (local y
+    domicilio) muestran todo junto.
 
   Pendiente:
   - **Filtrar por modalidad**: no todos los titulos van a estar
     disponibles en las dos modalidades -- hace falta poder marcar, por
-    juego, si aplica a local, a domicilio, o a ambos. Como
-    rentalGames (data/rentals.ts) es una lista fija en el codigo (NO
-    esta conectada al sistema de banderas for_sale/for_rental del
-    panel de Inventario), esto hoy se resolveria agregando dos
-    columnas al RentalGame de cada juego y editando el codigo -- el
-    admin todavia no podria autogestionarlo desde Inventario como con
-    venta/segunda mano. Evaluar si vale la pena unificar los sistemas
-    mas adelante.
+    juego, si aplica a local, a domicilio, o a ambos (hoy
+    allRentalGames() muestra la misma lista completa en los dos
+    menus). Como rentalGames (data/rentals.ts) sigue siendo una lista
+    fija en el codigo, marcar local/domicilio por juego seguiria
+    necesitando editar codigo para los 55 juegos de esa lista (los
+    agregados a mano si podrian tener su propio campo editable desde
+    Inventario sin problema).
   - **Paquetes**, de dos tipos:
     - **"Packs Ludoarte"**: combos fijos armados por el admin (ej:
       "Pack Familiar: 3 juegos por $500"), el cliente elige entre los

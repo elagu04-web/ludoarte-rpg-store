@@ -8,9 +8,10 @@ import {
   playMenuOpenSound,
   playMenuCloseSound,
 } from "@/game/music";
-import { rentalGames, type RentalGame } from "@/data/rentals";
-import { isVisible } from "@/data/gameOverrides";
+import type { RentalGame } from "@/data/rentals";
+import { allRentalGames } from "@/data/sellableGames";
 import { useGameOverrides } from "@/data/useGameOverrides";
+import { useCustomGames } from "@/data/useCustomGames";
 import { buildGameDialogue } from "@/game/gameDialogue";
 import SpinningBox from "./SpinningBox";
 import styles from "./GameOverlay.module.css";
@@ -33,10 +34,11 @@ export default function RentalMenu() {
   const selectedIndexRef = useRef(0);
   const selectedItemRef = useRef<HTMLLIElement | null>(null);
   const overrides = useGameOverrides();
+  const customGames = useCustomGames();
 
   const visibleRentalGames = useMemo(
-    () => (overrides ? rentalGames.filter((g) => isVisible(g.id, overrides)) : []),
-    [overrides]
+    () => (overrides ? allRentalGames(overrides, customGames ?? []) : []),
+    [overrides, customGames]
   );
   const visibleRentalGamesRef = useRef(visibleRentalGames);
   useEffect(() => {

@@ -50,19 +50,28 @@ alguna, avisame.
   el amigo lo abre y juegan los dos ahi. Mismo tablero y reglas, pero
   sin necesitar resolver el problema de "encontrar rival" todavia.
 
-- **Separar alquiler en el local de alquiler a domicilio**: hoy el
-  menu de Alquiler (RentalMenu.tsx) es solo informativo -- no tiene
-  ni siquiera un boton para pedirlo todavia, a diferencia de Comprar y
-  Segunda Mano que ya abren WhatsApp. Ese es el primer paso pendiente
-  antes de esto. La idea, ya charlada:
-  - Dos modalidades separadas: **alquiler en el local** (retiro en
-    persona) y **alquiler a domicilio** (entrega). No todos los
-    titulos van a estar disponibles en las dos modalidades -- hace
-    falta poder marcar, por juego, si aplica a local, a domicilio, o a
-    ambos (probablemente dos columnas mas en game_overrides/
-    custom_games, similar a como ya existen for_sale/for_rental).
-  - Ademas de alquilar titulos sueltos, va a haber **paquetes**, de
-    dos tipos:
+- **Separar alquiler en el local de alquiler a domicilio**: en marcha,
+  ya hecho el primer paso:
+  - [x] Boton de pedido por WhatsApp en el Alquiler existente (ahora
+    "Alquiler en el Local" -- RentalMenu.tsx).
+  - [x] Mesa nueva "Alquiler a Domicilio" en GroundFloorScene.ts,
+    (560, 1145) (antes vacia, en espejo con la de Alquiler en 560,535)
+    -- DeliveryRentalMenu.tsx + DeliveryRentalPrompt.tsx, mismo
+    catalogo de rentalGames por ahora, mensaje de WhatsApp pidiendo
+    direccion en vez de "retiro en el local".
+
+  Pendiente:
+  - **Filtrar por modalidad**: no todos los titulos van a estar
+    disponibles en las dos modalidades -- hace falta poder marcar, por
+    juego, si aplica a local, a domicilio, o a ambos. Como
+    rentalGames (data/rentals.ts) es una lista fija en el codigo (NO
+    esta conectada al sistema de banderas for_sale/for_rental del
+    panel de Inventario), esto hoy se resolveria agregando dos
+    columnas al RentalGame de cada juego y editando el codigo -- el
+    admin todavia no podria autogestionarlo desde Inventario como con
+    venta/segunda mano. Evaluar si vale la pena unificar los sistemas
+    mas adelante.
+  - **Paquetes**, de dos tipos:
     - **"Packs Ludoarte"**: combos fijos armados por el admin (ej:
       "Pack Familiar: 3 juegos por $500"), el cliente elige entre los
       combos ya armados.
@@ -70,15 +79,3 @@ alguna, avisame.
       juegos de la lista de alquiler a domicilio y el sistema calcula
       el precio del paquete. Mas complejo de programar y mantener que
       los packs fijos.
-  - Para el pedido en si (una vez elegido local/domicilio y title(s)
-    o pack), seguir el mismo patron que ya usa todo el resto del
-    sitio: armar el mensaje de WhatsApp con el detalle (modalidad,
-    juegos, direccion si es domicilio) en vez de programar un sistema
-    de pedidos propio -- no hace falta manejar zonas de entrega ni
-    precios de envio en el sistema todavia, eso lo cotiza el local por
-    WhatsApp.
-  - Ya hay lugar fisico pensado: en GroundFloorScene.ts la mesa de
-    (560, 1145) (debajo de "Membresia") esta en el layout pero sin
-    ninguna interaccion asignada -- es la candidata para "Alquiler a
-    Domicilio", en espejo con la mesa de "Alquiler" (en el local) que
-    ya esta en (560, 535).

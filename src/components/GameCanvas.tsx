@@ -13,12 +13,14 @@ import OrderPrompt from "./OrderPrompt";
 import OrderTruckPrompt from "./OrderTruckPrompt";
 import TvPrompt from "./TvPrompt";
 import RentalPrompt from "./RentalPrompt";
+import DeliveryRentalPrompt from "./DeliveryRentalPrompt";
 import ActivityPrompt from "./ActivityPrompt";
 import ShopMenu from "./ShopMenu";
 import GameDialogueBox from "./GameDialogueBox";
 import GameVideoPopup from "./GameVideoPopup";
 import TvMenu from "./TvMenu";
 import RentalMenu from "./RentalMenu";
+import DeliveryRentalMenu from "./DeliveryRentalMenu";
 import ActivityInfoScreen from "./ActivityInfoScreen";
 import SecondHandNpcPrompt from "./SecondHandNpcPrompt";
 import SecondHandMenu from "./SecondHandMenu";
@@ -88,12 +90,14 @@ export default function GameCanvas() {
       <OrderTruckPrompt />
       <TvPrompt />
       <RentalPrompt />
+      <DeliveryRentalPrompt />
       <ActivityPrompt />
       <ShopMenu />
       <GameDialogueBox />
       <GameVideoPopup />
       <TvMenu />
       <RentalMenu />
+      <DeliveryRentalMenu />
       <ActivityInfoScreen />
       <SecondHandNpcPrompt />
       <SecondHandMenu />

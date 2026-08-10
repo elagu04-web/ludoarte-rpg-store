@@ -12,6 +12,8 @@ export class GroundFloorScene extends BasePlayerScene {
   private nearTv = false;
   private rentalZone!: Phaser.Geom.Rectangle;
   private nearRental = false;
+  private deliveryRentalZone!: Phaser.Geom.Rectangle;
+  private nearDeliveryRental = false;
   private activityZones: { id: string; zone: Phaser.Geom.Rectangle }[] = [];
   private nearActivityId: string | null = null;
 
@@ -106,15 +108,16 @@ export class GroundFloorScene extends BasePlayerScene {
     // Ajedrez/Alquiler: el halo de Alquiler llegaba hasta Ajedrez).
     const TABLE_PROXIMITY_PADDING = 6;
     const RENTAL_TABLE = { x: 560, y: 535, width: TABLE_SIZE, height: TABLE_SIZE };
+    const DELIVERY_RENTAL_TABLE = { x: 560, y: 1145, width: TABLE_SIZE, height: TABLE_SIZE };
     const tables: { x: number; y: number; activityId?: string }[] = [
       { x: 355, y: 535, activityId: "ajedrez" }, // AJEDREZ
-      { x: 560, y: 535 }, // ALQUILER
+      { x: 560, y: 535 }, // ALQUILER (en el local)
       { x: 355, y: 735, activityId: "arte" }, // ARTE
       { x: 560, y: 735, activityId: "arcilla" }, // ARCILLA
       { x: 355, y: 935, activityId: "eventos" }, // EVENTOS
       { x: 560, y: 935, activityId: "club-del-puzzle" }, // CLUB DEL PUZZLE
       { x: 355, y: 1145, activityId: "membresia" }, // MEMBRESIA
-      { x: 560, y: 1145 },
+      { x: 560, y: 1145 }, // ALQUILER A DOMICILIO (mesa antes vacia)
     ];
     for (const table of tables) {
       this.addObstacle(table.x, table.y, TABLE_SIZE, TABLE_SIZE, { visible: false });
@@ -155,6 +158,22 @@ export class GroundFloorScene extends BasePlayerScene {
       RENTAL_TABLE.height + TABLE_PROXIMITY_PADDING * 2
     );
 
+    this.addTapHotspot(
+      DELIVERY_RENTAL_TABLE.x,
+      DELIVERY_RENTAL_TABLE.y,
+      DELIVERY_RENTAL_TABLE.width,
+      DELIVERY_RENTAL_TABLE.height,
+      () => this.nearDeliveryRental,
+      () => eventBus.emit("rental-delivery-open", true)
+    );
+
+    this.deliveryRentalZone = new Phaser.Geom.Rectangle(
+      DELIVERY_RENTAL_TABLE.x - DELIVERY_RENTAL_TABLE.width / 2 - TABLE_PROXIMITY_PADDING,
+      DELIVERY_RENTAL_TABLE.y - DELIVERY_RENTAL_TABLE.height / 2 - TABLE_PROXIMITY_PADDING,
+      DELIVERY_RENTAL_TABLE.width + TABLE_PROXIMITY_PADDING * 2,
+      DELIVERY_RENTAL_TABLE.height + TABLE_PROXIMITY_PADDING * 2
+    );
+
     // Pared inferior, con hueco para la puerta de salida
     this.addObstacle(170, 1550, 340, 140, { visible: false });
     this.addObstacle(743, 1550, 346, 140, { visible: false });
@@ -165,6 +184,7 @@ export class GroundFloorScene extends BasePlayerScene {
     this.events.on("shutdown", () => {
       eventBus.emit("tv-proximity", false);
       eventBus.emit("rental-proximity", false);
+      eventBus.emit("rental-delivery-proximity", false);
       eventBus.emit("activity-proximity", null);
     });
   }
@@ -193,6 +213,18 @@ export class GroundFloorScene extends BasePlayerScene {
     }
   }
 
+  private updateDeliveryRentalProximity() {
+    const inZone = Phaser.Geom.Rectangle.Overlaps(
+      this.player.getBounds(),
+      this.deliveryRentalZone
+    );
+
+    if (inZone !== this.nearDeliveryRental) {
+      this.nearDeliveryRental = inZone;
+      eventBus.emit("rental-delivery-proximity", inZone);
+    }
+  }
+
   private updateActivityProximity() {
     const bounds = this.player.getBounds();
     const match = this.activityZones.find(({ zone }) =>
@@ -212,6 +244,7 @@ export class GroundFloorScene extends BasePlayerScene {
   protected onSceneUpdate() {
     this.updateTvProximity();
     this.updateRentalProximity();
+    this.updateDeliveryRentalProximity();
     this.updateActivityProximity();
 
     if (this.nearTv && this.isEKeyJustDown()) {
@@ -220,6 +253,10 @@ export class GroundFloorScene extends BasePlayerScene {
 
     if (this.nearRental && this.isEKeyJustDown()) {
       eventBus.emit("rental-open", true);
+    }
+
+    if (this.nearDeliveryRental && this.isEKeyJustDown()) {
+      eventBus.emit("rental-delivery-open", true);
     }
 
     if (this.nearActivityId && this.isEKeyJustDown()) {

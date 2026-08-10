@@ -25,8 +25,21 @@ alguna, avisame.
   puntualmente que no le gusta de como esta ahora.
 
 - **Cruzarse con otros usuarios / jugar online**: poder jugar Ajedrez
-  (y tal vez otros juegos) contra gente de verdad dentro del juego,
-  por ejemplo integrando Lichess en modo anonimo. Es una idea grande
-  -- multiplayer real, cuentas o sesiones anonimas, embeber un
-  tablero de otro servicio -- falta definir alcance antes de
-  arrancar.
+  (y tal vez otros juegos) contra gente de verdad dentro del juego. Es
+  posible, pero es el item mas grande de toda esta lista -- bastante
+  mas trabajo que cualquier cosa hecha hasta ahora. Dos caminos:
+  - **Embeber Lichess** (tablero anonimo de otro sitio): rapido de
+    sumar, pero se sale del estilo pixel-art del resto del juego --
+    Lichess se ve y se siente como Lichess, no como Ludoarte.
+  - **Tablero propio + Supabase Realtime** (ya usamos Supabase para
+    todo lo demas): mantiene el estilo visual, pero hay que construir
+    reglas de ajedrez (libreria tipo chess.js), sincronizar turnos en
+    vivo y armar algun tipo de sala/emparejamiento -- varios dias de
+    trabajo.
+
+  Recomendacion para cuando se retome: no arrancar directo por
+  "emparejar con desconocidos" (necesita gente conectada al mismo
+  tiempo, cola de espera, etc.). Mejor una primera version mas chica:
+  "retar a un amigo por link" -- se genera un codigo/link de partida,
+  el amigo lo abre y juegan los dos ahi. Mismo tablero y reglas, pero
+  sin necesitar resolver el problema de "encontrar rival" todavia.

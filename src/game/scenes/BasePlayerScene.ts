@@ -24,6 +24,12 @@ const CAPTURED_KEY_CODES = [
 
 export type Direction = "down" | "left" | "right" | "up";
 
+// Below this stick displacement (0..1 of the joystick's radius), treat it
+// as centered -- a resting thumb never sits at *exactly* 0,0, and without
+// a deadzone that tiny drift kept the player twitching/facing a random
+// direction while stationary.
+const TOUCH_AXIS_DEADZONE = 0.15;
+
 export const IDLE_FRAME: Record<Direction, number> = {
   down: 1,
   left: 4,
@@ -49,7 +55,10 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     left: Phaser.Input.Keyboard.Key;
     right: Phaser.Input.Keyboard.Key;
   };
-  private touchDirection = { up: false, down: false, left: false, right: false };
+  /** Continuous -1..1 per axis from the mobile joystick -- not the old
+   * 4-button D-pad, so movement/aim on touch can land at any angle, same
+   * as dragging a real analog stick. */
+  private touchAxis = { x: 0, y: 0 };
   private touchInteractRequested = false;
   private inputPaused = false;
   private isDefeated = false;
@@ -111,32 +120,29 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     };
     this.eKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
 
-    this.touchDirection = { up: false, down: false, left: false, right: false };
+    this.touchAxis = { x: 0, y: 0 };
     this.touchInteractRequested = false;
 
-    const handleTouchDirection = (payload: {
-      direction: Direction;
-      pressed: boolean;
-    }) => {
-      this.touchDirection[payload.direction] = payload.pressed;
+    const handleTouchAxis = (payload: { x: number; y: number }) => {
+      this.touchAxis = payload;
     };
     const handleTouchInteract = () => {
       this.touchInteractRequested = true;
     };
 
-    eventBus.on("touch-direction", handleTouchDirection);
+    eventBus.on("touch-axis", handleTouchAxis);
     eventBus.on("touch-interact", handleTouchInteract);
 
     this.inputPaused = false;
     const handleMenuOpen = (open: boolean) => {
       this.inputPaused = open;
-      // A touch that lands on the (still-tappable) D-pad/interact zone
+      // A touch that lands on the (still-tappable) joystick/interact zone
       // while a menu is open queues up as a pending move/interact --
       // since onSceneUpdate() is skipped while paused, it never gets
       // consumed, and used to fire the instant the menu closed (e.g.
       // silently reopening the shelf you just closed). Dropping any
       // in-flight touch state on every open/close transition kills that.
-      this.touchDirection = { up: false, down: false, left: false, right: false };
+      this.touchAxis = { x: 0, y: 0 };
       this.touchInteractRequested = false;
       if (open) {
         keyboard.removeCapture(CAPTURED_KEY_CODES);
@@ -147,7 +153,7 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     eventBus.on("menu-open", handleMenuOpen);
 
     this.events.on("shutdown", () => {
-      eventBus.off("touch-direction", handleTouchDirection);
+      eventBus.off("touch-axis", handleTouchAxis);
       eventBus.off("touch-interact", handleTouchInteract);
       eventBus.off("menu-open", handleMenuOpen);
     });
@@ -251,26 +257,40 @@ export abstract class BasePlayerScene extends Phaser.Scene {
   }
 
   /**
-   * Currently-held movement axis, -1/0/1 per axis, regardless of the
-   * 4-direction walk animation. Useful for 8-way aiming (e.g. fireballs).
+   * Currently-held movement axis. Keyboard is always -1/0/1 per axis (the
+   * 4-direction walk animation doesn't care about anything finer); the
+   * mobile joystick instead reports a continuous -1..1 vector at whatever
+   * angle the thumb is actually at, so touch aiming/movement isn't locked
+   * to 8 directions like the old D-pad was.
    */
   protected getInputAxis(): { x: number; y: number } {
+    if (this.isTouchAxisActive()) {
+      return this.touchAxis;
+    }
+
     let x = 0;
     let y = 0;
 
-    if (this.cursors.left.isDown || this.wasd.left.isDown || this.touchDirection.left) {
+    if (this.cursors.left.isDown || this.wasd.left.isDown) {
       x = -1;
-    } else if (this.cursors.right.isDown || this.wasd.right.isDown || this.touchDirection.right) {
+    } else if (this.cursors.right.isDown || this.wasd.right.isDown) {
       x = 1;
     }
 
-    if (this.cursors.up.isDown || this.wasd.up.isDown || this.touchDirection.up) {
+    if (this.cursors.up.isDown || this.wasd.up.isDown) {
       y = -1;
-    } else if (this.cursors.down.isDown || this.wasd.down.isDown || this.touchDirection.down) {
+    } else if (this.cursors.down.isDown || this.wasd.down.isDown) {
       y = 1;
     }
 
     return { x, y };
+  }
+
+  private isTouchAxisActive(): boolean {
+    return (
+      Math.abs(this.touchAxis.x) > TOUCH_AXIS_DEADZONE ||
+      Math.abs(this.touchAxis.y) > TOUCH_AXIS_DEADZONE
+    );
   }
 
   /**
@@ -367,21 +387,32 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     let velocityX = 0;
     let velocityY = 0;
 
-    if (this.cursors.left.isDown || this.wasd.left.isDown || this.touchDirection.left) {
-      velocityX = -PLAYER_SPEED;
-    } else if (this.cursors.right.isDown || this.wasd.right.isDown || this.touchDirection.right) {
-      velocityX = PLAYER_SPEED;
-    }
+    if (this.isTouchAxisActive()) {
+      // Full 360-degree movement: walk in exactly the angle the thumb is
+      // at, always at full speed (this game has no analog "walk slower"
+      // concept -- only the direction is continuous, not the speed).
+      const length = Math.sqrt(
+        this.touchAxis.x * this.touchAxis.x + this.touchAxis.y * this.touchAxis.y
+      );
+      velocityX = (this.touchAxis.x / length) * PLAYER_SPEED;
+      velocityY = (this.touchAxis.y / length) * PLAYER_SPEED;
+    } else {
+      if (this.cursors.left.isDown || this.wasd.left.isDown) {
+        velocityX = -PLAYER_SPEED;
+      } else if (this.cursors.right.isDown || this.wasd.right.isDown) {
+        velocityX = PLAYER_SPEED;
+      }
 
-    if (this.cursors.up.isDown || this.wasd.up.isDown || this.touchDirection.up) {
-      velocityY = -PLAYER_SPEED;
-    } else if (this.cursors.down.isDown || this.wasd.down.isDown || this.touchDirection.down) {
-      velocityY = PLAYER_SPEED;
-    }
+      if (this.cursors.up.isDown || this.wasd.up.isDown) {
+        velocityY = -PLAYER_SPEED;
+      } else if (this.cursors.down.isDown || this.wasd.down.isDown) {
+        velocityY = PLAYER_SPEED;
+      }
 
-    if (velocityX !== 0 && velocityY !== 0) {
-      velocityX *= Math.SQRT1_2;
-      velocityY *= Math.SQRT1_2;
+      if (velocityX !== 0 && velocityY !== 0) {
+        velocityX *= Math.SQRT1_2;
+        velocityY *= Math.SQRT1_2;
+      }
     }
 
     this.player.setVelocity(velocityX, velocityY);

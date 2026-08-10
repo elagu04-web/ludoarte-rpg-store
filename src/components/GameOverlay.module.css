@@ -666,49 +666,35 @@
   }
 }
 
-.dpad {
+.joystickBase {
   position: absolute;
   left: 24px;
   bottom: 24px;
-  width: 168px;
-  height: 168px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  border: 2px solid rgba(245, 208, 96, 0.35);
   pointer-events: auto;
-}
-
-.dpadButton {
-  position: absolute;
-  width: 56px;
-  height: 56px;
-  border-radius: 8px;
-  border: none;
-  background: rgba(0, 0, 0, 0.45);
-  color: #ffffff;
-  font-size: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   touch-action: none;
   user-select: none;
 }
 
-.dpadUp {
-  left: 56px;
-  top: 0;
-}
-
-.dpadDown {
-  left: 56px;
-  top: 112px;
-}
-
-.dpadLeft {
-  left: 0;
-  top: 56px;
-}
-
-.dpadRight {
-  left: 112px;
-  top: 56px;
+.joystickKnob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 60px;
+  height: 60px;
+  margin-left: -30px;
+  margin-top: -30px;
+  border-radius: 50%;
+  background: rgba(245, 208, 96, 0.85);
+  border: 2px solid rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  /* Instant follow while dragging -- a transition here would make the
+     knob visibly lag behind a fast thumb flick. */
+  transition: none;
 }
 
 .interactButton {

@@ -77,3 +77,8 @@ alguna, avisame.
     de pedidos propio -- no hace falta manejar zonas de entrega ni
     precios de envio en el sistema todavia, eso lo cotiza el local por
     WhatsApp.
+  - Ya hay lugar fisico pensado: en GroundFloorScene.ts la mesa de
+    (560, 1145) (debajo de "Membresia") esta en el layout pero sin
+    ninguna interaccion asignada -- es la candidata para "Alquiler a
+    Domicilio", en espejo con la mesa de "Alquiler" (en el local) que
+    ya esta en (560, 535).

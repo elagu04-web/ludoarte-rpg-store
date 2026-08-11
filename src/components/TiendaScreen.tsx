@@ -97,7 +97,9 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
     const fromCode = rawOrderableGames.filter(
       (game) => isVisible(game.id, overrides) && !nowSellableIds.has(game.id)
     );
-    return [...fromCode, ...customOrderableGames(customGames ?? [])];
+    return [...fromCode, ...customOrderableGames(customGames ?? [])].sort((a, b) =>
+      a.name.localeCompare(b.name, "es")
+    );
   }, [overrides, customGames]);
 
   const usedGames = useMemo(() => {

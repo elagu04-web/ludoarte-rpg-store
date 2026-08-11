@@ -57,6 +57,10 @@ export function customSellableGames(customGames: CustomGame[]): BoardGame[] {
       price: game.price,
       image: game.image,
       stock: game.stock,
+      description: game.description ?? undefined,
+      players: game.players ?? undefined,
+      age: game.age ?? undefined,
+      duration: game.duration ?? undefined,
     }));
 }
 
@@ -98,6 +102,10 @@ export function secondHandGames(
       price: game.usedPrice,
       image: game.image,
       stock: game.stock,
+      description: game.description ?? undefined,
+      players: game.players ?? undefined,
+      age: game.age ?? undefined,
+      duration: game.duration ?? undefined,
     }));
 
   return [...fromCatalog, ...fromCustom];
@@ -144,9 +152,6 @@ export function allRentalGames(
       };
     });
 
-  // Los agregados a mano (custom_games) todavia no tienen donde guardar
-  // descripcion/jugadores/edad/duracion en la base de datos -- quedan sin
-  // esos datos hasta que se sume esa columna.
   const fromCustom: RentalGame[] = customGames
     .filter((game) => game.forRental && game.visible)
     .map((game) => ({
@@ -154,6 +159,10 @@ export function allRentalGames(
       name: game.name,
       price: game.rentalPrice,
       image: game.image,
+      description: game.description ?? undefined,
+      players: game.players ?? undefined,
+      age: game.age ?? undefined,
+      duration: game.duration ?? undefined,
     }));
 
   return [...fromStatic, ...fromCatalog, ...fromCustom].sort((a, b) =>

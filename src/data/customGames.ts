@@ -16,6 +16,12 @@ export interface CustomGame {
   forRental: boolean;
   secondHand: boolean;
   usedPrice: number;
+  /** Ficha opcional -- null hasta que el admin la carga desde Inventario,
+   * a diferencia del catalogo del codigo no hay de donde heredarla. */
+  description: string | null;
+  players: string | null;
+  age: string | null;
+  duration: string | null;
 }
 
 // Same cache/subscribe shape as data/gameOverrides.ts -- fetched once and
@@ -32,7 +38,7 @@ async function load(): Promise<CustomGame[]> {
   const { data } = await createClient()
     .from("custom_games")
     .select(
-      "id, name, price, rentalPrice:rental_price, stock, visible, image, forSale:for_sale, forRental:for_rental, secondHand:second_hand, usedPrice:used_price"
+      "id, name, price, rentalPrice:rental_price, stock, visible, image, forSale:for_sale, forRental:for_rental, secondHand:second_hand, usedPrice:used_price, description, players, age, duration"
     )
     .order("created_at", { ascending: true });
   return data ?? [];
@@ -113,6 +119,10 @@ export async function addCustomGame(
     forRental: options.forRental,
     secondHand: false,
     usedPrice: 0,
+    description: null,
+    players: null,
+    age: null,
+    duration: null,
   };
 
   const { error } = await createClient().from("custom_games").insert({
@@ -179,6 +189,10 @@ export async function updateCustomGame(
       | "forRental"
       | "secondHand"
       | "usedPrice"
+      | "description"
+      | "players"
+      | "age"
+      | "duration"
     >
   >
 ): Promise<{ error: string | null }> {

@@ -62,6 +62,16 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
   const [newGameForSale, setNewGameForSale] = useState(true);
   const [newGameForRental, setNewGameForRental] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
+  // Ficha (descripcion/jugadores/edad/duracion) de un juego agregado a
+  // mano -- solo aplica a custom games, los del catalogo la traen fija
+  // desde el codigo. Estado de edicion aparte de `rows` porque son campos
+  // de texto libre, no numeros/booleanos como el resto.
+  const [textDraft, setTextDraft] = useState({
+    description: "",
+    players: "",
+    age: "",
+    duration: "",
+  });
 
   const rowsRef = useRef<Record<string, Row>>({});
   const selectedIndexRef = useRef(0);
@@ -72,6 +82,7 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
   const usedPriceSaveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const isAddingRef = useRef(false);
   const addInputRef = useRef<HTMLInputElement>(null);
+  const textDraftSeededIdRef = useRef<string | null>(null);
 
   // Every game the panel lists: the 81 from the code (allGames) plus
   // whatever the admin created from here (customGames), all mixed
@@ -205,6 +216,39 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
     if (isAdding) addInputRef.current?.focus();
   }, [isAdding]);
 
+  // Refills the ficha draft when the selected game changes -- but only
+  // once per selection (tracked via textDraftSeededIdRef), not on every
+  // customGames update. Without that guard, saving one field (e.g.
+  // "players") updates the shared customGames cache, which would re-run
+  // this effect and stomp whatever the admin is mid-typing into a
+  // *different* field (e.g. "description") with the last-saved value.
+  // The empty-dependency-looking exception is on first load: if
+  // customGames hasn't arrived yet for the newly selected id, wait
+  // (don't seed blank) until it actually does, then seed exactly once.
+  useEffect(() => {
+    const game = visibleGames[selectedIndex];
+    const id = game?.id ?? null;
+
+    if (!game?.isCustom) {
+      if (textDraftSeededIdRef.current !== id) {
+        textDraftSeededIdRef.current = id;
+        setTextDraft({ description: "", players: "", age: "", duration: "" });
+      }
+      return;
+    }
+
+    if (textDraftSeededIdRef.current === id) return;
+    const custom = (customGames ?? []).find((g) => g.id === id);
+    if (!custom) return;
+    textDraftSeededIdRef.current = id;
+    setTextDraft({
+      description: custom.description ?? "",
+      players: custom.players ?? "",
+      age: custom.age ?? "",
+      duration: custom.duration ?? "",
+    });
+  }, [selectedIndex, visibleGames, customGames]);
+
   const markError = (id: string, hasError: boolean) => {
     setErrorIds((prev) => {
       const next = new Set(prev);
@@ -304,6 +348,17 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
     markError(id, false);
     saveUsedPrice(id, next);
     playMenuMoveSound();
+  };
+
+  // Solo custom games -- los del catalogo traen esta ficha fija desde el
+  // codigo, no hay nada que guardar para esos.
+  const saveCustomText = async (
+    id: string,
+    field: "description" | "players" | "age" | "duration",
+    value: string
+  ) => {
+    const { error } = await updateCustomGame(id, { [field]: value.trim() || null });
+    markError(id, !!error);
   };
 
   const toggleSecondHand = async (id: string) => {
@@ -418,10 +473,22 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
       // in an effect) -- also check actual DOM focus so a keystroke fired
       // right after clicking "+ Agregar juego" can't slip through as a
       // navigation shortcut before the ref catches up.
-      if (isAddingRef.current || document.activeElement === addInputRef.current) {
-        if (event.key === "Escape") cancelAddGame();
-        // Any other key is typed into the name field -- don't treat
-        // letters like "w"/"a"/"d" as navigation shortcuts while adding.
+      const activeTag = document.activeElement?.tagName;
+      const isTypingInField =
+        isAddingRef.current ||
+        document.activeElement === addInputRef.current ||
+        activeTag === "INPUT" ||
+        activeTag === "TEXTAREA";
+      if (isTypingInField) {
+        // Any other key is typed into the field -- don't treat letters
+        // like "w"/"a"/"d"/"e"/"v"/"l"/"u" as navigation/toggle shortcuts
+        // while a text field has focus. This is exactly the bug that once
+        // corrupted real stock/price data: a stray keystroke landing on
+        // the wrong row before focus had actually settled.
+        if (event.key === "Escape") {
+          if (isAddingRef.current) cancelAddGame();
+          else (document.activeElement as HTMLElement | null)?.blur();
+        }
         return;
       }
 
@@ -721,12 +788,66 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
             </div>
 
             {selectedGame.isCustom && (
-              <button
-                className={styles.deleteButton}
-                onClick={() => removeCustomGame(selectedGame.id)}
-              >
-                Eliminar juego
-              </button>
+              <>
+                <div className={styles.detailField}>
+                  <span className={styles.detailLabel}>Descripcion</span>
+                  <textarea
+                    className={styles.detailTextarea}
+                    value={textDraft.description}
+                    onChange={(e) =>
+                      setTextDraft((prev) => ({ ...prev, description: e.target.value }))
+                    }
+                    onBlur={(e) =>
+                      saveCustomText(selectedGame.id, "description", e.target.value)
+                    }
+                    placeholder="De que trata el juego..."
+                  />
+                </div>
+                <div className={styles.detailField}>
+                  <span className={styles.detailLabel}>Jugadores</span>
+                  <input
+                    type="text"
+                    className={styles.detailTextInput}
+                    value={textDraft.players}
+                    onChange={(e) =>
+                      setTextDraft((prev) => ({ ...prev, players: e.target.value }))
+                    }
+                    onBlur={(e) => saveCustomText(selectedGame.id, "players", e.target.value)}
+                    placeholder="ej: 2 a 4"
+                  />
+                </div>
+                <div className={styles.detailField}>
+                  <span className={styles.detailLabel}>Edad</span>
+                  <input
+                    type="text"
+                    className={styles.detailTextInput}
+                    value={textDraft.age}
+                    onChange={(e) => setTextDraft((prev) => ({ ...prev, age: e.target.value }))}
+                    onBlur={(e) => saveCustomText(selectedGame.id, "age", e.target.value)}
+                    placeholder="ej: 8+"
+                  />
+                </div>
+                <div className={styles.detailField}>
+                  <span className={styles.detailLabel}>Duracion</span>
+                  <input
+                    type="text"
+                    className={styles.detailTextInput}
+                    value={textDraft.duration}
+                    onChange={(e) =>
+                      setTextDraft((prev) => ({ ...prev, duration: e.target.value }))
+                    }
+                    onBlur={(e) => saveCustomText(selectedGame.id, "duration", e.target.value)}
+                    placeholder="ej: 30 min"
+                  />
+                </div>
+
+                <button
+                  className={styles.deleteButton}
+                  onClick={() => removeCustomGame(selectedGame.id)}
+                >
+                  Eliminar juego
+                </button>
+              </>
             )}
           </div>
         )}

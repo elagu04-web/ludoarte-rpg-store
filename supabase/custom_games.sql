@@ -24,6 +24,13 @@ create table if not exists public.custom_games (
   for_rental boolean not null default false,
   second_hand boolean not null default false,
   used_price integer not null default 0,
+  -- Ficha opcional (null = todavia no cargada) -- a diferencia del
+  -- catalogo del codigo, un juego agregado a mano no tiene de donde
+  -- heredar esto, asi que el admin la escribe el mismo desde Inventario.
+  description text,
+  players text,
+  age text,
+  duration text,
   created_at timestamptz not null default now()
 );
 
@@ -35,6 +42,10 @@ alter table public.custom_games add column if not exists for_rental boolean not 
 alter table public.custom_games add column if not exists rental_price integer not null default 0;
 alter table public.custom_games add column if not exists second_hand boolean not null default false;
 alter table public.custom_games add column if not exists used_price integer not null default 0;
+alter table public.custom_games add column if not exists description text;
+alter table public.custom_games add column if not exists players text;
+alter table public.custom_games add column if not exists age text;
+alter table public.custom_games add column if not exists duration text;
 
 alter table public.custom_games enable row level security;
 

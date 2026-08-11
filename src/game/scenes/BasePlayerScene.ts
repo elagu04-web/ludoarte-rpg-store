@@ -105,7 +105,11 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     this.player.setTint(gameState.playerTint);
     this.createPlayerAnimations();
 
-    this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+    // Camera smoothing tightened from 0.1 -- fine with the old D-pad's
+    // discrete taps, but the joystick's continuous direction changes made
+    // that lag between "the player already turned" and "the camera
+    // catches up" read as the whole game dragging/sliding.
+    this.cameras.main.startFollow(this.player, true, 0.3, 0.3);
 
     this.obstacles = this.physics.add.staticGroup();
     this.physics.add.collider(this.player, this.obstacles);

@@ -105,12 +105,20 @@ export function secondHandGames(
 
 const staticRentalIds = new Set(rentalGames.map((g) => g.id));
 
+// Para que un juego del catalogo marcado "para alquiler" desde Inventario
+// (en vez de estar ya en rentals.ts) tambien muestre descripcion/jugadores/
+// edad/duracion en vez de aparecer vacio -- misma idea que rentalGame()
+// ya usa en rentals.ts, pero mirando directo la estanteria de venta.
+const saleGamesById = new Map(
+  shelves.flatMap((shelf) => shelf.games).map((game) => [game.id, game])
+);
+
 /** Catalogo completo de alquiler que ven los clientes (RentalMenu /
  * DeliveryRentalMenu): la lista fija de rentals.ts, mas cualquier juego
  * (del catalogo o agregado a mano) que el admin haya marcado "para
  * alquiler" desde el panel de Inventario -- ese switch de Inventario
  * antes no llegaba a mostrarse en ningun lado para juegos que no
- * estuvieran ya en rentals.ts. */
+ * estuvieran ya en rentals.ts. Ordenado alfabeticamente. */
 export function allRentalGames(
   overrides: GameOverrides,
   customGames: CustomGame[]
@@ -121,13 +129,24 @@ export function allRentalGames(
     .filter((game) => !staticRentalIds.has(game.id))
     .filter((game) => effectiveForRental(game.id, game.forRental, overrides))
     .filter((game) => isVisible(game.id, overrides))
-    .map((game) => ({
-      id: game.id,
-      name: game.name,
-      price: effectiveRentalPrice(game.id, game.baseRentalPrice, overrides),
-      image: game.image,
-    }));
+    .map((game) => {
+      const saleMatch = saleGamesById.get(game.id);
+      return {
+        id: game.id,
+        name: game.name,
+        price: effectiveRentalPrice(game.id, game.baseRentalPrice, overrides),
+        image: game.image,
+        spinSheet: saleMatch?.spinSheet,
+        description: saleMatch?.description,
+        players: saleMatch?.players,
+        age: saleMatch?.age,
+        duration: saleMatch?.duration,
+      };
+    });
 
+  // Los agregados a mano (custom_games) todavia no tienen donde guardar
+  // descripcion/jugadores/edad/duracion en la base de datos -- quedan sin
+  // esos datos hasta que se sume esa columna.
   const fromCustom: RentalGame[] = customGames
     .filter((game) => game.forRental && game.visible)
     .map((game) => ({
@@ -137,5 +156,7 @@ export function allRentalGames(
       image: game.image,
     }));
 
-  return [...fromStatic, ...fromCatalog, ...fromCustom];
+  return [...fromStatic, ...fromCatalog, ...fromCustom].sort((a, b) =>
+    a.name.localeCompare(b.name, "es")
+  );
 }

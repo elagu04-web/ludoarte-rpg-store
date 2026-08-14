@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { eventBus } from "@/game/eventBus";
 import { playMenuOpenSound, playMenuCloseSound } from "@/game/music";
@@ -37,6 +37,40 @@ export default function CartView() {
     clearCart,
     totalPrice,
   } = useCart();
+  const [isPaying, setIsPaying] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
+
+  const payWithMercadoPago = async () => {
+    setIsPaying(true);
+    setPayError(null);
+    try {
+      const res = await fetch("/api/create-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: items.map((item) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || typeof data.initPoint !== "string") {
+        setPayError("No se pudo iniciar el pago. Intenta de nuevo.");
+        setIsPaying(false);
+        return;
+      }
+      // Carrito se vacia solo -- la redireccion navega fuera del sitio y
+      // Mercado Pago te trae de vuelta a la pagina de inicio, donde el
+      // carrito arranca vacio de todos modos.
+      window.location.href = data.initPoint;
+    } catch {
+      setPayError("No se pudo iniciar el pago. Intenta de nuevo.");
+      setIsPaying(false);
+    }
+  };
 
   useEffect(() => {
     eventBus.emit("menu-open", isCartOpen);
@@ -126,6 +160,14 @@ export default function CartView() {
               <span>Total</span>
               <span>${totalPrice}</span>
             </div>
+            <button
+              className={styles.mercadoPagoButton}
+              onClick={payWithMercadoPago}
+              disabled={isPaying}
+            >
+              {isPaying ? "Redirigiendo..." : "Pagar con Mercado Pago"}
+            </button>
+            {payError && <p className={styles.payError}>{payError}</p>}
             <a
               className={styles.whatsappButton}
               href={buildWhatsAppOrderUrl(items, totalPrice)}

@@ -1,0 +1,43 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 20, 0.85);
+  padding: 20px;
+}
+
+.panel {
+  background: #1a1a2e;
+  border-radius: 10px;
+  padding: 28px 32px;
+  max-width: 420px;
+  text-align: center;
+  font-family: var(--font-pixel), monospace;
+}
+
+.title {
+  font-size: 16px;
+  margin: 0 0 12px;
+}
+
+.body {
+  color: #e8e0d0;
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0 0 20px;
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+.closeButton {
+  color: #1a1a2e;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: var(--font-pixel), monospace;
+  cursor: pointer;
+}

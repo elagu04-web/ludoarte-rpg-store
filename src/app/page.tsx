@@ -14,6 +14,7 @@ import MusicController from "@/components/MusicController";
 import FullscreenButton from "@/components/FullscreenButton";
 import StartScreen from "@/components/StartScreen";
 import TiendaScreen from "@/components/TiendaScreen";
+import PaymentResultBanner from "@/components/PaymentResultBanner";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 
@@ -29,6 +30,7 @@ export default function Home() {
           onStart={() => setMode("historia")}
           onTienda={() => setMode("tienda")}
         />
+        <PaymentResultBanner />
       </AuthProvider>
     );
   }

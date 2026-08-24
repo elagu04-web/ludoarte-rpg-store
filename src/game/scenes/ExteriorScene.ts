@@ -173,11 +173,10 @@ export class ExteriorScene extends BasePlayerScene {
    * higher up on the facade.
    */
   private addInfoScreen(x: number, y: number, width: number, height: number) {
-    // TV pixel-art (64x64, cuadrada) centrada en el hueco de la pared --
-    // el hueco en si (width x height) no cambia, solo lo que se dibuja
-    // adentro, asi la zona de interaccion sigue igual que antes.
-    const tvSize = Math.min(width, height) - 10;
-    this.add.image(x, y, "info-screen-tv").setDisplaySize(tvSize, tvSize);
+    // Pantalla plana moderna, dibujada a mano en la misma proporcion
+    // vertical (90x110) que ocupaba el placeholder original -- llena todo
+    // el hueco de la pared, no un cuadrado achicado en el medio.
+    this.add.image(x, y, "info-screen-tv").setDisplaySize(width, height);
 
     this.addTapHotspot(
       x,

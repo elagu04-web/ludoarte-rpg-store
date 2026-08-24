@@ -305,6 +305,17 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
           <span>{TICKER_TEXT}</span>
         </div>
       </div>
+
+      {/* Credito requerido por la licencia CC-BY-SA de la TV pixel-art de
+          la fachada (Pixel Art TV Set, OpenGameArt.org). */}
+      <a
+        href="https://opengameart.org/content/pixel-art-tv-set"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={styles.credit}
+      >
+        TV: OpenGameArt.org (CC BY-SA 3.0)
+      </a>
     </div>
   );
 }

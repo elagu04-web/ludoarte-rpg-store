@@ -69,6 +69,7 @@ export class ExteriorScene extends BasePlayerScene {
   preload() {
     super.preload();
     this.load.image("bg-fachada", "/assets/scene/fachada.png");
+    this.load.image("info-screen-tv", "/assets/scene/info-screen-tv.png");
     this.load.spritesheet(
       "fireball-anim",
       "/assets/effects/fireball-sheet.png",
@@ -172,15 +173,11 @@ export class ExteriorScene extends BasePlayerScene {
    * higher up on the facade.
    */
   private addInfoScreen(x: number, y: number, width: number, height: number) {
-    this.add.rectangle(x, y, width, height, 0x1a1a2e).setStrokeStyle(4, 0x8b5a2b);
-    this.add.rectangle(x, y, width - 20, height - 26, 0x2d8f6f, 0.9);
-    this.add
-      .text(x, y, "i", {
-        fontSize: "32px",
-        color: "#eaffea",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5);
+    // TV pixel-art (64x64, cuadrada) centrada en el hueco de la pared --
+    // el hueco en si (width x height) no cambia, solo lo que se dibuja
+    // adentro, asi la zona de interaccion sigue igual que antes.
+    const tvSize = Math.min(width, height) - 10;
+    this.add.image(x, y, "info-screen-tv").setDisplaySize(tvSize, tvSize);
 
     this.addTapHotspot(
       x,

@@ -75,7 +75,12 @@ export async function POST(request: Request) {
   };
   // auto_return exige una URL https publica -- en localhost Mercado Pago
   // la rechaza, asi que solo se manda en produccion.
-  if (isPublicHttps) preference.auto_return = "approved";
+  if (isPublicHttps) {
+    preference.auto_return = "approved";
+    // Igual que auto_return, Mercado Pago no acepta localhost aca -- en
+    // dev el pedido simplemente no queda registrado en Pedidos.
+    preference.notification_url = `${origin}/api/mercadopago-webhook`;
+  }
 
   const mpRes = await fetch("https://api.mercadopago.com/checkout/preferences", {
     method: "POST",

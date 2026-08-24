@@ -62,10 +62,10 @@ export default function CartView() {
         setIsPaying(false);
         return;
       }
-      // Carrito se vacia solo -- la redireccion navega fuera del sitio y
-      // Mercado Pago te trae de vuelta a la pagina de inicio, donde el
-      // carrito arranca vacio de todos modos.
-      window.location.href = data.initPoint;
+      // Pestaña nueva (igual que "Comprar por WhatsApp") -- el juego se
+      // queda abierto donde estaba en vez de navegar afuera del sitio.
+      window.open(data.initPoint, "_blank", "noopener,noreferrer");
+      setIsPaying(false);
     } catch {
       setPayError("No se pudo iniciar el pago. Intenta de nuevo.");
       setIsPaying(false);

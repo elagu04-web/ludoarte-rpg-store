@@ -8,6 +8,7 @@ import { gameState } from "@/game/gameState";
 import CharacterSelectScreen from "./CharacterSelectScreen";
 import AdminScreen from "./AdminScreen";
 import InventoryScreen from "./InventoryScreen";
+import OrdersScreen from "./OrdersScreen";
 import styles from "./StartScreen.module.css";
 
 const CHARACTER_TINT_KEY = "ludoarte-character-tint";
@@ -19,7 +20,7 @@ const ADMIN_EMAIL = "elagu04@gmail.com";
 const MENU_REVEAL_MS = 1800;
 
 interface MenuItem {
-  id: "historia" | "tienda" | "personaje" | "admin" | "inventario";
+  id: "historia" | "tienda" | "personaje" | "admin" | "inventario" | "pedidos";
   label: string;
 }
 
@@ -30,6 +31,7 @@ const BASE_MENU_ITEMS: MenuItem[] = [
 const PERSONAJE_ITEM: MenuItem = { id: "personaje", label: "Elegir Personaje" };
 const ADMIN_ITEM: MenuItem = { id: "admin", label: "Panel Admin" };
 const INVENTORY_ITEM: MenuItem = { id: "inventario", label: "Inventario" };
+const ORDERS_ITEM: MenuItem = { id: "pedidos", label: "Pedidos" };
 
 const TICKER_TEXT =
   "Tienda de Juegos de Mesa — Abierto de martes a domingo en Épico Atlántida, calle 20 entre 11 y 1 — ";
@@ -50,12 +52,13 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
   const [characterMenuOpen, setCharacterMenuOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [ordersOpen, setOrdersOpen] = useState(false);
   const isAdmin = user?.email === ADMIN_EMAIL;
 
   const menuItems = useMemo(() => {
     if (!user) return BASE_MENU_ITEMS;
     return isAdmin
-      ? [...BASE_MENU_ITEMS, PERSONAJE_ITEM, ADMIN_ITEM, INVENTORY_ITEM]
+      ? [...BASE_MENU_ITEMS, PERSONAJE_ITEM, ADMIN_ITEM, INVENTORY_ITEM, ORDERS_ITEM]
       : [...BASE_MENU_ITEMS, PERSONAJE_ITEM];
   }, [user, isAdmin]);
 
@@ -155,7 +158,7 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
   }, []);
 
   useEffect(() => {
-    if (!showMenu || showCharacterSelect || adminOpen || inventoryOpen) return;
+    if (!showMenu || showCharacterSelect || adminOpen || inventoryOpen || ordersOpen) return;
 
     const runAction = (item: MenuItem) => {
       if (item.id === "historia") {
@@ -168,6 +171,8 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
         setAdminOpen(true);
       } else if (item.id === "inventario") {
         setInventoryOpen(true);
+      } else if (item.id === "pedidos") {
+        setOrdersOpen(true);
       }
     };
 
@@ -192,7 +197,16 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showMenu, showCharacterSelect, adminOpen, inventoryOpen, onStart, onTienda, menuItems]);
+  }, [
+    showMenu,
+    showCharacterSelect,
+    adminOpen,
+    inventoryOpen,
+    ordersOpen,
+    onStart,
+    onTienda,
+    menuItems,
+  ]);
 
   const selectItem = (item: MenuItem, index: number) => {
     if (index !== selectedIndexRef.current) playMenuMoveSound();
@@ -211,6 +225,8 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
       setAdminOpen(true);
     } else if (item.id === "inventario") {
       setInventoryOpen(true);
+    } else if (item.id === "pedidos") {
+      setOrdersOpen(true);
     }
   };
 
@@ -229,6 +245,10 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
 
   if (inventoryOpen) {
     return <InventoryScreen onExit={() => setInventoryOpen(false)} />;
+  }
+
+  if (ordersOpen) {
+    return <OrdersScreen onExit={() => setOrdersOpen(false)} />;
   }
 
   return (

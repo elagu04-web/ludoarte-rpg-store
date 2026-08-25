@@ -100,7 +100,7 @@ export class ExteriorScene extends BasePlayerScene {
 
     this.doorZone = this.addZoneMarker(795, 350, 120, 100, { visible: false });
 
-    this.addInfoScreen(970, 390, 90, 110);
+    this.addInfoScreen(970, 410, 90, 110);
 
     this.spaceKey = this.input.keyboard!.addKey(
       Phaser.Input.Keyboard.KeyCodes.SPACE

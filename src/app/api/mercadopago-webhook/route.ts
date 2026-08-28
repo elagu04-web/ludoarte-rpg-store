@@ -5,6 +5,14 @@ import { createClient } from "@supabase/supabase-js";
 // estado. Nunca confiamos en el contenido de la notificacion en si -- solo
 // trae un id -- volvemos a pedirle el pago real a la API de Mercado Pago
 // con el access token secreto antes de guardar nada.
+//
+// Escribe en "orders" con SUPABASE_SERVICE_ROLE_KEY (secreto de servidor,
+// nunca NEXT_PUBLIC_*, nunca pegado en el chat) en vez de la clave anonima
+// -- la tabla no tiene NINGUNA policy de insert/update para "anyone", asi
+// que con la clave anonima nadie (ni siquiera este propio webhook) podria
+// escribir ahi. La service role key bypasea RLS por completo, que es
+// exactamente lo que hace falta para esta unica escritura de confianza
+// del lado del servidor.
 
 interface MpItem {
   title?: string;
@@ -36,6 +44,10 @@ export async function POST(request: Request) {
   if (!accessToken) {
     return Response.json({ error: "MERCADOPAGO_ACCESS_TOKEN no configurado" }, { status: 500 });
   }
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    return Response.json({ error: "SUPABASE_SERVICE_ROLE_KEY no configurado" }, { status: 500 });
+  }
 
   let body: unknown = null;
   try {
@@ -66,10 +78,7 @@ export async function POST(request: Request) {
       ? items.reduce((sum, item) => sum + item.price * item.quantity, 0)
       : Math.round(Number(payment.transaction_amount) || 0);
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey);
   const { error } = await supabase.from("orders").upsert(
     {
       mp_payment_id: String(paymentId),

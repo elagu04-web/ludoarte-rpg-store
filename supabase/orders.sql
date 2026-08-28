@@ -21,18 +21,24 @@ create policy "Admin can view orders"
   on public.orders for select
   using (auth.jwt() ->> 'email' = 'elagu04@gmail.com');
 
--- El webhook lo llama Mercado Pago directamente (no hay sesion de admin
--- en ese contexto), asi que necesita poder insertar/actualizar con la
--- clave anonima. La validez del pedido la garantiza el propio webhook:
--- antes de guardar nada, vuelve a consultar el pago contra la API de
--- Mercado Pago con el access token secreto, nunca confia en lo que llega
--- directo en la notificacion.
+-- Sin policy de insert/update para nadie (ni admin, ni "anyone"): con RLS
+-- activado y ninguna policy que lo permita, esa operacion queda bloqueada
+-- para cualquiera que use la clave anonima -- incluido un visitante que
+-- intente escribir un pedido falso directo contra Supabase, sin pasar
+-- para nada por Mercado Pago.
+--
+-- El webhook (api/mercadopago-webhook) es el UNICO que puede escribir
+-- aca, usando SUPABASE_SERVICE_ROLE_KEY (un secreto de servidor que
+-- bypasea RLS por completo) en vez de la clave anonima -- por eso no le
+-- hace falta ninguna policy propia. La validez del pedido la sigue
+-- garantizando el webhook: antes de guardar nada, vuelve a consultar el
+-- pago contra la API de Mercado Pago con el access token secreto, nunca
+-- confia en lo que llega directo en la notificacion.
+--
+-- ANTES esta tabla tenia policies "with check (true)" que dejaban
+-- insertar/actualizar a cualquiera con la clave anonima (publica) del
+-- sitio -- alguien podia escribir pedidos falsos sin pasar por Mercado
+-- Pago. Si ya corriste una version vieja de este archivo, corre esto para
+-- sacarlas:
 drop policy if exists "Anyone can insert orders" on public.orders;
-create policy "Anyone can insert orders"
-  on public.orders for insert
-  with check (true);
-
 drop policy if exists "Anyone can update orders" on public.orders;
-create policy "Anyone can update orders"
-  on public.orders for update
-  using (true);

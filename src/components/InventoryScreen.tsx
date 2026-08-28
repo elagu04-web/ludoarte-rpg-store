@@ -670,8 +670,18 @@ export default function InventoryScreen({ onExit }: { onExit: () => void }) {
 
         {selectedGame && selectedRow && (
           <div className={styles.detailPanel}>
+            {/* key=id fuerza a React a montar un <img> nuevo por juego --
+                sin esto, al cambiar de seleccion reutilizaba el mismo
+                elemento y se quedaba viendo la imagen VIEJA mientras la
+                nueva (pesada) todavia estaba cargando, pareciendo "trajo
+                la imagen equivocada". */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={selectedGame.image} alt="" className={styles.detailThumb} />
+            <img
+              key={selectedGame.id}
+              src={selectedGame.image}
+              alt=""
+              className={styles.detailThumb}
+            />
             <p className={styles.detailName}>
               #{selectedIndex + 1} {selectedGame.name}
             </p>

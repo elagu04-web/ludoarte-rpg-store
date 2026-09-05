@@ -1,3 +1,5 @@
+import type { PlayerCharacterKey } from "@/game/characters";
+
 /**
  * Small shared state bridge between React (cart) and Phaser (world).
  * Plain data only — no Phaser/window dependency — safe to import from
@@ -10,6 +12,9 @@ export const gameState = {
    * escape a fight through a door instead of finishing it; resets to 1
    * after a win. */
   pendingMonsters: 1,
-  /** Tint applied to the player sprite (0xffffff = no tint, original colors). */
+  /** Tint applied to the player sprite (0xffffff = no tint, original colors).
+   * Only has a visible effect when playerCharacter is tintable. */
   playerTint: 0xffffff,
+  /** Which sprite sheet the player character uses. */
+  playerCharacter: "original" as PlayerCharacterKey,
 };

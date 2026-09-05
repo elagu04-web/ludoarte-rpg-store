@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { eventBus } from "@/game/eventBus";
 import { gameState } from "@/game/gameState";
 import { SCENE_DIMENSIONS } from "@/game/sceneDimensions";
+import { PLAYER_CHARACTERS, textureKeyFor } from "@/game/characters";
 
 export const PLAYER_SPEED = 320;
 
@@ -82,11 +83,14 @@ export abstract class BasePlayerScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.spritesheet(
-      "player-walk",
-      "/assets/characters/player-walk-sheet.png",
-      { frameWidth: 84, frameHeight: 108 }
-    );
+    // All playable sprite sheets are loaded up front (they're small) so
+    // switching character in the menu doesn't need a scene reload.
+    for (const character of PLAYER_CHARACTERS) {
+      this.load.spritesheet(textureKeyFor(character.key), character.file, {
+        frameWidth: 84,
+        frameHeight: 108,
+      });
+    }
   }
 
   protected createPlayer(x: number, y: number) {
@@ -99,10 +103,15 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, dims.width, dims.height);
     this.cameras.main.setZoom(dims.zoom);
 
-    this.player = this.physics.add.sprite(x, y, "player-walk", 1);
+    this.player = this.physics.add.sprite(
+      x,
+      y,
+      textureKeyFor(gameState.playerCharacter),
+      1
+    );
     this.player.setCollideWorldBounds(true);
     this.player.body?.setSize(40, 50).setOffset(22, 54);
-    this.player.setTint(gameState.playerTint);
+    this.applyPlayerTint();
     this.createPlayerAnimations();
 
     // Camera smoothing tightened from 0.1 -- fine with the old D-pad's
@@ -163,9 +172,17 @@ export abstract class BasePlayerScene extends Phaser.Scene {
     });
   }
 
-  private createPlayerAnimations() {
-    if (this.anims.exists("walk-down")) return; // animations are global, create once
+  /** Only the currently-selected character's sprite needs a tint -- the
+   * others are finished artwork that would look wrong multiplied by a
+   * color, see PLAYER_CHARACTERS.tintable. */
+  private applyPlayerTint() {
+    const character = PLAYER_CHARACTERS.find(
+      (c) => c.key === gameState.playerCharacter
+    );
+    this.player.setTint(character?.tintable ? gameState.playerTint : 0xffffff);
+  }
 
+  private createPlayerAnimations() {
     const directions: { key: Direction; start: number; end: number }[] = [
       { key: "down", start: 0, end: 2 },
       { key: "left", start: 3, end: 5 },
@@ -173,16 +190,24 @@ export abstract class BasePlayerScene extends Phaser.Scene {
       { key: "up", start: 9, end: 11 },
     ];
 
-    for (const dir of directions) {
-      this.anims.create({
-        key: `walk-${dir.key}`,
-        frames: this.anims.generateFrameNumbers("player-walk", {
-          start: dir.start,
-          end: dir.end,
-        }),
-        frameRate: 8,
-        repeat: -1,
-      });
+    // Animations are global (shared across scene restarts) -- one set per
+    // character sprite sheet, keyed by direction + character so switching
+    // character doesn't try to play frames from the wrong texture.
+    for (const character of PLAYER_CHARACTERS) {
+      const textureKey = textureKeyFor(character.key);
+      for (const dir of directions) {
+        const animKey = `walk-${dir.key}-${character.key}`;
+        if (this.anims.exists(animKey)) continue;
+        this.anims.create({
+          key: animKey,
+          frames: this.anims.generateFrameNumbers(textureKey, {
+            start: dir.start,
+            end: dir.end,
+          }),
+          frameRate: 8,
+          repeat: -1,
+        });
+      }
     }
   }
 
@@ -314,7 +339,7 @@ export abstract class BasePlayerScene extends Phaser.Scene {
   protected revive() {
     this.isDefeated = false;
     this.player.setAngle(0);
-    this.player.setTint(gameState.playerTint);
+    this.applyPlayerTint();
   }
 
   protected isEKeyJustDown(): boolean {
@@ -369,7 +394,10 @@ export abstract class BasePlayerScene extends Phaser.Scene {
 
     if (direction) {
       this.facing = direction;
-      this.player.anims.play(`walk-${direction}`, true);
+      this.player.anims.play(
+        `walk-${direction}-${gameState.playerCharacter}`,
+        true
+      );
     } else {
       this.player.anims.stop();
       this.player.setFrame(IDLE_FRAME[this.facing]);

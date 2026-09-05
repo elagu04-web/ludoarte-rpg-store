@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { playMenuMoveSound, playMenuConfirmSound } from "@/game/music";
+import { PLAYER_CHARACTERS, type PlayerCharacterKey } from "@/game/characters";
 import styles from "./CharacterSelectScreen.module.css";
 
 const FRAME_WIDTH = 84;
@@ -41,25 +42,48 @@ function renderTinted(canvas: HTMLCanvasElement, frame: ImageData, tint: number)
 }
 
 export default function CharacterSelectScreen({
+  initialCharacter,
+  initialTint,
   onConfirm,
   onCancel,
 }: {
-  onConfirm: (tint: number) => void;
+  initialCharacter: PlayerCharacterKey;
+  initialTint: number;
+  onConfirm: (character: PlayerCharacterKey, tint: number) => void;
   onCancel?: () => void;
 }) {
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const initialCharacterIndex = Math.max(
+    0,
+    PLAYER_CHARACTERS.findIndex((c) => c.key === initialCharacter)
+  );
+  const initialColorIndex = Math.max(
+    0,
+    COLORS.findIndex((c) => c.tint === initialTint)
+  );
+
+  const [characterIndex, setCharacterIndex] = useState(initialCharacterIndex);
+  const [colorIndex, setColorIndex] = useState(initialColorIndex);
   const [frameData, setFrameData] = useState<ImageData | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const selectedIndexRef = useRef(0);
+  const characterIndexRef = useRef(characterIndex);
+  const colorIndexRef = useRef(colorIndex);
+
+  const character = PLAYER_CHARACTERS[characterIndex];
 
   useEffect(() => {
-    selectedIndexRef.current = selectedIndex;
-  }, [selectedIndex]);
+    characterIndexRef.current = characterIndex;
+  }, [characterIndex]);
+  useEffect(() => {
+    colorIndexRef.current = colorIndex;
+  }, [colorIndex]);
 
   useEffect(() => {
+    let cancelled = false;
+    setFrameData(null);
     const img = new Image();
-    img.src = "/assets/characters/player-walk-sheet.png";
+    img.src = character.file;
     img.onload = () => {
+      if (cancelled) return;
       const off = document.createElement("canvas");
       off.width = FRAME_WIDTH;
       off.height = FRAME_HEIGHT;
@@ -78,29 +102,47 @@ export default function CharacterSelectScreen({
       );
       setFrameData(ctx.getImageData(0, 0, FRAME_WIDTH, FRAME_HEIGHT));
     };
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [character.file]);
 
   useEffect(() => {
     if (!frameData || !canvasRef.current) return;
-    renderTinted(canvasRef.current, frameData, COLORS[selectedIndex].tint);
-  }, [frameData, selectedIndex]);
+    const tint = character.tintable ? COLORS[colorIndex].tint : 0xffffff;
+    renderTinted(canvasRef.current, frameData, tint);
+  }, [frameData, colorIndex, character.tintable]);
 
-  const cycle = (delta: number) => {
-    setSelectedIndex((prev) => (prev + delta + COLORS.length) % COLORS.length);
+  const cycleCharacter = (delta: number) => {
+    setCharacterIndex(
+      (prev) => (prev + delta + PLAYER_CHARACTERS.length) % PLAYER_CHARACTERS.length
+    );
+    playMenuMoveSound();
+  };
+
+  const cycleColor = (delta: number) => {
+    if (!character.tintable) return;
+    setColorIndex((prev) => (prev + delta + COLORS.length) % COLORS.length);
     playMenuMoveSound();
   };
 
   const confirm = () => {
     playMenuConfirmSound();
-    onConfirm(COLORS[selectedIndexRef.current].tint);
+    const selected = PLAYER_CHARACTERS[characterIndexRef.current];
+    const tint = selected.tintable ? COLORS[colorIndexRef.current].tint : 0xffffff;
+    onConfirm(selected.key, tint);
   };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "ArrowLeft" || event.key === "a" || event.key === "A") {
-        cycle(-1);
+      if (event.key === "ArrowUp" || event.key === "w" || event.key === "W") {
+        cycleCharacter(-1);
+      } else if (event.key === "ArrowDown" || event.key === "s" || event.key === "S") {
+        cycleCharacter(1);
+      } else if (event.key === "ArrowLeft" || event.key === "a" || event.key === "A") {
+        cycleColor(-1);
       } else if (event.key === "ArrowRight" || event.key === "d" || event.key === "D") {
-        cycle(1);
+        cycleColor(1);
       } else if (event.key === "e" || event.key === "E" || event.key === "Enter") {
         confirm();
       } else if (event.key === "Escape" && onCancel) {
@@ -112,12 +154,11 @@ export default function CharacterSelectScreen({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [character.tintable]);
 
   return (
     <div className={styles.screen}>
       <p className={styles.title}>ELEGI TU PERSONAJE</p>
-      <p className={styles.subtitle}>MAGO</p>
 
       <div className={styles.previewWrapper}>
         <canvas
@@ -129,14 +170,26 @@ export default function CharacterSelectScreen({
       </div>
 
       <div className={styles.colorRow}>
-        <button className={styles.arrowButton} onClick={() => cycle(-1)}>
+        <button className={styles.arrowButton} onClick={() => cycleCharacter(-1)}>
           ◀
         </button>
-        <span className={styles.colorName}>{COLORS[selectedIndex].name}</span>
-        <button className={styles.arrowButton} onClick={() => cycle(1)}>
+        <span className={styles.colorName}>{character.label}</span>
+        <button className={styles.arrowButton} onClick={() => cycleCharacter(1)}>
           ▶
         </button>
       </div>
+
+      {character.tintable && (
+        <div className={styles.colorRow}>
+          <button className={styles.arrowButton} onClick={() => cycleColor(-1)}>
+            ◀
+          </button>
+          <span className={styles.colorName}>{COLORS[colorIndex].name}</span>
+          <button className={styles.arrowButton} onClick={() => cycleColor(1)}>
+            ▶
+          </button>
+        </div>
+      )}
 
       <div className={styles.actions}>
         <button className={styles.confirmButton} onClick={confirm}>
@@ -150,7 +203,7 @@ export default function CharacterSelectScreen({
       </div>
 
       <p className={styles.hint}>
-        FLECHAS: CAMBIAR COLOR &middot; E: CONFIRMAR
+        ▲▼: PERSONAJE {character.tintable ? "· ◀▶: COLOR " : ""}· E: CONFIRMAR
         {onCancel ? " · ESC: VOLVER" : ""}
       </p>
     </div>

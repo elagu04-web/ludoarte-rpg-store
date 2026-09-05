@@ -39,7 +39,7 @@ interface FlatEntry {
 }
 
 function buildSingleItemWhatsAppUrl(name: string, price: number | null): string {
-  const priceText = price !== null ? ` ($${price})` : "";
+  const priceText = price ? ` ($${price})` : "";
   const message = [
     "Hola! Quiero pedir o consultar este juego:",
     `- ${name}${priceText}`,
@@ -358,7 +358,11 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
                 </p>
                 <div className={styles.previewFooter}>
                   <span className={styles.previewPrice}>
-                    {selectedOrderable.price != null
+                    {/* price>0, no solo !=null: un juego agregado a mano
+                        que todavia no tiene precio cargado guarda 0 (no
+                        null), asi que ese caso tambien tiene que mostrar
+                        "Consultar" en vez de "$0". */}
+                    {selectedOrderable.price
                       ? `$${selectedOrderable.price}`
                       : "Consultar"}
                   </span>
@@ -440,7 +444,7 @@ export default function TiendaScreen({ onExit }: { onExit: () => void }) {
                       {game.name}
                     </span>
                     <span className={styles.rowPrice}>
-                      {game.price != null ? `$${game.price}` : "CONSULTAR"}
+                      {game.price ? `$${game.price}` : "CONSULTAR"}
                     </span>
                   </div>
                 </li>

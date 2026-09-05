@@ -426,7 +426,9 @@ export default function OrderTruckScreen() {
 
         <div className={styles.shopMenuFooter}>
           <div className={styles.shopMenuPrice}>
-            {selectedGame.price != null
+            {/* price>0, no solo !=null: un juego a mano sin precio
+                cargado todavia guarda 0, no null. */}
+            {selectedGame.price
               ? `$${selectedGame.price}`
               : "Consultar por WhatsApp"}
           </div>

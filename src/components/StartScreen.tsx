@@ -5,6 +5,7 @@ import { playMenuMoveSound, playMenuConfirmSound } from "@/game/music";
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/lib/supabase/client";
 import { gameState } from "@/game/gameState";
+import { PLAYER_CHARACTERS, type PlayerCharacterKey } from "@/game/characters";
 import CharacterSelectScreen from "./CharacterSelectScreen";
 import AdminScreen from "./AdminScreen";
 import InventoryScreen from "./InventoryScreen";
@@ -12,6 +13,10 @@ import OrdersScreen from "./OrdersScreen";
 import styles from "./StartScreen.module.css";
 
 const CHARACTER_TINT_KEY = "ludoarte-character-tint";
+// Local-only for now (no Supabase column yet) -- syncing which character
+// sprite you picked across devices can be added later the same way the
+// tint already is, see confirmCharacter().
+const CHARACTER_KEY = "ludoarte-character-key";
 const ADMIN_EMAIL = "elagu04@gmail.com";
 
 // The menu doesn't wait for the whole rise animation to finish -- that
@@ -65,6 +70,16 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
   useEffect(() => {
     if (selectedIndex >= menuItems.length) setSelectedIndex(0);
   }, [menuItems.length, selectedIndex]);
+
+  useEffect(() => {
+    const savedCharacter = localStorage.getItem(CHARACTER_KEY);
+    if (
+      savedCharacter &&
+      PLAYER_CHARACTERS.some((c) => c.key === savedCharacter)
+    ) {
+      gameState.playerCharacter = savedCharacter as PlayerCharacterKey;
+    }
+  }, []);
 
   useEffect(() => {
     if (loading) return;
@@ -131,10 +146,12 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
     signOut();
   };
 
-  const confirmCharacter = (tint: number) => {
+  const confirmCharacter = (character: PlayerCharacterKey, tint: number) => {
+    gameState.playerCharacter = character;
     gameState.playerTint = tint;
     setHasChosenCharacter(true);
     setCharacterMenuOpen(false);
+    localStorage.setItem(CHARACTER_KEY, character);
     localStorage.setItem(CHARACTER_TINT_KEY, String(tint));
     if (user) {
       createClient()
@@ -233,6 +250,8 @@ export default function StartScreen({ onStart, onTienda }: StartScreenProps) {
   if (showCharacterSelect) {
     return (
       <CharacterSelectScreen
+        initialCharacter={gameState.playerCharacter}
+        initialTint={gameState.playerTint}
         onConfirm={confirmCharacter}
         onCancel={forcedCharacterSelect ? undefined : () => setCharacterMenuOpen(false)}
       />

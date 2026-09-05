@@ -179,7 +179,9 @@ export default function DeliveryRentalMenu() {
         </ul>
         <div className={styles.shopMenuFooter}>
           <div className={styles.shopMenuPrice}>
-            {selectedGame.price !== null
+            {/* price>0, no solo !==null: un juego a mano marcado para
+                alquiler pero sin precio cargado todavia guarda 0. */}
+            {selectedGame.price
               ? `$${selectedGame.price}`
               : "Consultar precio"}
           </div>
